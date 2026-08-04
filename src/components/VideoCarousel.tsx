@@ -38,27 +38,24 @@ export function VideoCarousel() {
   const startX = useRef(0);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
-  // Forcer l'autoplay: immédiat sur desktop, au 1er scroll/interaction sur mobile
+  // Forcer l'autoplay: immédiat au chargement, avec retry
   useEffect(() => {
     const timeouts: NodeJS.Timeout[] = [];
-    let hasUserInteracted = false;
+    let hasStartedPlayback = false;
 
-    // Détecter la première interaction utilisateur
+    // Détecter interaction et forcer play
     const enableAutoplay = () => {
-      if (hasUserInteracted) return;
-      hasUserInteracted = true;
+      if (hasStartedPlayback) return;
+      hasStartedPlayback = true;
 
-      videoRefs.current.forEach((video) => {
-        if (video && video.paused) {
-          video.muted = true;
-          video.play().catch(() => {});
-        }
-      });
+      const video = videoRefs.current[index];
+      if (video && video.paused) {
+        video.muted = true;
+        video.play().catch(() => {});
+      }
 
-      // Retirer les listeners
       document.removeEventListener("scroll", enableAutoplay, true);
       document.removeEventListener("touchstart", enableAutoplay, true);
-      document.removeEventListener("touchmove", enableAutoplay, true);
       document.removeEventListener("click", enableAutoplay, true);
     };
 
@@ -73,28 +70,29 @@ export function VideoCarousel() {
       video.muted = true;
       video.playsInline = true;
 
-      // Essayer de lancer immédiatement (desktop)
-      video.play().catch(() => {
-        // Si fail (mobile), attendre interaction user
-        document.addEventListener("scroll", enableAutoplay, true);
-        document.addEventListener("touchstart", enableAutoplay, true);
-        document.addEventListener("touchmove", enableAutoplay, true);
-        document.addEventListener("click", enableAutoplay, true);
-      });
+      // Essayer de lancer immédiatement
+      const playAttempt = video.play();
+      if (playAttempt && typeof playAttempt.catch === "function") {
+        playAttempt.catch(() => {
+          // Si fail (mobile), attendre interaction user
+          document.addEventListener("scroll", enableAutoplay, true);
+          document.addEventListener("touchstart", enableAutoplay, true);
+          document.addEventListener("click", enableAutoplay, true);
+        });
+      }
 
-      // Aussi essayer au chargement
-      const onLoadedData = () => {
-        if (!hasUserInteracted) {
+      // Aussi essayer au chargement des données
+      const onCanPlay = () => {
+        if (!hasStartedPlayback && video.paused) {
           video.play().catch(() => {});
         }
       };
-      video.addEventListener("loadeddata", onLoadedData);
+      video.addEventListener("canplay", onCanPlay);
     });
 
     return () => {
       document.removeEventListener("scroll", enableAutoplay, true);
       document.removeEventListener("touchstart", enableAutoplay, true);
-      document.removeEventListener("touchmove", enableAutoplay, true);
       document.removeEventListener("click", enableAutoplay, true);
       timeouts.forEach(timeout => clearTimeout(timeout));
     };
@@ -160,10 +158,15 @@ export function VideoCarousel() {
               className="absolute inset-0 h-full w-full object-cover"
               src={slide.video}
               muted
-              loop
               playsInline
               autoPlay={i === index}
               preload={i === index ? "auto" : i === (index + 1) % SLIDES.length ? "metadata" : "none"}
+              onEnded={() => {
+                if (i === index) {
+                  goTo(index + 1);
+                  resetTimer();
+                }
+              }}
             />
           ) : (
             <div className="motion-slide absolute inset-0" />
