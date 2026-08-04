@@ -1,26 +1,87 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fbf2f1;
+  --foreground: #3a262b;
+  --surface: #ffffff;
+  --muted: #f6dfe3;
+  --muted-foreground: #8c6b70;
+  --border: #f0d4d8;
+  --primary: #c17a90;
+  --primary-foreground: #fff8f7;
+  --accent: #8a4a5e;
+  --accent-foreground: #fff8f7;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --font-sans: var(--font-manrope);
+  --font-serif: var(--font-fraunces);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), sans-serif;
+}
+
+::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+input,
+textarea {
+  accent-color: var(--primary);
+}
+
+.field {
+  @apply mt-1 w-full rounded-lg border border-border bg-surface/70 px-4 py-3 text-foreground outline-none backdrop-blur-md transition-colors duration-300 placeholder:text-muted-foreground/60 focus:border-primary;
+}
+
+/* Verre dépoli : panneaux translucides avec flou d'arrière-plan.
+   Pas de bordure ici : ajoutez border-white/50 (ou similaire) au cas par cas
+   pour rester compatible avec les utilitaires Tailwind (layers). */
+.glass {
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+
+/* Placeholder de mouvement (tons rose poudré) en attendant les vraies vidéos — voir VideoCarousel */
+.motion-slide {
+  background: radial-gradient(130% 130% at 30% 20%, #7a4256 0%, #3f2430 55%, #1c1015 100%);
+  background-size: 160% 160%;
+  animation: drift 20s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  0% {
+    background-position: 15% 25%;
+  }
+  100% {
+    background-position: 85% 65%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .motion-slide {
+    animation: none;
+  }
 }

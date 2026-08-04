@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+enum StatutRendezVous {
+  EN_ATTENTE
+  CONFIRME
+  REFUSE
+  ANNULE
+  TERMINE
+}
+
+enum CategoriePrestation {
+  COUPE
+  COULEUR
+  SOIN
+  HEAD_SPA
+  MASSAGE
+  EVENEMENTIEL
+}
+
+model Client {
+  id             String   @id @default(cuid())
+  nom            String
+  prenom         String
+  telephone      String   @unique
+  email          String
+  dateNaissance  DateTime?
+  commentConnue  String?
+  notes          String?
+  createdAt      DateTime @default(now())
+
+  rendezVous     RendezVous[]
+}
+
+model Prestation {
+  id                     String              @id @default(cuid())
+  nom                    String
+  description            String?
+  categorie              CategoriePrestation
+  prixCentimes           Int
+  dureeMinutes           Int
+  tempsNettoyageMinutes  Int                 @default(10)
+  actif                  Boolean             @default(true)
+  ordre                  Int                 @default(0)
+
+  rendezVousPrestations  RendezVousPrestation[]
+}
+
+model RendezVous {
+  id             String           @id @default(cuid())
+  clientId       String
+  client         Client           @relation(fields: [clientId], references: [id])
+  statut         StatutRendezVous @default(EN_ATTENTE)
+  estNouvelleCliente Boolean      @default(false)
+  dateDebut      DateTime
+  dateFin        DateTime
+  message        String?
+  motifRefus     String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  prestations    RendezVousPrestation[]
+}
+
+model RendezVousPrestation {
+  id           String     @id @default(cuid())
+  rendezVousId String
+  rendezVous   RendezVous @relation(fields: [rendezVousId], references: [id], onDelete: Cascade)
+  prestationId String
+  prestation   Prestation @relation(fields: [prestationId], references: [id])
+  ordre        Int        @default(0)
+}

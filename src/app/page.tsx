@@ -1,65 +1,149 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
+import { VideoCarousel } from "@/components/VideoCarousel";
+import { Reveal } from "@/components/Reveal";
+import { CategoryIcon } from "@/components/CategoryIcon";
+import { getPrestationsActives } from "@/lib/data";
+import { formatDuree, formatPrix } from "@/lib/prestations";
+import {
+  DESCRIPTION_CATEGORIE,
+  LABEL_CATEGORIE,
+  ORDRE_CATEGORIES,
+} from "@/lib/categories";
 
-export default function Home() {
+export default async function Home() {
+  const prestations = await getPrestationsActives();
+
+  const categories = ORDRE_CATEGORIES.map((categorie) => ({
+    categorie,
+    items: prestations.filter((p) => p.categorie === categorie),
+  })).filter((c) => c.items.length > 0);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="flex min-h-full flex-1 flex-col">
+      <Header />
+
+      <main className="flex-1">
+        <VideoCarousel />
+
+        <Reveal className="glass border-b border-white/40">
+          <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 px-6 py-20 text-center">
+            <span className="text-sm uppercase tracking-[0.3em] text-muted-foreground">
+              Salon privé
+            </span>
+            <h1 className="font-serif text-4xl leading-tight text-foreground sm:text-5xl">
+              Coiffure, couleur &amp; bien-être, sur mesure
+            </h1>
+            <p className="max-w-xl text-lg text-muted-foreground">
+              Un salon confidentiel, un nombre limité de clientes, une approche
+              personnalisée. Coiffure, colorations, Head Spa, massages et soins
+              capillaires, uniquement sur rendez-vous.
+            </p>
+            <Link
+              href="/reservation"
+              className="mt-2 rounded-full bg-primary px-8 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+              Prendre rendez-vous
+            </Link>
+          </div>
+        </Reveal>
+
+        <section className="relative mx-auto max-w-5xl px-6 py-24">
+          <Reveal className="mb-16 flex flex-col items-center text-center">
+            <span className="font-serif text-4xl italic text-primary/70">Le menu</span>
+            <h2 className="mt-2 font-serif text-3xl text-foreground sm:text-4xl">
+              Nos prestations
+            </h2>
+            <div className="mt-5 flex items-center gap-3 text-primary/50">
+              <span className="h-px w-10 bg-current" />
+              <span className="h-1.5 w-1.5 rotate-45 bg-current" />
+              <span className="h-px w-10 bg-current" />
+            </div>
+            <p className="mt-5 max-w-md text-muted-foreground">
+              Composez votre rendez-vous à la carte : durée et tarif se calculent
+              automatiquement selon vos choix.
+            </p>
+          </Reveal>
+
+          <div className="grid gap-8 md:grid-cols-2">
+            {categories.map(({ categorie, items }, catIndex) => (
+              <Reveal
+                key={categorie}
+                delay={catIndex * 80}
+                className={items.length > 4 ? "md:col-span-2" : ""}
+              >
+                <div className="glass h-full rounded-3xl border border-white/50 p-8 sm:p-10">
+                  <div className="flex items-start gap-4">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <CategoryIcon categorie={categorie} className="h-6 w-6" />
+                    </span>
+                    <div>
+                      <h3 className="font-serif text-2xl text-foreground">
+                        {LABEL_CATEGORIE[categorie] ?? categorie}
+                      </h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {DESCRIPTION_CATEGORIE[categorie]}
+                      </p>
+                    </div>
+                  </div>
+
+                  <ul className="mt-7 grid gap-x-8 gap-y-1 sm:grid-cols-2">
+                    {items.map((p) => (
+                      <li
+                        key={p.id}
+                        className="flex items-baseline gap-2 border-b border-border/60 py-3.5 last:border-0 sm:[&:nth-last-child(-n+2)]:border-0"
+                      >
+                        <span className="font-serif text-base text-foreground">
+                          {p.nom}
+                        </span>
+                        <span
+                          aria-hidden
+                          className="mb-1 flex-1 border-b border-dotted border-muted-foreground/40"
+                        />
+                        <span className="whitespace-nowrap text-xs text-muted-foreground">
+                          {formatDuree(p.dureeMinutes)}
+                        </span>
+                        <span className="whitespace-nowrap font-medium text-primary">
+                          {formatPrix(p.prixCentimes)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+
+        <Reveal className="glass border-t border-white/40">
+          <div className="mx-auto max-w-3xl px-6 py-20 text-center">
+            <h2 className="font-serif text-3xl text-foreground">
+              Déjà cliente ou nouvelle venue ?
+            </h2>
+            <p className="mt-3 text-muted-foreground">
+              Le salon fonctionne uniquement sur rendez-vous afin de garantir une
+              qualité de service optimale.
+            </p>
+            <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
+              <Link
+                href="/reservation/ancienne-cliente"
+                className="rounded-full bg-primary px-8 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95"
+              >
+                Je suis déjà cliente
+              </Link>
+              <Link
+                href="/reservation/nouvelle-cliente"
+                className="rounded-full border border-primary px-8 py-3 text-foreground transition-all duration-300 hover:bg-primary hover:text-primary-foreground active:scale-95"
+              >
+                Je suis une nouvelle cliente
+              </Link>
+            </div>
+          </div>
+        </Reveal>
       </main>
+
+      <Footer />
     </div>
   );
 }
