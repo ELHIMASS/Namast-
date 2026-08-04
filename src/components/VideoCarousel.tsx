@@ -38,54 +38,31 @@ export function VideoCarousel() {
   const startX = useRef(0);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
-  // Autoplay au 1er scroll/interaction utilisateur
+  // Autoplay automatique pour toutes les vidéos - une après l'autre
   useEffect(() => {
-    let hasStarted = false;
+    const video = videoRefs.current[index];
+    if (!video) return;
 
-    const startPlayback = () => {
-      if (hasStarted) return;
-      hasStarted = true;
+    video.muted = true;
+    video.playsInline = true;
 
-      const video = videoRefs.current[index];
-      if (video && video.paused) {
-        video.muted = true;
-        video.play().catch(() => {});
-      }
-
-      // Retirer les listeners une fois déclenché
-      document.removeEventListener("scroll", startPlayback, true);
-      document.removeEventListener("touchstart", startPlayback, true);
-      document.removeEventListener("touchmove", startPlayback, true);
-      document.removeEventListener("click", startPlayback, true);
-      window.removeEventListener("touchend", startPlayback, true);
+    // Essayer de lancer immédiatement
+    const playVideo = () => {
+      video.play().catch(() => {
+        // Si échoue, réessayer après un court délai
+        const timeout = setTimeout(playVideo, 100);
+        return () => clearTimeout(timeout);
+      });
     };
 
-    videoRefs.current.forEach((video, i) => {
-      if (!video) return;
+    playVideo();
 
-      if (i !== index) {
-        video.pause();
-        return;
+    // Mettre en pause les autres vidéos
+    videoRefs.current.forEach((v, i) => {
+      if (i !== index && v) {
+        v.pause();
       }
-
-      video.muted = true;
-      video.playsInline = true;
     });
-
-    // Écouter le 1er scroll/interaction
-    document.addEventListener("scroll", startPlayback, { capture: true, once: true });
-    document.addEventListener("touchstart", startPlayback, { capture: true, once: true });
-    document.addEventListener("touchmove", startPlayback, { capture: true, once: true });
-    document.addEventListener("click", startPlayback, { capture: true, once: true });
-    window.addEventListener("touchend", startPlayback, { once: true });
-
-    return () => {
-      document.removeEventListener("scroll", startPlayback, true);
-      document.removeEventListener("touchstart", startPlayback, true);
-      document.removeEventListener("touchmove", startPlayback, true);
-      document.removeEventListener("click", startPlayback, true);
-      window.removeEventListener("touchend", startPlayback, true);
-    };
   }, [index]);
 
   const goTo = useCallback((i: number) => {
