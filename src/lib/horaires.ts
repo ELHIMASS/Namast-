@@ -33,3 +33,8 @@ export const NOMS_JOURS = [
 export function estJourOuvert(date: Date): boolean {
   return (HORAIRES_SALON[date.getDay()] ?? []).length > 0;
 }
+
+// Les prestations enfants ne se réservent que le mercredi.
+export function estMercredi(date: Date): boolean {
+  return date.getDay() === 3;
+}

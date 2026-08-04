@@ -30,6 +30,34 @@ enum CategoriePrestation {
   EVENEMENTIEL
 }
 
+enum Profil {
+  FEMME
+  HOMME
+  ENFANT
+}
+
+enum LongueurCheveux {
+  COURT
+  CARRE
+  MI_LONG
+  LONG
+  TRES_LONG
+}
+
+enum Densite {
+  FIN
+  NORMAL
+  EPAIS
+}
+
+enum GroupeOption {
+  RITUEL_FEMME
+  BIEN_ETRE
+  COIFFAGE
+  COULEUR
+  HOMME
+}
+
 model Client {
   id             String   @id @default(cuid())
   nom            String
@@ -49,13 +77,67 @@ model Prestation {
   nom                    String
   description            String?
   categorie              CategoriePrestation
+  profil                 Profil              @default(FEMME)
   prixCentimes           Int
   dureeMinutes           Int
   tempsNettoyageMinutes  Int                 @default(10)
   actif                  Boolean             @default(true)
   ordre                  Int                 @default(0)
+  estLissage             Boolean             @default(false)
 
+  variantesLongueur      PrestationLongueur[]
   rendezVousPrestations  RendezVousPrestation[]
+}
+
+// Prix/durée spécifiques selon la longueur de cheveux, pour les prestations
+// qui varient (coiffure et coloration femmes). Absent = la prestation utilise
+// son prix/durée de base (ex: prestations homme, enfant, bien-être).
+model PrestationLongueur {
+  id           String          @id @default(cuid())
+  prestationId String
+  prestation   Prestation      @relation(fields: [prestationId], references: [id], onDelete: Cascade)
+  longueur     LongueurCheveux
+  prixCentimes Int
+  dureeMinutes Int
+
+  @@unique([prestationId, longueur])
+}
+
+// Matrice de tarifs pour le lissage Belmakosmetik (longueur x densité).
+model LissageTarif {
+  id           String          @id @default(cuid())
+  longueur     LongueurCheveux
+  densite      Densite
+  prixCentimes Int
+  dureeMinutes Int
+
+  @@unique([longueur, densite])
+}
+
+// Options additionnelles cochables (rituel détente, massages, wavy...).
+// prixCentimes est null quand le tarif dépend de la longueur (voir variantesLongueur).
+model Option {
+  id           String       @id @default(cuid())
+  nom          String
+  description  String?
+  groupe       GroupeOption
+  prixCentimes Int?
+  dureeMinutes Int
+  actif        Boolean      @default(true)
+  ordre        Int          @default(0)
+
+  variantesLongueur OptionLongueur[]
+  rendezVousOptions RendezVousOption[]
+}
+
+model OptionLongueur {
+  id           String          @id @default(cuid())
+  optionId     String
+  option       Option          @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  longueur     LongueurCheveux
+  prixCentimes Int
+
+  @@unique([optionId, longueur])
 }
 
 model RendezVous {
@@ -75,10 +157,22 @@ model RendezVous {
 }
 
 model RendezVousPrestation {
-  id           String     @id @default(cuid())
+  id           String           @id @default(cuid())
   rendezVousId String
-  rendezVous   RendezVous @relation(fields: [rendezVousId], references: [id], onDelete: Cascade)
+  rendezVous   RendezVous       @relation(fields: [rendezVousId], references: [id], onDelete: Cascade)
   prestationId String
-  prestation   Prestation @relation(fields: [prestationId], references: [id])
-  ordre        Int        @default(0)
+  prestation   Prestation       @relation(fields: [prestationId], references: [id])
+  ordre        Int              @default(0)
+  longueur     LongueurCheveux?
+  densite      Densite?
+
+  options      RendezVousOption[]
+}
+
+model RendezVousOption {
+  id                     String               @id @default(cuid())
+  rendezVousPrestationId String
+  rendezVousPrestation   RendezVousPrestation @relation(fields: [rendezVousPrestationId], references: [id], onDelete: Cascade)
+  optionId               String
+  option                 Option               @relation(fields: [optionId], references: [id])
 }

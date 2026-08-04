@@ -4,7 +4,13 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCreneauxDisponibles } from "@/lib/creneaux";
-import { calculerTotal } from "@/lib/prestations";
+import { estMercredi } from "@/lib/horaires";
+import { calculerTotalAvecOptions } from "@/lib/prestations";
+import {
+  construireDonneesPrestations,
+  resoudreLignes,
+  type LigneChoisie,
+} from "@/lib/reservationLignes";
 import {
   notifierDemandeAcceptee,
   notifierDemandeRefusee,
@@ -17,7 +23,12 @@ import {
 const COOKIE_NAME = "namaste_admin";
 const INCLUDE_COMPLET = {
   client: true,
-  prestations: { include: { prestation: true } },
+  prestations: {
+    include: {
+      prestation: { include: { variantesLongueur: true } },
+      options: { include: { option: { include: { variantesLongueur: true } } } },
+    },
+  },
 } as const;
 
 function normaliserTelephone(telephone: string): string {
@@ -75,16 +86,20 @@ export async function chercherClientParTelephoneAction(telephone: string) {
 
 export async function getCreneauxAdminAction(
   dateISO: string,
-  prestationIds: string[],
+  lignes: LigneChoisie[],
   excludeRendezVousId?: string,
 ) {
-  const prestations = await prisma.prestation.findMany({
-    where: { id: { in: prestationIds } },
-  });
+  if (lignes.length === 0) return [];
+
+  const { prestations, lignesResolues, lissageMatrice } = await resoudreLignes(lignes);
   if (prestations.length === 0) return [];
 
-  const { dureeTotaleAvecNettoyage } = calculerTotal(prestations);
   const date = new Date(dateISO);
+  if (prestations.some((p) => p.profil === "ENFANT") && !estMercredi(date)) {
+    return [];
+  }
+
+  const { dureeTotaleAvecNettoyage } = calculerTotalAvecOptions(lignesResolues, lissageMatrice);
   const debutJournee = new Date(date);
   debutJournee.setHours(0, 0, 0, 0);
   const finJournee = new Date(date);
@@ -127,18 +142,15 @@ export async function refuserDemandeAction(rendezVousId: string, motif?: string)
 export async function creerRendezVousAdminAction({
   clientId,
   nouveauClient,
-  prestationIds,
+  lignes,
   dateDebutISO,
 }: {
   clientId?: string;
   nouveauClient?: { nom: string; prenom: string; telephone: string; email: string };
-  prestationIds: string[];
+  lignes: LigneChoisie[];
   dateDebutISO: string;
 }) {
-  const prestations = await prisma.prestation.findMany({
-    where: { id: { in: prestationIds } },
-  });
-  if (prestations.length === 0) {
+  if (lignes.length === 0) {
     return { ok: false as const, error: "Merci de choisir au moins une prestation." };
   }
 
@@ -161,7 +173,8 @@ export async function creerRendezVousAdminAction({
     return { ok: false as const, error: "Merci de sélectionner ou créer une cliente." };
   }
 
-  const { dureeTotaleAvecNettoyage } = calculerTotal(prestations);
+  const { lignesResolues, lissageMatrice } = await resoudreLignes(lignes);
+  const { dureeTotaleAvecNettoyage } = calculerTotalAvecOptions(lignesResolues, lissageMatrice);
   const dateDebut = new Date(dateDebutISO);
   const dateFin = new Date(dateDebut.getTime() + dureeTotaleAvecNettoyage * 60000);
 
@@ -172,7 +185,7 @@ export async function creerRendezVousAdminAction({
       dateDebut,
       dateFin,
       prestations: {
-        create: prestations.map((p, i) => ({ prestationId: p.id, ordre: i })),
+        create: construireDonneesPrestations(lignes),
       },
     },
     include: INCLUDE_COMPLET,
@@ -184,11 +197,11 @@ export async function creerRendezVousAdminAction({
 
 export async function modifierRendezVousAction({
   rendezVousId,
-  prestationIds,
+  lignes,
   dateDebutISO,
 }: {
   rendezVousId: string;
-  prestationIds: string[];
+  lignes: LigneChoisie[];
   dateDebutISO: string;
 }) {
   const existant = await prisma.rendezVous.findUnique({ where: { id: rendezVousId } });
@@ -196,14 +209,12 @@ export async function modifierRendezVousAction({
     return { ok: false as const, error: "Rendez-vous introuvable." };
   }
 
-  const prestations = await prisma.prestation.findMany({
-    where: { id: { in: prestationIds } },
-  });
-  if (prestations.length === 0) {
+  if (lignes.length === 0) {
     return { ok: false as const, error: "Merci de choisir au moins une prestation." };
   }
 
-  const { dureeTotaleAvecNettoyage } = calculerTotal(prestations);
+  const { lignesResolues, lissageMatrice } = await resoudreLignes(lignes);
+  const { dureeTotaleAvecNettoyage } = calculerTotalAvecOptions(lignesResolues, lissageMatrice);
   const dateDebut = new Date(dateDebutISO);
   const dateFin = new Date(dateDebut.getTime() + dureeTotaleAvecNettoyage * 60000);
   const dateChangee = existant.dateDebut.getTime() !== dateDebut.getTime();
@@ -216,7 +227,7 @@ export async function modifierRendezVousAction({
       dateFin,
       prestations: {
         deleteMany: {},
-        create: prestations.map((p, i) => ({ prestationId: p.id, ordre: i })),
+        create: construireDonneesPrestations(lignes),
       },
     },
     include: INCLUDE_COMPLET,

@@ -24,3 +24,36 @@ export const ORDRE_CATEGORIES = [
   "MASSAGE",
   "EVENEMENTIEL",
 ];
+
+export const LABEL_PROFIL: Record<string, string> = {
+  FEMME: "Femmes",
+  HOMME: "Hommes",
+  ENFANT: "Enfants",
+};
+
+
+export const LABEL_LONGUEUR: Record<string, string> = {
+  COURT: "Courts",
+  CARRE: "Carré",
+  MI_LONG: "Mi-longs",
+  LONG: "Longs",
+  TRES_LONG: "Très longs / épais",
+};
+
+export const ORDRE_LONGUEURS = ["COURT", "CARRE", "MI_LONG", "LONG", "TRES_LONG"] as const;
+
+export const LABEL_DENSITE: Record<string, string> = {
+  FIN: "Fins",
+  NORMAL: "Normaux",
+  EPAIS: "Épais",
+};
+
+export const ORDRE_DENSITES = ["FIN", "NORMAL", "EPAIS"] as const;
+
+export const LABEL_GROUPE_OPTION: Record<string, string> = {
+  RITUEL_FEMME: "Rituel coiffure détente",
+  BIEN_ETRE: "Options bien-être",
+  COIFFAGE: "Options coiffage",
+  COULEUR: "Options couleur",
+  HOMME: "Options",
+};

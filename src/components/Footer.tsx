@@ -16,6 +16,7 @@ export function Footer() {
           Coiffure &amp; bien-être
         </p>
         <p className="mt-3">Salon privé — fonctionne uniquement sur rendez-vous.</p>
+        <p className="mt-1">6 impasse des Prunelliers, 69720 Saint-Laurent-de-Mure</p>
 
         <div className="mt-6 max-w-xs">
           <p className="mb-2 text-xs uppercase tracking-[0.2em] text-primary/80">

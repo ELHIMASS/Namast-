@@ -2,13 +2,19 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { Prestation as PrestationModele } from "@/generated/prisma";
-import { formatPrix } from "@/lib/prestations";
+import {
+  calculerTotalAvecOptions,
+  formatPrix,
+  type LigneReservation,
+  type LissageTarifSimple,
+  type OptionAvecVariantes,
+  type PrestationAvecVariantes,
+} from "@/lib/prestations";
+import { LABEL_LONGUEUR } from "@/lib/categories";
 import { WeekCalendar, type RendezVousCalendrier } from "@/components/WeekCalendar";
 import { RendezVousModal } from "./RendezVousModal";
 import { accepterDemandeAction, refuserDemandeAction } from "./actions";
 
-type Prestation = { id: string; nom: string; prixCentimes: number };
 type RendezVous = {
   id: string;
   dateDebut: Date;
@@ -23,7 +29,7 @@ type RendezVous = {
     email: string;
     commentConnue: string | null;
   };
-  prestations: { prestation: Prestation }[];
+  prestations: RendezVousCalendrier["prestations"];
 };
 
 function formatDateHeure(date: Date) {
@@ -36,18 +42,36 @@ function formatDateHeure(date: Date) {
   });
 }
 
-function totalPrestations(items: { prestation: Prestation }[]) {
-  return items.reduce((s, i) => s + i.prestation.prixCentimes, 0);
+function versLignes(prestations: RendezVous["prestations"]): LigneReservation[] {
+  return prestations.map((p) => ({
+    prestation: p.prestation,
+    longueur: p.longueur ?? undefined,
+    densite: p.densite ?? undefined,
+    options: p.options.map((o) => o.option),
+  }));
+}
+
+function listePrestations(prestations: RendezVous["prestations"]): string {
+  return prestations
+    .map((p) => {
+      const label = p.longueur ? ` (${LABEL_LONGUEUR[p.longueur]})` : "";
+      return `${p.prestation.nom}${label}`;
+    })
+    .join(", ");
 }
 
 export function AdminDashboard({
   demandesInitiales,
   confirmesInitiaux,
   prestations,
+  options,
+  lissageMatrice,
 }: {
   demandesInitiales: RendezVous[];
   confirmesInitiaux: RendezVous[];
-  prestations: PrestationModele[];
+  prestations: PrestationAvecVariantes[];
+  options: OptionAvecVariantes[];
+  lissageMatrice: LissageTarifSimple[];
 }) {
   const router = useRouter();
   const [traitees, setTraitees] = useState<Set<string>>(new Set());
@@ -98,71 +122,75 @@ export function AdminDashboard({
           </p>
         ) : (
           <div className="space-y-4">
-            {demandes.map((rdv) => (
-              <div
-                key={rdv.id}
-                className="glass rounded-2xl border border-white/50 p-6"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <p className="font-serif text-lg text-foreground">
-                      {rdv.client.prenom} {rdv.client.nom}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {rdv.client.telephone}
-                      {rdv.client.email ? ` · ${rdv.client.email}` : ""}
-                    </p>
-                    {rdv.client.commentConnue && (
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Connu via : {rdv.client.commentConnue}
+            {demandes.map((rdv) => {
+              const { prixTotalCentimes } = calculerTotalAvecOptions(
+                versLignes(rdv.prestations),
+                lissageMatrice,
+              );
+              return (
+                <div
+                  key={rdv.id}
+                  className="glass rounded-2xl border border-white/50 p-6"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <p className="font-serif text-lg text-foreground">
+                        {rdv.client.prenom} {rdv.client.nom}
                       </p>
-                    )}
+                      <p className="text-sm text-muted-foreground">
+                        {rdv.client.telephone}
+                        {rdv.client.email ? ` · ${rdv.client.email}` : ""}
+                      </p>
+                      {rdv.client.commentConnue && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Connu via : {rdv.client.commentConnue}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium text-foreground">
+                        {formatDateHeure(rdv.dateDebut)}
+                      </p>
+                      <p className="text-sm text-primary">{formatPrix(prixTotalCentimes)}</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium text-foreground">
-                      {formatDateHeure(rdv.dateDebut)}
-                    </p>
-                    <p className="text-sm text-primary">
-                      {formatPrix(totalPrestations(rdv.prestations))}
-                    </p>
-                  </div>
-                </div>
 
-                <p className="mt-3 text-sm text-foreground">
-                  {rdv.prestations.map((p) => p.prestation.nom).join(", ")}
-                </p>
-                {rdv.message && (
-                  <p className="mt-2 rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-                    « {rdv.message} »
+                  <p className="mt-3 text-sm text-foreground">
+                    {listePrestations(rdv.prestations)}
                   </p>
-                )}
+                  {rdv.message && (
+                    <p className="mt-2 rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
+                      « {rdv.message} »
+                    </p>
+                  )}
 
-                <div className="mt-4 flex gap-3">
-                  <button
-                    type="button"
-                    disabled={isPending && traitementId === rdv.id}
-                    onClick={() => accepter(rdv.id)}
-                    className="rounded-full bg-primary px-5 py-2 text-sm text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 disabled:opacity-50"
-                  >
-                    Accepter
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isPending && traitementId === rdv.id}
-                    onClick={() => refuser(rdv.id)}
-                    className="rounded-full border border-border px-5 py-2 text-sm text-foreground transition-all duration-300 hover:border-rose-400 hover:text-rose-700 active:scale-95 disabled:opacity-50"
-                  >
-                    Refuser
-                  </button>
+                  <div className="mt-4 flex gap-3">
+                    <button
+                      type="button"
+                      disabled={isPending && traitementId === rdv.id}
+                      onClick={() => accepter(rdv.id)}
+                      className="rounded-full bg-primary px-5 py-2 text-sm text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 disabled:opacity-50"
+                    >
+                      Accepter
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isPending && traitementId === rdv.id}
+                      onClick={() => refuser(rdv.id)}
+                      className="rounded-full border border-border px-5 py-2 text-sm text-foreground transition-all duration-300 hover:border-rose-400 hover:text-rose-700 active:scale-95 disabled:opacity-50"
+                    >
+                      Refuser
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
 
       <section>
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-serif text-2xl text-foreground">Planning</h2>
           <button
             type="button"
@@ -178,6 +206,8 @@ export function AdminDashboard({
       {modal && (
         <RendezVousModal
           prestations={prestations}
+          options={options}
+          lissageMatrice={lissageMatrice}
           rendezVous={modal === "creer" ? undefined : modal}
           onClose={() => setModal(null)}
           onSaved={fermerEtRafraichir}

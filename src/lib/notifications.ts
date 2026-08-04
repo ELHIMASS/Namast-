@@ -1,10 +1,25 @@
+import { prisma } from "@/lib/prisma";
 import { envoyerEmail } from "@/lib/email";
-import { formatPrix } from "@/lib/prestations";
+import {
+  calculerTotalAvecOptions,
+  formatPrix,
+  type Densite,
+  type LigneReservation,
+  type Longueur,
+  type OptionAvecVariantes,
+  type PrestationAvecVariantes,
+} from "@/lib/prestations";
+import { LABEL_LONGUEUR } from "@/lib/categories";
 
 type RendezVousEmail = {
   dateDebut: Date;
   client: { prenom: string; nom: string; email: string };
-  prestations: { prestation: { nom: string; prixCentimes: number } }[];
+  prestations: {
+    prestation: PrestationAvecVariantes;
+    longueur?: Longueur | null;
+    densite?: Densite | null;
+    options: { option: OptionAvecVariantes }[];
+  }[];
 };
 
 function formatDateHeure(date: Date): string {
@@ -17,12 +32,29 @@ function formatDateHeure(date: Date): string {
   });
 }
 
-function listePrestations(rdv: RendezVousEmail): string {
-  return rdv.prestations.map((p) => p.prestation.nom).join(", ");
+function versLignes(rdv: RendezVousEmail): LigneReservation[] {
+  return rdv.prestations.map((p) => ({
+    prestation: p.prestation,
+    longueur: p.longueur ?? undefined,
+    densite: p.densite ?? undefined,
+    options: p.options.map((o) => o.option),
+  }));
 }
 
-function totalPrix(rdv: RendezVousEmail): string {
-  return formatPrix(rdv.prestations.reduce((s, p) => s + p.prestation.prixCentimes, 0));
+function listePrestations(rdv: RendezVousEmail): string {
+  return rdv.prestations
+    .map((p) => {
+      const label = p.longueur ? ` (${LABEL_LONGUEUR[p.longueur]})` : "";
+      const options = p.options.map((o) => o.option.nom).join(", ");
+      return `${p.prestation.nom}${label}${options ? ` + ${options}` : ""}`;
+    })
+    .join(", ");
+}
+
+async function totalPrix(rdv: RendezVousEmail): Promise<string> {
+  const lissageMatrice = await prisma.lissageTarif.findMany();
+  const { prixTotalCentimes } = calculerTotalAvecOptions(versLignes(rdv), lissageMatrice);
+  return formatPrix(prixTotalCentimes);
 }
 
 function gabarit(titre: string, intro: string, corpsHtml: string): string {
@@ -36,12 +68,12 @@ function gabarit(titre: string, intro: string, corpsHtml: string): string {
   `;
 }
 
-function detailsRdvHtml(rdv: RendezVousEmail): string {
+async function detailsRdvHtml(rdv: RendezVousEmail): Promise<string> {
   return `
     <ul>
       <li><strong>Date :</strong> ${formatDateHeure(rdv.dateDebut)}</li>
       <li><strong>Prestations :</strong> ${listePrestations(rdv)}</li>
-      <li><strong>Total :</strong> ${totalPrix(rdv)}</li>
+      <li><strong>Total :</strong> ${await totalPrix(rdv)}</li>
     </ul>
   `;
 }
@@ -53,7 +85,7 @@ export async function notifierRdvCreeParAdmin(rdv: RendezVousEmail) {
     html: gabarit(
       "Rendez-vous confirmé",
       `Bonjour ${rdv.client.prenom}, un rendez-vous a été pris pour vous chez Namasté.`,
-      detailsRdvHtml(rdv),
+      await detailsRdvHtml(rdv),
     ),
   });
 }
@@ -65,7 +97,7 @@ export async function notifierRdvModifie(rdv: RendezVousEmail) {
     html: gabarit(
       "Rendez-vous modifié",
       `Bonjour ${rdv.client.prenom}, votre rendez-vous chez Namasté a été mis à jour.`,
-      detailsRdvHtml(rdv),
+      await detailsRdvHtml(rdv),
     ),
   });
 }
@@ -79,7 +111,7 @@ export async function notifierRdvDeplace(rdv: RendezVousEmail, ancienneDateDebut
       `Bonjour ${rdv.client.prenom}, votre rendez-vous chez Namasté a été déplacé.`,
       `
         <p><strong>Ancien créneau :</strong> ${formatDateHeure(ancienneDateDebut)}</p>
-        ${detailsRdvHtml(rdv)}
+        ${await detailsRdvHtml(rdv)}
       `,
     ),
   });
@@ -92,7 +124,7 @@ export async function notifierRdvSupprime(rdv: RendezVousEmail) {
     html: gabarit(
       "Rendez-vous annulé",
       `Bonjour ${rdv.client.prenom}, votre rendez-vous chez Namasté a été annulé.`,
-      detailsRdvHtml(rdv),
+      await detailsRdvHtml(rdv),
     ),
   });
 }
@@ -104,7 +136,7 @@ export async function notifierDemandeAcceptee(rdv: RendezVousEmail) {
     html: gabarit(
       "Demande acceptée",
       `Bonjour ${rdv.client.prenom}, bonne nouvelle : votre demande de rendez-vous chez Namasté a été acceptée.`,
-      detailsRdvHtml(rdv),
+      await detailsRdvHtml(rdv),
     ),
   });
 }

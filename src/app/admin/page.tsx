@@ -1,6 +1,6 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { getPrestationsActives } from "@/lib/data";
+import { getCatalogue } from "@/lib/data";
 import { AdminDashboard } from "./AdminDashboard";
 import { getDemandesEnAttente, getRendezVousConfirmes, logoutAdminAction } from "./actions";
 
@@ -10,10 +10,10 @@ import { getDemandesEnAttente, getRendezVousConfirmes, logoutAdminAction } from 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  const [demandes, confirmes, prestations] = await Promise.all([
+  const [demandes, confirmes, { prestations, options, lissageMatrice }] = await Promise.all([
     getDemandesEnAttente(),
     getRendezVousConfirmes(),
-    getPrestationsActives(),
+    getCatalogue(),
   ]);
 
   return (
@@ -44,6 +44,8 @@ export default async function AdminPage() {
             demandesInitiales={demandes}
             confirmesInitiaux={confirmes}
             prestations={prestations}
+            options={options}
+            lissageMatrice={lissageMatrice}
           />
         </div>
       </main>

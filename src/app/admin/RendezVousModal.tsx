@@ -1,10 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import type { Prestation } from "@/generated/prisma";
-import { estJourOuvert } from "@/lib/horaires";
-import { calculerTotal, formatDuree, formatPrix } from "@/lib/prestations";
+import { estJourOuvert, estMercredi } from "@/lib/horaires";
+import {
+  calculerTotalAvecOptions,
+  formatDuree,
+  formatPrix,
+  ligneEstComplete,
+  type LigneReservation,
+  type LissageTarifSimple,
+  type OptionAvecVariantes,
+  type PrestationAvecVariantes,
+} from "@/lib/prestations";
 import type { RendezVousCalendrier } from "@/components/WeekCalendar";
+import { PrestationChooser } from "../reservation/PrestationChooser";
+import type { LigneChoisie } from "@/lib/reservationLignes";
 import {
   chercherClientParTelephoneAction,
   creerRendezVousAdminAction,
@@ -22,16 +32,20 @@ function prochainsJours(nombre: number): Date[] {
     d.setDate(d.getDate() + i);
     jours.push(d);
   }
-  return jours.filter(estJourOuvert);
+  return jours;
 }
 
 export function RendezVousModal({
   prestations,
+  options,
+  lissageMatrice,
   rendezVous,
   onClose,
   onSaved,
 }: {
-  prestations: Prestation[];
+  prestations: PrestationAvecVariantes[];
+  options: OptionAvecVariantes[];
+  lissageMatrice: LissageTarifSimple[];
   rendezVous?: RendezVousCalendrier;
   onClose: () => void;
   onSaved: () => void;
@@ -51,8 +65,13 @@ export function RendezVousModal({
   const [prenom, setPrenom] = useState(rendezVous?.client.prenom ?? "");
   const [email, setEmail] = useState(rendezVous?.client.email ?? "");
 
-  const [prestationIds, setPrestationIds] = useState<string[]>(
-    rendezVous?.prestations.map((p) => p.prestation.id) ?? [],
+  const [lignes, setLignes] = useState<LigneReservation[]>(
+    rendezVous?.prestations.map((p) => ({
+      prestation: p.prestation,
+      longueur: p.longueur ?? undefined,
+      densite: p.densite ?? undefined,
+      options: p.options.map((o) => o.option),
+    })) ?? [],
   );
 
   const [dateSelectionnee, setDateSelectionnee] = useState<Date | null>(
@@ -67,23 +86,28 @@ export function RendezVousModal({
   const [erreur, setErreur] = useState<string | null>(null);
   const [confirmSuppression, setConfirmSuppression] = useState(false);
 
-  const jours = useMemo(() => prochainsJours(21), []);
-  const prestationsSelectionnees = useMemo(
-    () => prestations.filter((p) => prestationIds.includes(p.id)),
-    [prestations, prestationIds],
-  );
   const total = useMemo(
-    () => calculerTotal(prestationsSelectionnees),
-    [prestationsSelectionnees],
+    () => calculerTotalAvecOptions(lignes, lissageMatrice),
+    [lignes, lissageMatrice],
   );
+  const pretPourCreneau = lignes.length > 0 && lignes.every(ligneEstComplete);
+  const contientEnfant = lignes.some((l) => l.prestation.profil === "ENFANT");
 
-  function toggle(id: string) {
-    setPrestationIds((ids) => (ids.includes(id) ? ids.filter((i) => i !== id) : [...ids, id]));
-  }
+  const lignesChoisies: LigneChoisie[] = lignes.map((l) => ({
+    prestationId: l.prestation.id,
+    longueur: l.longueur,
+    densite: l.densite,
+    optionIds: l.options.map((o) => o.id),
+  }));
+
+  const jours = useMemo(() => {
+    const base = prochainsJours(21).filter(estJourOuvert);
+    return contientEnfant ? base.filter(estMercredi) : base;
+  }, [contientEnfant]);
 
   function chargerCreneaux(date: Date) {
     startTransition(async () => {
-      const iso = await getCreneauxAdminAction(date.toISOString(), prestationIds, rendezVous?.id);
+      const iso = await getCreneauxAdminAction(date.toISOString(), lignesChoisies, rendezVous?.id);
       setCreneaux(iso);
     });
   }
@@ -120,14 +144,14 @@ export function RendezVousModal({
     (rechercheEffectuee && (!!clientTrouve || (nom.trim() && prenom.trim() && email.trim())));
 
   function enregistrer() {
-    if (!creneauSelectionne || prestationIds.length === 0 || !clientPret) return;
+    if (!creneauSelectionne || !pretPourCreneau || !clientPret) return;
     setErreur(null);
 
     startTransition(async () => {
       if (modeEdition && rendezVous) {
         const resultat = await modifierRendezVousAction({
           rendezVousId: rendezVous.id,
-          prestationIds,
+          lignes: lignesChoisies,
           dateDebutISO: creneauSelectionne,
         });
         if (!resultat.ok) {
@@ -140,7 +164,7 @@ export function RendezVousModal({
           nouveauClient: clientTrouve
             ? undefined
             : { nom, prenom, telephone, email },
-          prestationIds,
+          lignes: lignesChoisies,
           dateDebutISO: creneauSelectionne,
         });
         if (!resultat.ok) {
@@ -257,27 +281,14 @@ export function RendezVousModal({
 
           <div>
             <p className="mb-2 text-sm text-muted-foreground">Prestations</p>
-            <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
-              {prestations.map((p) => (
-                <label
-                  key={p.id}
-                  className="flex cursor-pointer items-center justify-between rounded-xl border border-border bg-surface px-3 py-2 text-sm"
-                >
-                  <span className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={prestationIds.includes(p.id)}
-                      onChange={() => toggle(p.id)}
-                    />
-                    {p.nom}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDuree(p.dureeMinutes)} · {formatPrix(p.prixCentimes)}
-                  </span>
-                </label>
-              ))}
-            </div>
-            {prestationIds.length > 0 && (
+            <PrestationChooser
+              prestations={prestations}
+              options={options}
+              lissageMatrice={lissageMatrice}
+              lignes={lignes}
+              onChange={setLignes}
+            />
+            {lignes.length > 0 && (
               <p className="mt-2 text-xs text-muted-foreground">
                 Durée {formatDuree(total.dureePrestations)} · Total{" "}
                 {formatPrix(total.prixTotalCentimes)}
@@ -286,7 +297,9 @@ export function RendezVousModal({
           </div>
 
           <div>
-            <p className="mb-2 text-sm text-muted-foreground">Date</p>
+            <p className="mb-2 text-sm text-muted-foreground">
+              Date{contientEnfant ? " (mercredi uniquement)" : ""}
+            </p>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {jours.map((jour) => {
                 const actif = dateSelectionnee?.toDateString() === jour.toDateString();
@@ -294,7 +307,7 @@ export function RendezVousModal({
                   <button
                     key={jour.toISOString()}
                     type="button"
-                    disabled={prestationIds.length === 0}
+                    disabled={!pretPourCreneau}
                     onClick={() => choisirDate(jour)}
                     className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs transition-colors disabled:opacity-40 ${
                       actif
@@ -385,7 +398,7 @@ export function RendezVousModal({
             <button
               type="button"
               onClick={enregistrer}
-              disabled={isPending || !creneauSelectionne || prestationIds.length === 0 || !clientPret}
+              disabled={isPending || !creneauSelectionne || !pretPourCreneau || !clientPret}
               className="rounded-full bg-primary px-6 py-2.5 text-sm text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 disabled:opacity-40"
             >
               {isPending ? "Enregistrement…" : modeEdition ? "Enregistrer" : "Créer le rendez-vous"}

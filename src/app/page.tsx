@@ -4,21 +4,28 @@ import { Footer } from "@/components/Footer";
 import { VideoCarousel } from "@/components/VideoCarousel";
 import { Reveal } from "@/components/Reveal";
 import { CategoryIcon } from "@/components/CategoryIcon";
-import { getPrestationsActives } from "@/lib/data";
-import { formatDuree, formatPrix } from "@/lib/prestations";
+import { ProfilIcon } from "@/components/ProfilIcon";
+import { getCatalogue } from "@/lib/data";
+import { formatDuree, formatPrix, prixAPartirDe } from "@/lib/prestations";
 import {
   DESCRIPTION_CATEGORIE,
   LABEL_CATEGORIE,
+  LABEL_PROFIL,
   ORDRE_CATEGORIES,
 } from "@/lib/categories";
 
 export default async function Home() {
-  const prestations = await getPrestationsActives();
+  const { prestations, lissageMatrice } = await getCatalogue();
 
-  const categories = ORDRE_CATEGORIES.map((categorie) => ({
-    categorie,
-    items: prestations.filter((p) => p.categorie === categorie),
-  })).filter((c) => c.items.length > 0);
+  const profils = ["FEMME", "HOMME", "ENFANT"]
+    .map((profil) => ({
+      profil,
+      categories: ORDRE_CATEGORIES.map((categorie) => ({
+        categorie,
+        items: prestations.filter((p) => p.profil === profil && p.categorie === categorie),
+      })).filter((c) => c.items.length > 0),
+    }))
+    .filter((p) => p.categories.length > 0);
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -66,52 +73,70 @@ export default async function Home() {
             </p>
           </Reveal>
 
-          <div className="grid gap-8 md:grid-cols-2">
-            {categories.map(({ categorie, items }, catIndex) => (
-              <Reveal
-                key={categorie}
-                delay={catIndex * 80}
-                className={items.length > 4 ? "md:col-span-2" : ""}
-              >
-                <div className="glass h-full rounded-3xl border border-white/50 p-8 sm:p-10">
-                  <div className="flex items-start gap-4">
-                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <CategoryIcon categorie={categorie} className="h-6 w-6" />
-                    </span>
-                    <div>
-                      <h3 className="font-serif text-2xl text-foreground">
-                        {LABEL_CATEGORIE[categorie] ?? categorie}
-                      </h3>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {DESCRIPTION_CATEGORIE[categorie]}
-                      </p>
-                    </div>
-                  </div>
+          <div className="space-y-16">
+            {profils.map(({ profil, categories }) => (
+              <div key={profil}>
+                <Reveal className="mb-6 flex items-center gap-3">
+                  <ProfilIcon profil={profil} className="h-6 w-6 text-primary" />
+                  <h3 className="font-serif text-2xl text-foreground sm:text-3xl">
+                    {LABEL_PROFIL[profil]}
+                  </h3>
+                </Reveal>
 
-                  <ul className="mt-7 grid gap-x-8 gap-y-1 sm:grid-cols-2">
-                    {items.map((p) => (
-                      <li
-                        key={p.id}
-                        className="flex items-baseline gap-2 border-b border-border/60 py-3.5 last:border-0 sm:[&:nth-last-child(-n+2)]:border-0"
-                      >
-                        <span className="font-serif text-base text-foreground">
-                          {p.nom}
-                        </span>
-                        <span
-                          aria-hidden
-                          className="mb-1 flex-1 border-b border-dotted border-muted-foreground/40"
-                        />
-                        <span className="whitespace-nowrap text-xs text-muted-foreground">
-                          {formatDuree(p.dureeMinutes)}
-                        </span>
-                        <span className="whitespace-nowrap font-medium text-primary">
-                          {formatPrix(p.prixCentimes)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="grid gap-6 sm:gap-8 md:grid-cols-2">
+                  {categories.map(({ categorie, items }, catIndex) => (
+                    <Reveal
+                      key={categorie}
+                      delay={catIndex * 60}
+                      className={items.length > 4 ? "md:col-span-2" : ""}
+                    >
+                      <div className="glass h-full rounded-3xl border border-white/50 p-6 sm:p-8 md:p-10">
+                        <div className="flex items-start gap-4">
+                          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                            <CategoryIcon categorie={categorie} className="h-6 w-6" />
+                          </span>
+                          <div>
+                            <h4 className="font-serif text-xl text-foreground sm:text-2xl">
+                              {LABEL_CATEGORIE[categorie] ?? categorie}
+                            </h4>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                              {DESCRIPTION_CATEGORIE[categorie]}
+                            </p>
+                          </div>
+                        </div>
+
+                        <ul className="mt-7 grid gap-x-8 gap-y-1 sm:grid-cols-2">
+                          {items.map((p) => {
+                            const varie = p.estLissage || p.variantesLongueur.length > 0;
+                            const prix = prixAPartirDe(p, lissageMatrice);
+                            return (
+                              <li
+                                key={p.id}
+                                className="flex items-baseline gap-2 border-b border-border/60 py-3.5 last:border-0 sm:[&:nth-last-child(-n+2)]:border-0"
+                              >
+                                <span className="font-serif text-base text-foreground">
+                                  {p.nom}
+                                </span>
+                                <span
+                                  aria-hidden
+                                  className="mb-1 flex-1 border-b border-dotted border-muted-foreground/40"
+                                />
+                                <span className="whitespace-nowrap text-xs text-muted-foreground">
+                                  {formatDuree(p.dureeMinutes)}
+                                </span>
+                                <span className="whitespace-nowrap font-medium text-primary">
+                                  {varie && "dès "}
+                                  {formatPrix(prix)}
+                                </span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    </Reveal>
+                  ))}
                 </div>
-              </Reveal>
+              </div>
             ))}
           </div>
         </section>

@@ -2,6 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { HORAIRES_SALON } from "@/lib/horaires";
+import type {
+  Densite,
+  Longueur,
+  OptionAvecVariantes,
+  PrestationAvecVariantes,
+} from "@/lib/prestations";
 
 const JOUR_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
 const HEURE_DEBUT = 9;
@@ -15,7 +21,12 @@ export type RendezVousCalendrier = {
   dateDebut: Date;
   dateFin: Date;
   client: { id: string; prenom: string; nom: string; telephone: string; email: string };
-  prestations: { prestation: { id: string; nom: string } }[];
+  prestations: {
+    prestation: PrestationAvecVariantes;
+    longueur?: Longueur | null;
+    densite?: Densite | null;
+    options: { option: OptionAvecVariantes }[];
+  }[];
 };
 
 function startOfWeek(date: Date): Date {

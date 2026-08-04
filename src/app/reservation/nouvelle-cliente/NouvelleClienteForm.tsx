@@ -1,10 +1,19 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import type { Prestation } from "@/generated/prisma";
-import { estJourOuvert } from "@/lib/horaires";
-import { calculerTotal, formatDuree, formatPrix } from "@/lib/prestations";
-import { LABEL_CATEGORIE } from "@/lib/categories";
+import { estJourOuvert, estMercredi } from "@/lib/horaires";
+import {
+  calculerTotalAvecOptions,
+  formatDuree,
+  formatPrix,
+  ligneEstComplete,
+  type LigneReservation,
+  type LissageTarifSimple,
+  type OptionAvecVariantes,
+  type PrestationAvecVariantes,
+} from "@/lib/prestations";
+import { PrestationChooser } from "../PrestationChooser";
+import type { LigneChoisie } from "@/lib/reservationLignes";
 import { creerDemandeNouvelleClienteAction, getCreneauxAction } from "../actions";
 
 type Step = "infos" | "prestations" | "creneau" | "envoyee";
@@ -21,7 +30,15 @@ function prochainsJours(nombre: number): Date[] {
   return jours;
 }
 
-export function NouvelleClienteForm({ prestations }: { prestations: Prestation[] }) {
+export function NouvelleClienteForm({
+  prestations,
+  options,
+  lissageMatrice,
+}: {
+  prestations: PrestationAvecVariantes[];
+  options: OptionAvecVariantes[];
+  lissageMatrice: LissageTarifSimple[];
+}) {
   const [step, setStep] = useState<Step>("infos");
   const [isPending, startTransition] = useTransition();
 
@@ -32,35 +49,37 @@ export function NouvelleClienteForm({ prestations }: { prestations: Prestation[]
   const [commentConnue, setCommentConnue] = useState("");
   const [message, setMessage] = useState("");
 
-  const [prestationIds, setPrestationIds] = useState<string[]>([]);
+  const [lignes, setLignes] = useState<LigneReservation[]>([]);
 
   const [dateSelectionnee, setDateSelectionnee] = useState<Date | null>(null);
   const [creneaux, setCreneaux] = useState<string[]>([]);
   const [creneauSelectionne, setCreneauSelectionne] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
 
-  const prestationsSelectionnees = useMemo(
-    () => prestations.filter((p) => prestationIds.includes(p.id)),
-    [prestations, prestationIds],
-  );
   const total = useMemo(
-    () => calculerTotal(prestationsSelectionnees),
-    [prestationsSelectionnees],
+    () => calculerTotalAvecOptions(lignes, lissageMatrice),
+    [lignes, lissageMatrice],
   );
+  const pretPourCreneau = lignes.length > 0 && lignes.every(ligneEstComplete);
+  const contientEnfant = lignes.some((l) => l.prestation.profil === "ENFANT");
 
-  const jours = useMemo(() => prochainsJours(21).filter(estJourOuvert), []);
+  const lignesChoisies: LigneChoisie[] = lignes.map((l) => ({
+    prestationId: l.prestation.id,
+    longueur: l.longueur,
+    densite: l.densite,
+    optionIds: l.options.map((o) => o.id),
+  }));
 
-  function togglePrestation(id: string) {
-    setPrestationIds((ids) =>
-      ids.includes(id) ? ids.filter((i) => i !== id) : [...ids, id],
-    );
-  }
+  const jours = useMemo(() => {
+    const base = prochainsJours(21).filter(estJourOuvert);
+    return contientEnfant ? base.filter(estMercredi) : base;
+  }, [contientEnfant]);
 
   function choisirDate(date: Date) {
     setDateSelectionnee(date);
     setCreneauSelectionne(null);
     startTransition(async () => {
-      const iso = await getCreneauxAction(date.toISOString(), prestationIds);
+      const iso = await getCreneauxAction(date.toISOString(), lignesChoisies);
       setCreneaux(iso);
     });
   }
@@ -76,7 +95,7 @@ export function NouvelleClienteForm({ prestations }: { prestations: Prestation[]
         email,
         commentConnue: commentConnue || undefined,
         message: message || undefined,
-        prestationIds,
+        lignes: lignesChoisies,
         dateDebutISO: creneauSelectionne,
       });
       if (!resultat.ok) {
@@ -179,34 +198,15 @@ export function NouvelleClienteForm({ prestations }: { prestations: Prestation[]
   if (step === "prestations") {
     return (
       <div className="space-y-6">
-        <div className="space-y-2">
-          {prestations.map((p) => (
-            <label
-              key={p.id}
-              className="flex cursor-pointer items-center justify-between glass rounded-xl border border-white/50 px-4 py-3 transition-colors hover:border-primary/40"
-            >
-              <span className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={prestationIds.includes(p.id)}
-                  onChange={() => togglePrestation(p.id)}
-                  className="h-4 w-4"
-                />
-                <span>
-                  <span className="block text-foreground">{p.nom}</span>
-                  <span className="block text-xs text-muted-foreground">
-                    {LABEL_CATEGORIE[p.categorie] ?? p.categorie}
-                  </span>
-                </span>
-              </span>
-              <span className="text-sm text-muted-foreground">
-                {formatDuree(p.dureeMinutes)} · {formatPrix(p.prixCentimes)}
-              </span>
-            </label>
-          ))}
-        </div>
+        <PrestationChooser
+          prestations={prestations}
+          options={options}
+          lissageMatrice={lissageMatrice}
+          lignes={lignes}
+          onChange={setLignes}
+        />
 
-        {prestationIds.length > 0 && (
+        {lignes.length > 0 && (
           <div className="rounded-xl bg-muted px-4 py-3 text-sm text-foreground">
             Durée totale {formatDuree(total.dureePrestations)} · Total{" "}
             {formatPrix(total.prixTotalCentimes)}
@@ -215,7 +215,7 @@ export function NouvelleClienteForm({ prestations }: { prestations: Prestation[]
 
         <button
           type="button"
-          disabled={prestationIds.length === 0}
+          disabled={!pretPourCreneau}
           onClick={() => setStep("creneau")}
           className="w-full rounded-full bg-primary px-6 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 disabled:opacity-40"
         >
@@ -229,7 +229,9 @@ export function NouvelleClienteForm({ prestations }: { prestations: Prestation[]
     return (
       <div className="space-y-6">
         <div>
-          <p className="mb-3 text-sm text-muted-foreground">Date souhaitée</p>
+          <p className="mb-3 text-sm text-muted-foreground">
+            Date souhaitée{contientEnfant ? " (mercredi uniquement)" : ""}
+          </p>
           <div className="flex gap-2 overflow-x-auto pb-2">
             {jours.map((jour) => {
               const actif = dateSelectionnee?.toDateString() === jour.toDateString();

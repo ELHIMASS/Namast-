@@ -2,7 +2,13 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCreneauxDisponibles } from "@/lib/creneaux";
-import { calculerTotal } from "@/lib/prestations";
+import { estMercredi } from "@/lib/horaires";
+import { calculerTotalAvecOptions } from "@/lib/prestations";
+import {
+  construireDonneesPrestations,
+  resoudreLignes,
+  type LigneChoisie,
+} from "@/lib/reservationLignes";
 
 function normaliserTelephone(telephone: string): string {
   return telephone.replace(/[\s.\-]/g, "");
@@ -23,15 +29,19 @@ export async function findClientByPhone(telephone: string) {
   };
 }
 
-async function creneauxPourDate(dateISO: string, prestationIds: string[]) {
-  const prestations = await prisma.prestation.findMany({
-    where: { id: { in: prestationIds } },
-  });
+async function creneauxPourLignes(dateISO: string, lignes: LigneChoisie[], excludeRendezVousId?: string) {
+  if (lignes.length === 0) return [];
 
+  const { prestations, lignesResolues, lissageMatrice } = await resoudreLignes(lignes);
   if (prestations.length === 0) return [];
 
-  const { dureeTotaleAvecNettoyage } = calculerTotal(prestations);
+  // Réservation mercredi uniquement pour les prestations enfants.
   const date = new Date(dateISO);
+  if (prestations.some((p) => p.profil === "ENFANT") && !estMercredi(date)) {
+    return [];
+  }
+
+  const { dureeTotaleAvecNettoyage } = calculerTotalAvecOptions(lignesResolues, lissageMatrice);
 
   const debutJournee = new Date(date);
   debutJournee.setHours(0, 0, 0, 0);
@@ -42,6 +52,7 @@ async function creneauxPourDate(dateISO: string, prestationIds: string[]) {
     where: {
       dateDebut: { gte: debutJournee, lte: finJournee },
       statut: { in: ["CONFIRME", "EN_ATTENTE"] },
+      ...(excludeRendezVousId ? { id: { not: excludeRendezVousId } } : {}),
     },
     select: { dateDebut: true, dateFin: true },
   });
@@ -53,34 +64,31 @@ async function creneauxPourDate(dateISO: string, prestationIds: string[]) {
   });
 }
 
-export async function getCreneauxAction(dateISO: string, prestationIds: string[]) {
-  const creneaux = await creneauxPourDate(dateISO, prestationIds);
+export async function getCreneauxAction(dateISO: string, lignes: LigneChoisie[]) {
+  const creneaux = await creneauxPourLignes(dateISO, lignes);
   return creneaux.map((d) => d.toISOString());
 }
 
 export async function creerRendezVousDirectAction({
   clientId,
-  prestationIds,
+  lignes,
   dateDebutISO,
 }: {
   clientId: string;
-  prestationIds: string[];
+  lignes: LigneChoisie[];
   dateDebutISO: string;
 }) {
-  const prestations = await prisma.prestation.findMany({
-    where: { id: { in: prestationIds } },
-  });
-
-  if (prestations.length === 0) {
+  if (lignes.length === 0) {
     return { ok: false as const, error: "Aucune prestation sélectionnée." };
   }
 
-  const { dureeTotaleAvecNettoyage } = calculerTotal(prestations);
+  const { lignesResolues, lissageMatrice } = await resoudreLignes(lignes);
+  const { dureeTotaleAvecNettoyage } = calculerTotalAvecOptions(lignesResolues, lissageMatrice);
   const dateDebut = new Date(dateDebutISO);
   const dateFin = new Date(dateDebut.getTime() + dureeTotaleAvecNettoyage * 60000);
 
   // Revérifie la disponibilité au moment de la confirmation (évite les doubles réservations).
-  const creneauxDispo = await creneauxPourDate(dateDebutISO, prestationIds);
+  const creneauxDispo = await creneauxPourLignes(dateDebutISO, lignes);
   const disponible = creneauxDispo.some((c) => c.getTime() === dateDebut.getTime());
   if (!disponible) {
     return {
@@ -97,7 +105,7 @@ export async function creerRendezVousDirectAction({
       dateDebut,
       dateFin,
       prestations: {
-        create: prestations.map((p, i) => ({ prestationId: p.id, ordre: i })),
+        create: construireDonneesPrestations(lignes),
       },
     },
   });
@@ -112,7 +120,7 @@ export async function creerDemandeNouvelleClienteAction({
   email,
   commentConnue,
   message,
-  prestationIds,
+  lignes,
   dateDebutISO,
 }: {
   nom: string;
@@ -121,18 +129,15 @@ export async function creerDemandeNouvelleClienteAction({
   email: string;
   commentConnue?: string;
   message?: string;
-  prestationIds: string[];
+  lignes: LigneChoisie[];
   dateDebutISO: string;
 }) {
-  const prestations = await prisma.prestation.findMany({
-    where: { id: { in: prestationIds } },
-  });
-
-  if (prestations.length === 0) {
+  if (lignes.length === 0) {
     return { ok: false as const, error: "Merci de choisir au moins une prestation." };
   }
 
-  const { dureeTotaleAvecNettoyage } = calculerTotal(prestations);
+  const { lignesResolues, lissageMatrice } = await resoudreLignes(lignes);
+  const { dureeTotaleAvecNettoyage } = calculerTotalAvecOptions(lignesResolues, lissageMatrice);
   const dateDebut = new Date(dateDebutISO);
   const dateFin = new Date(dateDebut.getTime() + dureeTotaleAvecNettoyage * 60000);
   const telephoneNormalise = normaliserTelephone(telephone);
@@ -158,7 +163,7 @@ export async function creerDemandeNouvelleClienteAction({
       dateFin,
       message: message || undefined,
       prestations: {
-        create: prestations.map((p, i) => ({ prestationId: p.id, ordre: i })),
+        create: construireDonneesPrestations(lignes),
       },
     },
   });

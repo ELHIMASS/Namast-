@@ -1,11 +1,11 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
-import { getPrestationsActives } from "@/lib/data";
+import { getCatalogue } from "@/lib/data";
 import { NouvelleClienteForm } from "./NouvelleClienteForm";
 
 export default async function NouvelleClientePage() {
-  const prestations = await getPrestationsActives();
+  const { prestations, options, lissageMatrice } = await getCatalogue();
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -21,7 +21,11 @@ export default async function NouvelleClientePage() {
           </p>
 
           <div className="mt-10">
-            <NouvelleClienteForm prestations={prestations} />
+            <NouvelleClienteForm
+              prestations={prestations}
+              options={options}
+              lissageMatrice={lissageMatrice}
+            />
           </div>
         </Reveal>
       </main>
