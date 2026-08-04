@@ -36,6 +36,24 @@ export function VideoCarousel() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const dragging = useRef(false);
   const startX = useRef(0);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+
+  // Pilotage manuel de la lecture : sur mobile, l'attribut React `autoPlay`
+  // n'est pas fiable (le navigateur vérifie que la vidéo est bien muette au
+  // moment précis où il évalue l'autorisation de lecture auto). On force
+  // `muted` en JS puis on appelle `.play()` nous-mêmes. On ne joue que la
+  // vidéo active, les autres sont en pause (économie de données mobiles).
+  useEffect(() => {
+    videoRefs.current.forEach((video, i) => {
+      if (!video) return;
+      if (i === index) {
+        video.muted = true;
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    });
+  }, [index]);
 
   const goTo = useCallback((i: number) => {
     setIndex(((i % SLIDES.length) + SLIDES.length) % SLIDES.length);
@@ -91,12 +109,15 @@ export function VideoCarousel() {
         >
           {slide.video ? (
             <video
+              ref={(el) => {
+                videoRefs.current[i] = el;
+              }}
               className="absolute inset-0 h-full w-full object-cover"
               src={slide.video}
-              autoPlay
               muted
               loop
               playsInline
+              preload={i === 0 ? "auto" : "metadata"}
             />
           ) : (
             <div className="motion-slide absolute inset-0" />
