@@ -38,10 +38,8 @@ export function VideoCarousel() {
   const startX = useRef(0);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
-  // Pilotage manuel de la lecture : sur mobile, l'attribut React `autoPlay`
-  // n'est pas fiable. On force `muted` en JS puis on appelle `.play()` nous-mêmes.
-  // On joue que la vidéo active, les autres sont en pause (économie de données).
-  // Avec connexion lente, on réessaie automatiquement quand les données arrivent.
+  // Sur mobile, l'autoplay est bloqué. On force play() en JS après interaction utilisateur
+  // ou après que la vidéo soit prête. Les autres vidéos sont en pause (économie données).
   useEffect(() => {
     const timeouts: NodeJS.Timeout[] = [];
 
@@ -53,31 +51,47 @@ export function VideoCarousel() {
         return;
       }
 
-      // Forcer muted pour autoriser l'autoplay
+      // S'assurer que la vidéo est muette (obligation pour autoplay)
       video.muted = true;
 
-      // Fonction pour essayer de lancer la vidéo avec retries
+      // Fonction pour lancer la vidéo avec retry
       const tryPlay = () => {
-        const playPromise = video.play();
-        if (playPromise && typeof playPromise.catch === "function") {
-          playPromise.catch(() => {
-            // En cas d'échec, réessayer une fois après un court délai
-            const timeout = setTimeout(() => {
+        const attempt = video.play();
+        if (attempt?.catch) {
+          attempt.catch(() => {
+            // Réessayer quand la vidéo a des données
+            const retry = () => {
               video.play().catch(() => {
-                // Réessayer quand la vidéo a assez de données
-                const handleLoadedData = () => {
+                // Dernier recours: réessayer encore
+                const timeout = setTimeout(() => {
                   video.play().catch(() => {});
-                };
-                video.addEventListener("loadeddata", handleLoadedData, { once: true });
-                video.addEventListener("canplay", handleLoadedData, { once: true });
+                }, 300);
+                timeouts.push(timeout);
               });
-            }, 200);
+            };
+
+            video.addEventListener("loadeddata", retry, { once: true });
+            video.addEventListener("canplay", retry, { once: true });
+
+            // Essayer aussi après un court délai
+            const timeout = setTimeout(retry, 100);
             timeouts.push(timeout);
           });
         }
       };
 
+      // Essayer immédiatement
       tryPlay();
+
+      // Essayer aussi au premier clic/interaction utilisateur
+      const handleInteraction = () => {
+        tryPlay();
+        document.removeEventListener("click", handleInteraction);
+        document.removeEventListener("touchstart", handleInteraction);
+      };
+
+      document.addEventListener("click", handleInteraction, { once: true });
+      document.addEventListener("touchstart", handleInteraction, { once: true });
     });
 
     return () => {
@@ -147,6 +161,7 @@ export function VideoCarousel() {
               muted
               loop
               playsInline
+              autoPlay={i === index}
               preload={i === index ? "auto" : i === (index + 1) % SLIDES.length ? "metadata" : "none"}
             />
           ) : (
