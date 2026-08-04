@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const HORAIRES = [
   { jour: "Lundi", heures: "13h30 – 18h00" },
   { jour: "Mardi", heures: "Fermé" },
@@ -9,32 +11,87 @@ const HORAIRES = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-border">
-      <div className="mx-auto max-w-5xl px-6 py-10 text-sm text-muted-foreground">
-        <p className="font-serif text-lg text-foreground">Namasté</p>
-        <p className="text-xs uppercase tracking-[0.25em] text-primary">
-          Coiffure &amp; bien-être
-        </p>
-        <p className="mt-3">Salon privé — fonctionne uniquement sur rendez-vous.</p>
-        <p className="mt-1">6 impasse des Prunelliers, 69720 Saint-Laurent-de-Mure</p>
+    <footer className="border-t border-border bg-background/50">
+      <div className="mx-auto max-w-5xl px-6 py-16">
+        {/* Contenu principal en grille */}
+        <div className="grid gap-12 md:grid-cols-3">
+          {/* Section Branding & Description */}
+          <div className="footer-section">
+            <p className="font-serif text-2xl font-medium text-foreground">Namasté</p>
+            <p className="mt-1 text-xs uppercase tracking-[0.25em] text-primary">
+              Coiffure &amp; bien-être
+            </p>
+            <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
+              Salon privé fonctionnant uniquement sur rendez-vous pour garantir une qualité de service optimale.
+            </p>
+          </div>
 
-        <div className="mt-6 max-w-xs">
-          <p className="mb-2 text-xs uppercase tracking-[0.2em] text-primary/80">
-            Horaires
+          {/* Section Localisation */}
+          <div className="footer-section">
+            <p className="text-xs uppercase tracking-[0.2em] font-medium text-foreground mb-4">
+              Localisation
+            </p>
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <div>
+                <p className="font-medium text-foreground text-xs uppercase tracking-[0.15em] mb-1">Adresse</p>
+                <p>6 impasse des Prunelliers</p>
+                <p>69720 Saint-Laurent-de-Mure</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Section Horaires */}
+          <div className="footer-section">
+            <p className="text-xs uppercase tracking-[0.2em] font-medium text-foreground mb-4">
+              Horaires d'ouverture
+            </p>
+            <ul className="space-y-2 text-sm">
+              {HORAIRES.map((h) => (
+                <li key={h.jour} className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">{h.jour}</span>
+                  <span className={`text-right ${h.heures === "Fermé" ? "italic text-muted-foreground/60" : "text-foreground font-medium"}`}>
+                    {h.heures}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Séparateur */}
+        <div className="my-8 h-px bg-border" />
+
+        {/* Liens légaux */}
+        <div className="mb-8 flex flex-wrap justify-center gap-4 sm:gap-6 text-xs">
+          <Link
+            href="/privacy"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Politique de Confidentialité
+          </Link>
+          <span className="text-border">•</span>
+          <Link
+            href="/legal"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Mentions Légales
+          </Link>
+          <span className="text-border">•</span>
+          <Link
+            href="/cookies"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Gestion des Cookies
+          </Link>
+        </div>
+
+        {/* Pied de page */}
+        <div className="flex flex-col items-center gap-4 text-center text-xs text-muted-foreground">
+          <p>© {new Date().getFullYear()} Namasté. Tous droits réservés.</p>
+          <p>Salon de coiffure privé sur rendez-vous</p>
+          <p className="text-[0.7rem] text-muted-foreground/50">
+            Réalisé par Ismail EL HIMASS
           </p>
-          <ul>
-            {HORAIRES.map((h) => (
-              <li
-                key={h.jour}
-                className="flex items-baseline justify-between gap-4 border-b border-border/60 py-1.5 last:border-0"
-              >
-                <span className="text-foreground">{h.jour}</span>
-                <span className={h.heures === "Fermé" ? "italic text-muted-foreground" : ""}>
-                  {h.heures}
-                </span>
-              </li>
-            ))}
-          </ul>
         </div>
       </div>
     </footer>

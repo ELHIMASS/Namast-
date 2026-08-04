@@ -5,6 +5,7 @@ import { VideoCarousel } from "@/components/VideoCarousel";
 import { Reveal } from "@/components/Reveal";
 import { CategoryIcon } from "@/components/CategoryIcon";
 import { ProfilIcon } from "@/components/ProfilIcon";
+import { HaircutIcons } from "@/components/HaircutIcons";
 import { getCatalogue } from "@/lib/data";
 import { formatDuree, formatPrix, prixAPartirDe } from "@/lib/prestations";
 import {
@@ -28,7 +29,8 @@ export default async function Home() {
     .filter((p) => p.categories.length > 0);
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    <div className="flex min-h-full flex-1 flex-col relative">
+      <HaircutIcons />
       <Header />
 
       <main className="flex-1">
@@ -39,7 +41,7 @@ export default async function Home() {
             <span className="text-sm uppercase tracking-[0.3em] text-muted-foreground">
               Salon privé
             </span>
-            <h1 className="font-serif text-4xl leading-tight text-foreground sm:text-5xl">
+            <h1 className="font-serif text-4xl leading-tight sm:text-5xl gradient-text animate-gradient">
               Coiffure, couleur &amp; bien-être, sur mesure
             </h1>
             <p className="max-w-xl text-lg text-muted-foreground">
@@ -49,7 +51,7 @@ export default async function Home() {
             </p>
             <Link
               href="/reservation"
-              className="mt-2 rounded-full bg-primary px-8 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95"
+              className="mt-2 rounded-full bg-primary px-8 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 btn-hover animate-bounce-subtle"
             >
               Prendre rendez-vous
             </Link>
@@ -58,8 +60,8 @@ export default async function Home() {
 
         <section className="relative mx-auto max-w-5xl px-6 py-24">
           <Reveal className="mb-16 flex flex-col items-center text-center">
-            <span className="font-serif text-4xl italic text-primary/70">Le menu</span>
-            <h2 className="mt-2 font-serif text-3xl text-foreground sm:text-4xl">
+            <span className="font-serif text-4xl italic text-primary/70 animate-text-glow">Le menu</span>
+            <h2 className="mt-2 font-serif text-3xl sm:text-4xl gradient-text animate-gradient">
               Nos prestations
             </h2>
             <div className="mt-5 flex items-center gap-3 text-primary/50">
@@ -90,48 +92,46 @@ export default async function Home() {
                       delay={catIndex * 60}
                       className={items.length > 4 ? "md:col-span-2" : ""}
                     >
-                      <div className="glass h-full rounded-3xl border border-white/50 p-6 sm:p-8 md:p-10">
-                        <div className="flex items-start gap-4">
-                          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                            <CategoryIcon categorie={categorie} className="h-6 w-6" />
+                      <div className="glass h-full rounded-3xl border border-white/50 p-6 sm:p-8 md:p-10 card-hover">
+                        <div className="flex items-start gap-4 pb-6 border-b border-border/40">
+                          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                            <CategoryIcon categorie={categorie} className="h-7 w-7" />
                           </span>
-                          <div>
-                            <h4 className="font-serif text-xl text-foreground sm:text-2xl">
+                          <div className="flex-1">
+                            <h4 className="font-serif text-2xl text-foreground sm:text-3xl">
                               {LABEL_CATEGORIE[categorie] ?? categorie}
                             </h4>
-                            <p className="mt-1 text-sm text-muted-foreground">
+                            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                               {DESCRIPTION_CATEGORIE[categorie]}
                             </p>
                           </div>
                         </div>
 
-                        <ul className="mt-7 grid gap-x-8 gap-y-1 sm:grid-cols-2">
+                        <div className="mt-6 space-y-4">
                           {items.map((p) => {
                             const varie = p.estLissage || p.variantesLongueur.length > 0;
                             const prix = prixAPartirDe(p, lissageMatrice);
                             return (
-                              <li
+                              <div
                                 key={p.id}
-                                className="flex items-baseline gap-2 border-b border-border/60 py-3.5 last:border-0 sm:[&:nth-last-child(-n+2)]:border-0"
+                                className="flex flex-col gap-2 pb-4 border-b border-border/30 last:border-0 last:pb-0"
                               >
-                                <span className="font-serif text-base text-foreground">
-                                  {p.nom}
+                                <div className="flex items-baseline justify-between gap-3 service-item">
+                                  <span className="font-serif font-medium text-base text-foreground">
+                                    {p.nom}
+                                  </span>
+                                  <span className="whitespace-nowrap text-sm font-semibold text-primary animate-float price-highlight">
+                                    {varie && "dès "}
+                                    {formatPrix(prix)}
+                                  </span>
+                                </div>
+                                <span className="text-xs text-muted-foreground">
+                                  Durée: {formatDuree(p.dureeMinutes)}
                                 </span>
-                                <span
-                                  aria-hidden
-                                  className="mb-1 flex-1 border-b border-dotted border-muted-foreground/40"
-                                />
-                                <span className="whitespace-nowrap text-xs text-muted-foreground">
-                                  {formatDuree(p.dureeMinutes)}
-                                </span>
-                                <span className="whitespace-nowrap font-medium text-primary">
-                                  {varie && "dès "}
-                                  {formatPrix(prix)}
-                                </span>
-                              </li>
+                              </div>
                             );
                           })}
-                        </ul>
+                        </div>
                       </div>
                     </Reveal>
                   ))}
@@ -143,7 +143,7 @@ export default async function Home() {
 
         <Reveal className="glass border-t border-white/40">
           <div className="mx-auto max-w-3xl px-6 py-20 text-center">
-            <h2 className="font-serif text-3xl text-foreground">
+            <h2 className="font-serif text-3xl gradient-text animate-gradient">
               Déjà cliente ou nouvelle venue ?
             </h2>
             <p className="mt-3 text-muted-foreground">
@@ -153,13 +153,13 @@ export default async function Home() {
             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
               <Link
                 href="/reservation/ancienne-cliente"
-                className="rounded-full bg-primary px-8 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95"
+                className="rounded-full bg-primary px-8 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 btn-hover"
               >
                 Je suis déjà cliente
               </Link>
               <Link
                 href="/reservation/nouvelle-cliente"
-                className="rounded-full border border-primary px-8 py-3 text-foreground transition-all duration-300 hover:bg-primary hover:text-primary-foreground active:scale-95"
+                className="rounded-full border border-primary px-8 py-3 text-foreground transition-all duration-300 hover:bg-primary hover:text-primary-foreground active:scale-95 btn-hover"
               >
                 Je suis une nouvelle cliente
               </Link>
