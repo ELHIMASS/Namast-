@@ -152,9 +152,15 @@ export function VideoCarousel() {
               autoPlay={i === index}
               preload={i === index ? "auto" : i === (index + 1) % SLIDES.length ? "metadata" : "none"}
               onEnded={() => {
-                if (i === index) {
+                if (i === index && !dragging.current) {
                   goTo(index + 1);
                   resetTimer();
+                }
+              }}
+              onTimeUpdate={() => {
+                // S'assurer que les autres vidéos sont bien en pause
+                if (i !== index && !videoRefs.current[i]?.paused) {
+                  videoRefs.current[i]?.pause();
                 }
               }}
             />
