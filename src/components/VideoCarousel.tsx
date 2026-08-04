@@ -38,9 +38,17 @@ export function VideoCarousel() {
   const startX = useRef(0);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
-  // Forcer l'autoplay agressivement - retry constant jusqu'à succès
+  // ULTRA FORCE: Autoplay en permanence, retry CONSTANT
   useEffect(() => {
     const intervals: NodeJS.Timeout[] = [];
+    let rafId: number | null = null;
+
+    const tryPlayVideo = (video: HTMLVideoElement) => {
+      if (video.paused) {
+        video.muted = true;
+        video.play().catch(() => {});
+      }
+    };
 
     videoRefs.current.forEach((video, i) => {
       if (!video) return;
@@ -53,53 +61,51 @@ export function VideoCarousel() {
       video.muted = true;
       video.playsInline = true;
 
-      // Fonction pour essayer de jouer la vidéo
-      const tryPlay = () => {
-        if (!video.paused) return; // Déjà en train de jouer
-
-        video.play().catch(() => {
-          // Ignore l'erreur, on va réessayer
-        });
-      };
-
       // Essayer immédiatement
-      tryPlay();
+      tryPlayVideo(video);
 
-      // Retry AGRESSIF: essayer toutes les 50ms pendant 10 secondes
-      let attempts = 0;
+      // Retry ULTRA AGRESSIF: toutes les 10ms INDÉFINIMENT
+      const ultraInterval = setInterval(() => {
+        tryPlayVideo(video);
+      }, 10);
+      intervals.push(ultraInterval);
+
+      // Aussi toutes les 100ms pour plus de force
       const interval = setInterval(() => {
-        if (!video.paused) {
-          // Vidéo joue, arrêter les retries
-          clearInterval(interval);
-          return;
-        }
-
-        if (attempts > 200) {
-          // Après 10 secondes, arrêter
-          clearInterval(interval);
-          return;
-        }
-
-        tryPlay();
-        attempts++;
-      }, 50);
-
+        tryPlayVideo(video);
+      }, 100);
       intervals.push(interval);
 
-      // Aussi essayer aux événements
-      const handlers = {
-        loadeddata: tryPlay,
-        canplay: tryPlay,
-        canplaythrough: tryPlay,
+      // Essayer aussi à chaque frame (60fps)
+      const loop = () => {
+        tryPlayVideo(video);
+        rafId = requestAnimationFrame(loop);
       };
+      rafId = requestAnimationFrame(loop);
 
-      Object.entries(handlers).forEach(([event, handler]) => {
-        video.addEventListener(event, handler as EventListener);
+      // Écouter TOUS les événements possibles
+      ["loadstart", "progress", "loadedmetadata", "loadeddata", "canplay", "canplaythrough", "playing", "play"].forEach(
+        (event) => {
+          video.addEventListener(event, () => tryPlayVideo(video));
+        }
+      );
+
+      // Aussi sur visibility change
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+          tryPlayVideo(video);
+        }
+      });
+
+      // Et on focus
+      window.addEventListener("focus", () => {
+        tryPlayVideo(video);
       });
     });
 
     return () => {
-      intervals.forEach(interval => clearInterval(interval));
+      intervals.forEach((interval) => clearInterval(interval));
+      if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, [index]);
 
