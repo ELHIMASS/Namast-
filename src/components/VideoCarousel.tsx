@@ -38,26 +38,9 @@ export function VideoCarousel() {
   const startX = useRef(0);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
-  // Forcer l'autoplay: immédiat au chargement, avec retry
+  // Forcer l'autoplay agressivement - retry constant jusqu'à succès
   useEffect(() => {
-    const timeouts: NodeJS.Timeout[] = [];
-    let hasStartedPlayback = false;
-
-    // Détecter interaction et forcer play
-    const enableAutoplay = () => {
-      if (hasStartedPlayback) return;
-      hasStartedPlayback = true;
-
-      const video = videoRefs.current[index];
-      if (video && video.paused) {
-        video.muted = true;
-        video.play().catch(() => {});
-      }
-
-      document.removeEventListener("scroll", enableAutoplay, true);
-      document.removeEventListener("touchstart", enableAutoplay, true);
-      document.removeEventListener("click", enableAutoplay, true);
-    };
+    const intervals: NodeJS.Timeout[] = [];
 
     videoRefs.current.forEach((video, i) => {
       if (!video) return;
@@ -70,31 +53,53 @@ export function VideoCarousel() {
       video.muted = true;
       video.playsInline = true;
 
-      // Essayer de lancer immédiatement
-      const playAttempt = video.play();
-      if (playAttempt && typeof playAttempt.catch === "function") {
-        playAttempt.catch(() => {
-          // Si fail (mobile), attendre interaction user
-          document.addEventListener("scroll", enableAutoplay, true);
-          document.addEventListener("touchstart", enableAutoplay, true);
-          document.addEventListener("click", enableAutoplay, true);
-        });
-      }
+      // Fonction pour essayer de jouer la vidéo
+      const tryPlay = () => {
+        if (!video.paused) return; // Déjà en train de jouer
 
-      // Aussi essayer au chargement des données
-      const onCanPlay = () => {
-        if (!hasStartedPlayback && video.paused) {
-          video.play().catch(() => {});
-        }
+        video.play().catch(() => {
+          // Ignore l'erreur, on va réessayer
+        });
       };
-      video.addEventListener("canplay", onCanPlay);
+
+      // Essayer immédiatement
+      tryPlay();
+
+      // Retry AGRESSIF: essayer toutes les 50ms pendant 10 secondes
+      let attempts = 0;
+      const interval = setInterval(() => {
+        if (!video.paused) {
+          // Vidéo joue, arrêter les retries
+          clearInterval(interval);
+          return;
+        }
+
+        if (attempts > 200) {
+          // Après 10 secondes, arrêter
+          clearInterval(interval);
+          return;
+        }
+
+        tryPlay();
+        attempts++;
+      }, 50);
+
+      intervals.push(interval);
+
+      // Aussi essayer aux événements
+      const handlers = {
+        loadeddata: tryPlay,
+        canplay: tryPlay,
+        canplaythrough: tryPlay,
+      };
+
+      Object.entries(handlers).forEach(([event, handler]) => {
+        video.addEventListener(event, handler as EventListener);
+      });
     });
 
     return () => {
-      document.removeEventListener("scroll", enableAutoplay, true);
-      document.removeEventListener("touchstart", enableAutoplay, true);
-      document.removeEventListener("click", enableAutoplay, true);
-      timeouts.forEach(timeout => clearTimeout(timeout));
+      intervals.forEach(interval => clearInterval(interval));
     };
   }, [index]);
 
