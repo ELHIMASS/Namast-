@@ -209,18 +209,20 @@ export function RendezVousModal({
 
         <div className="mt-6 space-y-6">
           {modeEdition && rendezVous ? (
-            <p className="text-sm text-foreground">
-              Cliente :{" "}
-              <span className="font-medium">
-                {rendezVous.client.prenom} {rendezVous.client.nom}
-              </span>{" "}
-              <span className="text-muted-foreground">({rendezVous.client.telephone})</span>
-            </p>
+            <div className="rounded-lg bg-muted/40 p-3">
+              <p className="text-sm">
+                <span className="font-semibold text-foreground">Cliente:</span>{" "}
+                <span className="font-medium text-foreground">
+                  {rendezVous.client.prenom} {rendezVous.client.nom}
+                </span>{" "}
+                <span className="text-xs text-muted-foreground">({rendezVous.client.telephone})</span>
+              </p>
+            </div>
           ) : (
             <div>
-              <label className="block text-sm text-foreground">
+              <label className="block text-sm font-semibold text-foreground">
                 Téléphone de la cliente
-                <div className="mt-1 flex gap-2">
+                <div className="mt-2 flex gap-2">
                   <input
                     value={telephone}
                     onChange={(e) => {
@@ -280,7 +282,7 @@ export function RendezVousModal({
           )}
 
           <div>
-            <p className="mb-2 text-sm text-muted-foreground">Prestations</p>
+            <p className="mb-3 text-sm font-semibold text-foreground">Prestations</p>
             <PrestationChooser
               prestations={prestations}
               options={options}
@@ -289,15 +291,17 @@ export function RendezVousModal({
               onChange={setLignes}
             />
             {lignes.length > 0 && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                Durée {formatDuree(total.dureePrestations)} · Total{" "}
-                {formatPrix(total.prixTotalCentimes)}
-              </p>
+              <div className="mt-3 flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2">
+                <span className="text-xs text-muted-foreground">Durée</span>
+                <span className="font-medium text-foreground">{formatDuree(total.dureePrestations)}</span>
+                <span className="text-xs text-muted-foreground ml-4">Total</span>
+                <span className="font-bold text-primary">{formatPrix(total.prixTotalCentimes)}</span>
+              </div>
             )}
           </div>
 
           <div>
-            <p className="mb-2 text-sm text-muted-foreground">
+            <p className="mb-3 text-sm font-semibold text-foreground">
               Date{contientEnfant ? " (mercredi uniquement)" : ""}
             </p>
             <div className="flex gap-2 overflow-x-auto pb-1">
@@ -328,7 +332,7 @@ export function RendezVousModal({
 
           {dateSelectionnee && (
             <div>
-              <p className="mb-2 text-sm text-muted-foreground">Horaire</p>
+              <p className="mb-3 text-sm font-semibold text-foreground">Horaire</p>
               <div className="flex flex-wrap gap-2">
                 {creneaux.map((iso) => {
                   const actif = creneauSelectionne === iso;
@@ -359,7 +363,11 @@ export function RendezVousModal({
             </div>
           )}
 
-          {erreur && <p className="text-sm text-rose-700">{erreur}</p>}
+          {erreur && (
+            <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 p-3">
+              <p className="text-sm text-rose-700 font-medium">{erreur}</p>
+            </div>
+          )}
 
           <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-5">
             {modeEdition ? (
