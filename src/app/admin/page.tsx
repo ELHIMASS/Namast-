@@ -4,6 +4,11 @@ import { getPrestationsActives } from "@/lib/data";
 import { AdminDashboard } from "./AdminDashboard";
 import { getDemandesEnAttente, getRendezVousConfirmes, logoutAdminAction } from "./actions";
 
+// Toujours régénérée au moment de la requête : sans ça, Netlify servirait
+// une page figée avec les données du dernier build (les nouvelles demandes
+// n'apparaîtraient jamais sans redéployer).
+export const dynamic = "force-dynamic";
+
 export default async function AdminPage() {
   const [demandes, confirmes, prestations] = await Promise.all([
     getDemandesEnAttente(),
