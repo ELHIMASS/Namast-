@@ -43,14 +43,30 @@ export function VideoCarousel() {
   // moment précis où il évalue l'autorisation de lecture auto). On force
   // `muted` en JS puis on appelle `.play()` nous-mêmes. On ne joue que la
   // vidéo active, les autres sont en pause (économie de données mobiles).
+  //
+  // Sur une connexion mobile lente, le tout premier appel à .play() peut
+  // échouer simplement parce qu'aucune donnée n'a encore été chargée (pas
+  // un blocage de politique du navigateur) — sans nouvelle tentative, la
+  // vidéo reste bloquée en pause pour toujours. On réessaie donc dès que
+  // la vidéo signale qu'elle a assez de données pour démarrer.
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
       if (!video) return;
-      if (i === index) {
-        video.muted = true;
-        video.play().catch(() => {});
-      } else {
+      if (i !== index) {
         video.pause();
+        return;
+      }
+
+      video.muted = true;
+      const tentative = video.play();
+      if (tentative && typeof tentative.catch === "function") {
+        tentative.catch(() => {
+          const reessayer = () => {
+            video.play().catch(() => {});
+          };
+          video.addEventListener("loadeddata", reessayer, { once: true });
+          video.addEventListener("canplay", reessayer, { once: true });
+        });
       }
     });
   }, [index]);
