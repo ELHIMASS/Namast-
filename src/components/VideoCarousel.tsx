@@ -39,36 +39,50 @@ export function VideoCarousel() {
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
   // Pilotage manuel de la lecture : sur mobile, l'attribut React `autoPlay`
-  // n'est pas fiable (le navigateur vérifie que la vidéo est bien muette au
-  // moment précis où il évalue l'autorisation de lecture auto). On force
-  // `muted` en JS puis on appelle `.play()` nous-mêmes. On ne joue que la
-  // vidéo active, les autres sont en pause (économie de données mobiles).
-  //
-  // Sur une connexion mobile lente, le tout premier appel à .play() peut
-  // échouer simplement parce qu'aucune donnée n'a encore été chargée (pas
-  // un blocage de politique du navigateur) — sans nouvelle tentative, la
-  // vidéo reste bloquée en pause pour toujours. On réessaie donc dès que
-  // la vidéo signale qu'elle a assez de données pour démarrer.
+  // n'est pas fiable. On force `muted` en JS puis on appelle `.play()` nous-mêmes.
+  // On joue que la vidéo active, les autres sont en pause (économie de données).
+  // Avec connexion lente, on réessaie automatiquement quand les données arrivent.
   useEffect(() => {
+    const timeouts: NodeJS.Timeout[] = [];
+
     videoRefs.current.forEach((video, i) => {
       if (!video) return;
+
       if (i !== index) {
         video.pause();
         return;
       }
 
+      // Forcer muted pour autoriser l'autoplay
       video.muted = true;
-      const tentative = video.play();
-      if (tentative && typeof tentative.catch === "function") {
-        tentative.catch(() => {
-          const reessayer = () => {
-            video.play().catch(() => {});
-          };
-          video.addEventListener("loadeddata", reessayer, { once: true });
-          video.addEventListener("canplay", reessayer, { once: true });
-        });
-      }
+
+      // Fonction pour essayer de lancer la vidéo avec retries
+      const tryPlay = () => {
+        const playPromise = video.play();
+        if (playPromise && typeof playPromise.catch === "function") {
+          playPromise.catch(() => {
+            // En cas d'échec, réessayer une fois après un court délai
+            const timeout = setTimeout(() => {
+              video.play().catch(() => {
+                // Réessayer quand la vidéo a assez de données
+                const handleLoadedData = () => {
+                  video.play().catch(() => {});
+                };
+                video.addEventListener("loadeddata", handleLoadedData, { once: true });
+                video.addEventListener("canplay", handleLoadedData, { once: true });
+              });
+            }, 200);
+            timeouts.push(timeout);
+          });
+        }
+      };
+
+      tryPlay();
     });
+
+    return () => {
+      timeouts.forEach(timeout => clearTimeout(timeout));
+    };
   }, [index]);
 
   const goTo = useCallback((i: number) => {
@@ -133,7 +147,7 @@ export function VideoCarousel() {
               muted
               loop
               playsInline
-              preload={i === 0 ? "auto" : "metadata"}
+              preload={i === index ? "auto" : i === (index + 1) % SLIDES.length ? "metadata" : "none"}
             />
           ) : (
             <div className="motion-slide absolute inset-0" />
