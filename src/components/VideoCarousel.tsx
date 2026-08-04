@@ -38,16 +38,26 @@ export function VideoCarousel() {
   const startX = useRef(0);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
-  // ULTRA FORCE: Autoplay en permanence, retry CONSTANT
+  // Autoplay au 1er scroll/interaction utilisateur
   useEffect(() => {
-    const intervals: NodeJS.Timeout[] = [];
-    let rafId: number | null = null;
+    let hasStarted = false;
 
-    const tryPlayVideo = (video: HTMLVideoElement) => {
-      if (video.paused) {
+    const startPlayback = () => {
+      if (hasStarted) return;
+      hasStarted = true;
+
+      const video = videoRefs.current[index];
+      if (video && video.paused) {
         video.muted = true;
         video.play().catch(() => {});
       }
+
+      // Retirer les listeners une fois déclenché
+      document.removeEventListener("scroll", startPlayback, true);
+      document.removeEventListener("touchstart", startPlayback, true);
+      document.removeEventListener("touchmove", startPlayback, true);
+      document.removeEventListener("click", startPlayback, true);
+      window.removeEventListener("touchend", startPlayback, true);
     };
 
     videoRefs.current.forEach((video, i) => {
@@ -60,52 +70,21 @@ export function VideoCarousel() {
 
       video.muted = true;
       video.playsInline = true;
-
-      // Essayer immédiatement
-      tryPlayVideo(video);
-
-      // Retry ULTRA AGRESSIF: toutes les 10ms INDÉFINIMENT
-      const ultraInterval = setInterval(() => {
-        tryPlayVideo(video);
-      }, 10);
-      intervals.push(ultraInterval);
-
-      // Aussi toutes les 100ms pour plus de force
-      const interval = setInterval(() => {
-        tryPlayVideo(video);
-      }, 100);
-      intervals.push(interval);
-
-      // Essayer aussi à chaque frame (60fps)
-      const loop = () => {
-        tryPlayVideo(video);
-        rafId = requestAnimationFrame(loop);
-      };
-      rafId = requestAnimationFrame(loop);
-
-      // Écouter TOUS les événements possibles
-      ["loadstart", "progress", "loadedmetadata", "loadeddata", "canplay", "canplaythrough", "playing", "play"].forEach(
-        (event) => {
-          video.addEventListener(event, () => tryPlayVideo(video));
-        }
-      );
-
-      // Aussi sur visibility change
-      document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") {
-          tryPlayVideo(video);
-        }
-      });
-
-      // Et on focus
-      window.addEventListener("focus", () => {
-        tryPlayVideo(video);
-      });
     });
 
+    // Écouter le 1er scroll/interaction
+    document.addEventListener("scroll", startPlayback, { capture: true, once: true });
+    document.addEventListener("touchstart", startPlayback, { capture: true, once: true });
+    document.addEventListener("touchmove", startPlayback, { capture: true, once: true });
+    document.addEventListener("click", startPlayback, { capture: true, once: true });
+    window.addEventListener("touchend", startPlayback, { once: true });
+
     return () => {
-      intervals.forEach((interval) => clearInterval(interval));
-      if (rafId !== null) cancelAnimationFrame(rafId);
+      document.removeEventListener("scroll", startPlayback, true);
+      document.removeEventListener("touchstart", startPlayback, true);
+      document.removeEventListener("touchmove", startPlayback, true);
+      document.removeEventListener("click", startPlayback, true);
+      window.removeEventListener("touchend", startPlayback, true);
     };
   }, [index]);
 
