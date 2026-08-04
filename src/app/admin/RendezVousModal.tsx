@@ -190,7 +190,7 @@ export function RendezVousModal({
       onClick={onClose}
     >
       <div
-        className="glass max-h-full w-full max-w-lg overflow-y-auto rounded-3xl border border-white/60 bg-surface/95 p-6 sm:p-8"
+        className="max-h-full w-full max-w-lg overflow-y-auto rounded-3xl border border-border bg-surface p-6 sm:p-8 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
