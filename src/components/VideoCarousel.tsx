@@ -38,10 +38,29 @@ export function VideoCarousel() {
   const startX = useRef(0);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
-  // Sur mobile, l'autoplay est bloqué. On force play() en JS après interaction utilisateur
-  // ou après que la vidéo soit prête. Les autres vidéos sont en pause (économie données).
+  // Forcer l'autoplay: immédiat sur desktop, au 1er scroll/interaction sur mobile
   useEffect(() => {
     const timeouts: NodeJS.Timeout[] = [];
+    let hasUserInteracted = false;
+
+    // Détecter la première interaction utilisateur
+    const enableAutoplay = () => {
+      if (hasUserInteracted) return;
+      hasUserInteracted = true;
+
+      videoRefs.current.forEach((video) => {
+        if (video && video.paused) {
+          video.muted = true;
+          video.play().catch(() => {});
+        }
+      });
+
+      // Retirer les listeners
+      document.removeEventListener("scroll", enableAutoplay, true);
+      document.removeEventListener("touchstart", enableAutoplay, true);
+      document.removeEventListener("touchmove", enableAutoplay, true);
+      document.removeEventListener("click", enableAutoplay, true);
+    };
 
     videoRefs.current.forEach((video, i) => {
       if (!video) return;
@@ -51,50 +70,32 @@ export function VideoCarousel() {
         return;
       }
 
-      // S'assurer que la vidéo est muette (obligation pour autoplay)
       video.muted = true;
+      video.playsInline = true;
 
-      // Fonction pour lancer la vidéo avec retry
-      const tryPlay = () => {
-        const attempt = video.play();
-        if (attempt?.catch) {
-          attempt.catch(() => {
-            // Réessayer quand la vidéo a des données
-            const retry = () => {
-              video.play().catch(() => {
-                // Dernier recours: réessayer encore
-                const timeout = setTimeout(() => {
-                  video.play().catch(() => {});
-                }, 300);
-                timeouts.push(timeout);
-              });
-            };
+      // Essayer de lancer immédiatement (desktop)
+      video.play().catch(() => {
+        // Si fail (mobile), attendre interaction user
+        document.addEventListener("scroll", enableAutoplay, true);
+        document.addEventListener("touchstart", enableAutoplay, true);
+        document.addEventListener("touchmove", enableAutoplay, true);
+        document.addEventListener("click", enableAutoplay, true);
+      });
 
-            video.addEventListener("loadeddata", retry, { once: true });
-            video.addEventListener("canplay", retry, { once: true });
-
-            // Essayer aussi après un court délai
-            const timeout = setTimeout(retry, 100);
-            timeouts.push(timeout);
-          });
+      // Aussi essayer au chargement
+      const onLoadedData = () => {
+        if (!hasUserInteracted) {
+          video.play().catch(() => {});
         }
       };
-
-      // Essayer immédiatement
-      tryPlay();
-
-      // Essayer aussi au premier clic/interaction utilisateur
-      const handleInteraction = () => {
-        tryPlay();
-        document.removeEventListener("click", handleInteraction);
-        document.removeEventListener("touchstart", handleInteraction);
-      };
-
-      document.addEventListener("click", handleInteraction, { once: true });
-      document.addEventListener("touchstart", handleInteraction, { once: true });
+      video.addEventListener("loadeddata", onLoadedData);
     });
 
     return () => {
+      document.removeEventListener("scroll", enableAutoplay, true);
+      document.removeEventListener("touchstart", enableAutoplay, true);
+      document.removeEventListener("touchmove", enableAutoplay, true);
+      document.removeEventListener("click", enableAutoplay, true);
       timeouts.forEach(timeout => clearTimeout(timeout));
     };
   }, [index]);
