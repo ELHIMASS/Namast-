@@ -16,12 +16,20 @@ import type { RendezVousCalendrier } from "@/components/WeekCalendar";
 import { PrestationChooser } from "../reservation/PrestationChooser";
 import type { LigneChoisie } from "@/lib/reservationLignes";
 import {
-  chercherClientParTelephoneAction,
+  chercherClientsParNomAction,
   creerRendezVousAdminAction,
   getCreneauxAdminAction,
   modifierRendezVousAction,
   supprimerRendezVousAction,
 } from "./actions";
+
+type ClientResume = {
+  id: string;
+  nom: string;
+  prenom: string;
+  telephone: string;
+  email: string;
+};
 
 function prochainsJours(nombre: number): Date[] {
   const jours: Date[] = [];
@@ -52,15 +60,18 @@ export function RendezVousModal({
 }) {
   const modeEdition = !!rendezVous;
 
+  // La cliente se retrouve par son nom ou son prénom. Le téléphone n'est
+  // demandé que pour créer une fiche : il sert de clé unique en base et
+  // permet à la cliente d'accéder ensuite à son espace.
+  const [recherche, setRecherche] = useState("");
+  const [resultats, setResultats] = useState<ClientResume[] | null>(
+    modeEdition ? [] : null,
+  );
+  const [creationManuelle, setCreationManuelle] = useState(false);
   const [telephone, setTelephone] = useState(rendezVous?.client.telephone ?? "");
-  const [rechercheEffectuee, setRechercheEffectuee] = useState(modeEdition);
-  const [clientTrouve, setClientTrouve] = useState<{
-    id: string;
-    nom: string;
-    prenom: string;
-    telephone: string;
-    email: string;
-  } | null>(rendezVous?.client ?? null);
+  const [clientTrouve, setClientTrouve] = useState<ClientResume | null>(
+    rendezVous?.client ?? null,
+  );
   const [nom, setNom] = useState(rendezVous?.client.nom ?? "");
   const [prenom, setPrenom] = useState(rendezVous?.client.prenom ?? "");
   const [email, setEmail] = useState(rendezVous?.client.email ?? "");
@@ -127,21 +138,40 @@ export function RendezVousModal({
 
   function chercherClient() {
     setErreur(null);
+    setClientTrouve(null);
+    setCreationManuelle(false);
     startTransition(async () => {
-      const c = await chercherClientParTelephoneAction(telephone);
-      setRechercheEffectuee(true);
-      setClientTrouve(c);
-      if (c) {
-        setNom(c.nom);
-        setPrenom(c.prenom);
-        setEmail(c.email);
-      }
+      const trouves = await chercherClientsParNomAction(recherche);
+      setResultats(trouves);
+      // Un seul résultat : on le retient d'office, c'est le cas courant.
+      if (trouves.length === 1) choisirClient(trouves[0]);
     });
+  }
+
+  function choisirClient(client: ClientResume) {
+    setClientTrouve(client);
+    setNom(client.nom);
+    setPrenom(client.prenom);
+    setEmail(client.email);
+    setTelephone(client.telephone);
+  }
+
+  /** Prépare la création d'une fiche à partir de ce qui a été tapé. */
+  function preparerCreation() {
+    const termes = recherche.trim().split(/\s+/).filter(Boolean);
+    setPrenom((actuel) => actuel || termes[0] || "");
+    setNom((actuel) => actuel || termes.slice(1).join(" "));
+    setCreationManuelle(true);
   }
 
   const clientPret =
     modeEdition ||
-    (rechercheEffectuee && (!!clientTrouve || (nom.trim() && prenom.trim() && email.trim())));
+    !!clientTrouve ||
+    (creationManuelle &&
+      !!nom.trim() &&
+      !!prenom.trim() &&
+      !!telephone.trim() &&
+      !!email.trim());
 
   function enregistrer() {
     if (!creneauSelectionne || !pretPourCreneau || !clientPret) return;
@@ -221,22 +251,29 @@ export function RendezVousModal({
           ) : (
             <div>
               <label className="block text-sm font-semibold text-foreground">
-                Téléphone de la cliente
+                Nom ou prénom de la cliente
                 <div className="mt-2 flex gap-2">
                   <input
-                    value={telephone}
+                    value={recherche}
                     onChange={(e) => {
-                      setTelephone(e.target.value);
-                      setRechercheEffectuee(false);
+                      setRecherche(e.target.value);
+                      setResultats(null);
                       setClientTrouve(null);
+                      setCreationManuelle(false);
                     }}
-                    placeholder="06 12 34 56 78"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        chercherClient();
+                      }
+                    }}
+                    placeholder="Marie Dupont"
                     className="field mt-0 flex-1"
                   />
                   <button
                     type="button"
                     onClick={chercherClient}
-                    disabled={!telephone.trim() || isPending}
+                    disabled={!recherche.trim() || isPending}
                     className="shrink-0 rounded-lg border border-border px-4 text-sm text-foreground transition-colors hover:border-primary disabled:opacity-40"
                   >
                     Chercher
@@ -244,16 +281,69 @@ export function RendezVousModal({
                 </div>
               </label>
 
-              {rechercheEffectuee && clientTrouve && (
-                <p className="mt-2 text-sm text-primary">
-                  Cliente trouvée : {clientTrouve.prenom} {clientTrouve.nom}
-                </p>
+              {clientTrouve && (
+                <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-primary/40 bg-primary/5 px-4 py-3">
+                  <p className="text-sm">
+                    <span className="font-medium text-foreground">
+                      {clientTrouve.prenom} {clientTrouve.nom}
+                    </span>{" "}
+                    <span className="text-xs text-muted-foreground">
+                      {clientTrouve.telephone}
+                    </span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setClientTrouve(null)}
+                    className="shrink-0 text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                  >
+                    Changer
+                  </button>
+                </div>
               )}
 
-              {rechercheEffectuee && !clientTrouve && (
+              {/* Plusieurs homonymes : le téléphone départage. */}
+              {!clientTrouve && resultats && resultats.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    {resultats.length} cliente{resultats.length > 1 ? "s" : ""} trouvée
+                    {resultats.length > 1 ? "s" : ""} — sélectionnez la bonne fiche.
+                  </p>
+                  {resultats.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => choisirClient(c)}
+                      className="flex w-full items-center justify-between gap-3 rounded-lg border border-border px-4 py-2.5 text-left transition-colors hover:border-primary"
+                    >
+                      <span className="text-sm text-foreground">
+                        {c.prenom} {c.nom}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{c.telephone}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {!clientTrouve && resultats?.length === 0 && !creationManuelle && (
+                <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/60 px-4 py-3">
+                  <p className="text-sm text-muted-foreground">
+                    Aucune cliente à ce nom.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={preparerCreation}
+                    className="rounded-full bg-primary px-4 py-1.5 text-xs text-primary-foreground transition-opacity hover:opacity-90"
+                  >
+                    Créer sa fiche
+                  </button>
+                </div>
+              )}
+
+              {!clientTrouve && creationManuelle && (
                 <div className="mt-3 space-y-3 rounded-xl border border-border bg-muted/60 p-4">
                   <p className="text-xs text-muted-foreground">
-                    Nouvelle cliente — merci de compléter ses informations.
+                    Nouvelle cliente — le téléphone et l&apos;email lui permettront de
+                    retrouver son rendez-vous et de recevoir les confirmations.
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     <input
@@ -269,6 +359,12 @@ export function RendezVousModal({
                       className="field mt-0"
                     />
                   </div>
+                  <input
+                    value={telephone}
+                    onChange={(e) => setTelephone(e.target.value)}
+                    placeholder="06 12 34 56 78"
+                    className="field mt-0"
+                  />
                   <input
                     type="email"
                     value={email}

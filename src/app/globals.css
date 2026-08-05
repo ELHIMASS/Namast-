@@ -65,7 +65,12 @@ textarea {
    Les photos viennent de téléphones, avec des balances des blancs très
    différentes (LED violette du Head Spa, suspensions chaudes, néon salle d'eau).
    Ce traitement commun les ramène toutes dans la palette rose poudré du site.
-   Au survol, la photo reprend ses couleurs d'origine : effet « la pièce s'éclaire ». */
+   Au survol, la photo reprend ses couleurs d'origine : effet « la pièce s'éclaire ».
+
+   Tout ce bloc est dans @layer components : sans cela, ces règles écrasent les
+   utilitaires Tailwind posés sur les mêmes éléments (un `absolute` perdait face
+   au `position: relative` de .photo-frame, et le conteneur retombait à 0 px). */
+@layer components {
 .photo-frame {
   position: relative;
   overflow: hidden;
@@ -100,6 +105,114 @@ textarea {
 .photo-frame:hover::after {
   opacity: 0.35;
 }
+
+/* ================== CADRES PHOTO ==================
+   Cadre d'accrochage mural : passe-partout clair, filet rosé, ombre portée.
+   Les photos sont posées légèrement de travers, comme sur un mur de galerie,
+   et se redressent en se soulevant au survol. */
+.cadre-photo {
+  position: relative;
+  padding: 10px;
+  border-radius: 26px;
+  background: linear-gradient(150deg, #fffdfc 0%, #f9ecee 55%, #f2dade 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 18px 40px -18px rgba(58, 38, 43, 0.45),
+    0 2px 6px rgba(58, 38, 43, 0.08);
+  transition:
+    transform 600ms cubic-bezier(0.34, 1.35, 0.64, 1),
+    box-shadow 600ms ease;
+}
+
+/* Filet fin à l'intérieur du passe-partout. */
+.cadre-photo::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  z-index: 2;
+  border: 1px solid rgba(193, 122, 144, 0.45);
+  border-radius: 22px;
+  pointer-events: none;
+}
+
+.cadre-photo:hover {
+  transform: rotate(0deg) translateY(-10px) scale(1.02);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 30px 55px -20px rgba(58, 38, 43, 0.5),
+    0 4px 10px rgba(58, 38, 43, 0.1);
+}
+
+/* Inclinaisons irrégulières : un mur de photos parfaitement aligné fait faux. */
+.cadre-incline-a {
+  transform: rotate(-2.2deg);
+}
+.cadre-incline-b {
+  transform: rotate(1.6deg);
+}
+.cadre-incline-c {
+  transform: rotate(-1deg);
+}
+
+/* Décalage vertical de l'accrochage. En CSS et non en utilitaires Tailwind :
+   ces classes font partie du dessin du mur de photos, au même titre que les
+   inclinaisons juste au-dessus. */
+@media (min-width: 640px) {
+  .cadre-decale-a {
+    margin-top: 0;
+  }
+  .cadre-decale-b {
+    margin-top: 2.75rem;
+  }
+  .cadre-decale-c {
+    margin-top: 1rem;
+  }
+}
+
+/* ================== PHOTOS FONDUES ==================
+   Hors galerie, les photos n'ont pas de cadre : leurs bords s'effacent
+   progressivement dans le fond. Un masque, et non un dégradé posé par-dessus :
+   les bords deviennent réellement transparents, donc le fondu marche aussi
+   bien sur le fond rosé de la page que sur les panneaux en verre dépoli. */
+.photo-fondue {
+  border-radius: 0;
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 0%, #000 15%, #000 85%, transparent 100%),
+    linear-gradient(to right, transparent 0%, #000 11%, #000 89%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to bottom, transparent 0%, #000 15%, #000 85%, transparent 100%),
+    linear-gradient(to right, transparent 0%, #000 11%, #000 89%, transparent 100%);
+  mask-composite: intersect;
+}
+
+/* Fondu haut/bas seulement, pour les bandes pleine largeur. */
+.photo-fondue-verticale {
+  border-radius: 0;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 14%,
+    #000 84%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 14%,
+    #000 84%,
+    transparent 100%
+  );
+}
+
+/* Sur une photo fondue, le vignetage sombre ferait un bord marqué là où
+   l'image doit justement s'effacer : on ne garde que le voile rosé. */
+.photo-fondue::after,
+.photo-fondue-verticale::after {
+  background: linear-gradient(160deg, rgba(193, 122, 144, 0.18), rgba(138, 74, 94, 0.13));
+}
+}
+/* fin @layer components */
 
 .field {
   @apply mt-1 w-full rounded-lg border border-border bg-surface/70 px-4 py-3 text-foreground outline-none backdrop-blur-md transition-colors duration-300 placeholder:text-muted-foreground/60 focus:border-primary;
@@ -523,5 +636,15 @@ textarea {
   .photo-frame img,
   .photo-frame::after {
     transition: none;
+  }
+  .cadre-photo,
+  .cadre-incline-a,
+  .cadre-incline-b,
+  .cadre-incline-c {
+    transform: none;
+    transition: none;
+  }
+  .cadre-photo:hover {
+    transform: none;
   }
 }

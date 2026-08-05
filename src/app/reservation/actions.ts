@@ -16,18 +16,36 @@ function normaliserTelephone(telephone: string): string {
   return telephone.replace(/[\s.\-]/g, "");
 }
 
-export async function findClientByPhone(telephone: string) {
-  const client = await prisma.client.findUnique({
-    where: { telephone: normaliserTelephone(telephone) },
+/**
+ * Identification de la cliente par son prénom et son nom.
+ * En cas d'homonymes, aucune fiche n'est renvoyée : ouvrir le compte d'une
+ * autre cliente serait pire que de demander d'appeler le salon.
+ */
+export async function findClientByName(prenom: string, nom: string) {
+  const p = prenom.trim();
+  const n = nom.trim();
+  if (!p || !n) return { statut: "introuvable" as const };
+
+  const clients = await prisma.client.findMany({
+    where: {
+      prenom: { equals: p, mode: "insensitive" },
+      nom: { equals: n, mode: "insensitive" },
+    },
+    take: 2,
   });
 
-  if (!client) return null;
+  if (clients.length === 0) return { statut: "introuvable" as const };
+  if (clients.length > 1) return { statut: "homonymes" as const };
 
+  const client = clients[0];
   return {
-    id: client.id,
-    nom: client.nom,
-    prenom: client.prenom,
-    telephone: client.telephone,
+    statut: "trouve" as const,
+    client: {
+      id: client.id,
+      nom: client.nom,
+      prenom: client.prenom,
+      telephone: client.telephone,
+    },
   };
 }
 

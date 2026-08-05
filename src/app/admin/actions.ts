@@ -85,6 +85,29 @@ export async function chercherClientParTelephoneAction(telephone: string) {
   });
 }
 
+/**
+ * Recherche une cliente par nom ou prénom, dans n'importe quel ordre :
+ * « marie », « dupont » ou « marie dupont » trouvent la même personne.
+ * Plusieurs homonymes peuvent remonter, d'où une liste et non un résultat unique.
+ */
+export async function chercherClientsParNomAction(recherche: string) {
+  const termes = recherche.trim().split(/\s+/).filter(Boolean);
+  if (termes.length === 0) return [];
+
+  return prisma.client.findMany({
+    where: {
+      AND: termes.map((terme) => ({
+        OR: [
+          { prenom: { contains: terme, mode: "insensitive" as const } },
+          { nom: { contains: terme, mode: "insensitive" as const } },
+        ],
+      })),
+    },
+    orderBy: [{ nom: "asc" }, { prenom: "asc" }],
+    take: 10,
+  });
+}
+
 export async function getCreneauxAdminAction(
   dateISO: string,
   lignes: LigneChoisie[],

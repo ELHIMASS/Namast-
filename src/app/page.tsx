@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { VideoCarousel } from "@/components/VideoCarousel";
 import { BandeAmbiance } from "@/components/BandeAmbiance";
 import { Galerie } from "@/components/Galerie";
+import { Repliable } from "@/components/Repliable";
 import { Reveal } from "@/components/Reveal";
 import { CategoryIcon } from "@/components/CategoryIcon";
 import { ProfilIcon } from "@/components/ProfilIcon";
@@ -58,7 +59,7 @@ export default async function Home() {
     }));
 
   return (
-    <div className="flex min-h-full flex-1 flex-col relative">
+    <div className="relative flex min-h-full flex-1 flex-col pb-24 md:pb-0">
       <HaircutIcons />
       <Header />
 
@@ -118,6 +119,11 @@ export default async function Home() {
                     {DESCRIPTION_FORMULE[formule]}
                   </p>
 
+                  <Repliable
+                    apercu={`Voir les ${items.length} tarifs · dès ${formatPrix(
+                      Math.min(...items.map((p) => prixAPartirDe(p, lissageMatrice))),
+                    )}`}
+                  >
                   <div className="mt-5 rounded-2xl bg-muted/40 p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.15em] text-foreground">
                       Toutes les prestations comprennent
@@ -160,6 +166,7 @@ export default async function Home() {
                       );
                     })}
                   </div>
+                  </Repliable>
                 </div>
               </Reveal>
             ))}
@@ -184,15 +191,14 @@ export default async function Home() {
                     >
                       <div className="glass h-full rounded-3xl border border-white/50 p-6 sm:p-8 md:p-10 card-hover">
                         {illustree && IMAGE_CATEGORIE[categorie] && (
-                          <div className="photo-frame relative mb-6 h-44 rounded-2xl sm:h-52">
+                          <div className="photo-frame photo-fondue group relative mb-6 h-44 sm:h-52">
                             <Image
                               src={IMAGE_CATEGORIE[categorie].src}
                               alt={IMAGE_CATEGORIE[categorie].alt}
                               fill
                               sizes="(min-width: 768px) 45vw, 100vw"
-                              className="object-cover"
+                              className="object-cover transition-transform duration-700 group-hover:scale-105"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-surface/45 to-transparent" />
                           </div>
                         )}
 
@@ -210,6 +216,11 @@ export default async function Home() {
                           </div>
                         </div>
 
+                        <Repliable
+                          apercu={`Voir les ${items.length} tarifs · dès ${formatPrix(
+                            Math.min(...items.map((p) => prixAPartirDe(p, lissageMatrice))),
+                          )}`}
+                        >
                         <div className="mt-6 space-y-4">
                           {items.map((p) => {
                             const varie = p.estLissage || p.variantesLongueur.length > 0;
@@ -235,6 +246,7 @@ export default async function Home() {
                             );
                           })}
                         </div>
+                        </Repliable>
                       </div>
                     </Reveal>
                   ))}
@@ -276,6 +288,17 @@ export default async function Home() {
       </main>
 
       <Footer />
+
+      {/* Mobile : la prise de rendez-vous reste à portée de pouce, quelle que
+          soit la position dans la page (le menu fait plusieurs écrans). */}
+      <div className="glass fixed inset-x-0 bottom-0 z-30 border-t border-white/50 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 md:hidden">
+        <Link
+          href="/reservation"
+          className="flex w-full items-center justify-center rounded-full bg-primary px-6 py-3.5 text-primary-foreground transition-opacity active:scale-[0.99]"
+        >
+          Prendre rendez-vous
+        </Link>
+      </div>
     </div>
   );
 }

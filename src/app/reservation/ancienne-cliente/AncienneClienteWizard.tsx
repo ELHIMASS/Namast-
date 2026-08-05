@@ -17,7 +17,7 @@ import { PrestationChooser } from "../PrestationChooser";
 import type { LigneChoisie } from "@/lib/reservationLignes";
 import {
   creerRendezVousDirectAction,
-  findClientByPhone,
+  findClientByName,
   getCreneauxAction,
 } from "../actions";
 
@@ -49,7 +49,8 @@ export function AncienneClienteWizard({
   const [step, setStep] = useState<Step>("identification");
   const [isPending, startTransition] = useTransition();
 
-  const [telephone, setTelephone] = useState("");
+  const [prenom, setPrenom] = useState("");
+  const [nom, setNom] = useState("");
   const [client, setClient] = useState<ClientTrouve | null>(null);
   const [erreurIdentification, setErreurIdentification] = useState<string | null>(null);
 
@@ -84,14 +85,23 @@ export function AncienneClienteWizard({
     e.preventDefault();
     setErreurIdentification(null);
     startTransition(async () => {
-      const trouve = await findClientByPhone(telephone);
-      if (!trouve) {
+      const resultat = await findClientByName(prenom, nom);
+
+      if (resultat.statut === "homonymes") {
         setErreurIdentification(
-          "Aucun compte trouvé avec ce numéro. Si vous êtes déjà cliente du salon, vérifiez le numéro saisi, sinon faites une demande en tant que nouvelle cliente.",
+          "Plusieurs clientes portent ce nom. Merci d'appeler le salon pour réserver, afin de ne pas nous tromper de fiche.",
         );
         return;
       }
-      setClient(trouve);
+
+      if (resultat.statut === "introuvable") {
+        setErreurIdentification(
+          "Aucun compte à ce nom. Si vous êtes déjà cliente du salon, vérifiez l'orthographe de votre prénom et de votre nom, sinon faites une demande en tant que nouvelle cliente.",
+        );
+        return;
+      }
+
+      setClient(resultat.client);
       setStep("prestations");
     });
   }
@@ -126,17 +136,30 @@ export function AncienneClienteWizard({
   if (step === "identification") {
     return (
       <form onSubmit={soumettreIdentification} className="space-y-4">
-        <label className="block text-sm text-foreground">
-          Numéro de téléphone
-          <input
-            type="tel"
-            required
-            value={telephone}
-            onChange={(e) => setTelephone(e.target.value)}
-            placeholder="06 12 34 56 78"
-            className="field"
-          />
-        </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block text-sm text-foreground">
+            Prénom
+            <input
+              required
+              autoComplete="given-name"
+              value={prenom}
+              onChange={(e) => setPrenom(e.target.value)}
+              placeholder="Marie"
+              className="field"
+            />
+          </label>
+          <label className="block text-sm text-foreground">
+            Nom
+            <input
+              required
+              autoComplete="family-name"
+              value={nom}
+              onChange={(e) => setNom(e.target.value)}
+              placeholder="Dupont"
+              className="field"
+            />
+          </label>
+        </div>
         {erreurIdentification && (
           <p className="text-sm text-rose-700">{erreurIdentification}</p>
         )}

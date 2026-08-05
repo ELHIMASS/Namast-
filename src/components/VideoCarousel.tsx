@@ -39,10 +39,13 @@ export function VideoCarousel() {
   }, []);
 
   return (
-    <div className="relative h-[80vh] min-h-[560px] w-full select-none overflow-hidden bg-[#1c1015]">
+    // Mobile : hauteur réduite et cadrage plein (object-cover). En
+    // object-contain, le format de la vidéo laissait de larges bandes noires
+    // en haut et en bas sur un écran de téléphone.
+    <div className="relative h-[62vh] min-h-[420px] w-full select-none overflow-hidden bg-[#1c1015] sm:h-[80vh] sm:min-h-[560px]">
       <video
         ref={videoRef}
-        className="absolute inset-0 h-full w-full object-contain"
+        className="absolute inset-0 h-full w-full object-cover sm:object-contain"
         src={SLIDE.video}
         muted
         loop

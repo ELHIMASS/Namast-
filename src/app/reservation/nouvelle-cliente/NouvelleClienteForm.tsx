@@ -13,6 +13,7 @@ import {
   type OptionAvecVariantes,
   type PrestationAvecVariantes,
 } from "@/lib/prestations";
+import { BarreFixeMobile } from "@/components/BarreFixeMobile";
 import { PrestationChooser } from "../PrestationChooser";
 import type { LigneChoisie } from "@/lib/reservationLignes";
 import { creerDemandeNouvelleClienteAction, getCreneauxAction } from "../actions";
@@ -209,21 +210,48 @@ export function NouvelleClienteForm({
           onChange={setLignes}
         />
 
-        {lignes.length > 0 && (
-          <div className="rounded-xl bg-muted px-4 py-3 text-sm text-foreground">
-            Durée totale {formatDuree(total.dureePrestations)} · Total{" "}
-            {formatPrix(total.prixTotalCentimes)}
-          </div>
-        )}
+        {/* Desktop : récapitulatif et bouton dans le flux de la page. */}
+        <div className="hidden md:block md:space-y-6">
+          {lignes.length > 0 && (
+            <div className="rounded-xl bg-muted px-4 py-3 text-sm text-foreground">
+              Durée totale {formatDuree(total.dureePrestations)} · Total{" "}
+              {formatPrix(total.prixTotalCentimes)}
+            </div>
+          )}
 
-        <button
-          type="button"
-          disabled={!pretPourCreneau}
-          onClick={() => setStep("creneau")}
-          className="w-full rounded-full bg-primary px-6 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 disabled:opacity-40"
-        >
-          Choisir un créneau souhaité
-        </button>
+          <button
+            type="button"
+            disabled={!pretPourCreneau}
+            onClick={() => setStep("creneau")}
+            className="w-full rounded-full bg-primary px-6 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 disabled:opacity-40"
+          >
+            Choisir un créneau souhaité
+          </button>
+        </div>
+
+        {/* Mobile : la carte fait plusieurs écrans, le total et la suite
+            restent donc visibles en permanence en bas de l'écran. */}
+        <div className="pb-28 md:hidden" />
+        <BarreFixeMobile>
+          {lignes.length > 0 && (
+            <p className="mb-2 flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">
+                {formatDuree(total.dureePrestations)}
+              </span>
+              <span className="font-semibold text-primary">
+                {formatPrix(total.prixTotalCentimes)}
+              </span>
+            </p>
+          )}
+          <button
+            type="button"
+            disabled={!pretPourCreneau}
+            onClick={() => setStep("creneau")}
+            className="w-full rounded-full bg-primary px-6 py-3.5 text-primary-foreground transition-opacity active:scale-[0.99] disabled:opacity-40"
+          >
+            Choisir un créneau souhaité
+          </button>
+        </BarreFixeMobile>
       </div>
     );
   }

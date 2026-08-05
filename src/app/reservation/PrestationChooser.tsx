@@ -395,7 +395,7 @@ export function PrestationChooser({
                           }
                           checked={selectionnee}
                           onChange={() => togglePrestation(prestation)}
-                          className="mt-1 h-4 w-4 shrink-0"
+                          className="mt-0.5 h-5 w-5 shrink-0"
                         />
                         <span className="font-serif text-base text-foreground">
                           {prestation.nom}
@@ -429,7 +429,7 @@ export function PrestationChooser({
                             key={longueur}
                             type="button"
                             onClick={() => setLongueur(prestation.id, longueur)}
-                            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                            className={`rounded-full border px-4 py-2 text-xs transition-colors ${
                               ligne?.longueur === longueur
                                 ? "border-primary bg-primary text-primary-foreground"
                                 : "border-border bg-surface text-foreground hover:border-primary/40"
@@ -448,7 +448,7 @@ export function PrestationChooser({
                             key={densite}
                             type="button"
                             onClick={() => setDensite(prestation.id, densite)}
-                            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                            className={`rounded-full border px-4 py-2 text-xs transition-colors ${
                               ligne?.densite === densite
                                 ? "border-primary bg-primary text-primary-foreground"
                                 : "border-border bg-surface text-foreground hover:border-primary/40"
@@ -514,7 +514,7 @@ export function PrestationChooser({
                                         type="checkbox"
                                         checked={coche}
                                         onChange={() => toggleOption(prestation.id, option.id)}
-                                        className="h-3.5 w-3.5"
+                                        className="h-5 w-5"
                                       />
                                       {option.nom}
                                     </span>

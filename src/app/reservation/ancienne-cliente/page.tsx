@@ -14,7 +14,7 @@ export default async function AncienneClientePage() {
         <Reveal className="mx-auto max-w-3xl px-6 py-16">
           <h1 className="font-serif text-4xl text-foreground">Je suis déjà cliente</h1>
           <p className="mt-3 text-muted-foreground">
-            Identifiez-vous avec votre numéro de téléphone pour réserver directement.
+            Identifiez-vous avec votre prénom et votre nom pour réserver directement.
           </p>
 
           <div className="mt-10">
