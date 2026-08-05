@@ -1,7 +1,10 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { VideoCarousel } from "@/components/VideoCarousel";
+import { BandeAmbiance } from "@/components/BandeAmbiance";
+import { Galerie } from "@/components/Galerie";
 import { Reveal } from "@/components/Reveal";
 import { CategoryIcon } from "@/components/CategoryIcon";
 import { ProfilIcon } from "@/components/ProfilIcon";
@@ -10,23 +13,49 @@ import { getCatalogue } from "@/lib/data";
 import { formatDuree, formatPrix, prixAPartirDe } from "@/lib/prestations";
 import {
   DESCRIPTION_CATEGORIE,
+  DESCRIPTION_FORMULE,
+  IMAGE_CATEGORIE,
+  INCLUS_FORMULE,
   LABEL_CATEGORIE,
+  LABEL_FORMULE,
   LABEL_PROFIL,
   ORDRE_CATEGORIES,
+  ORDRE_FORMULES,
 } from "@/lib/categories";
 
 export default async function Home() {
   const { prestations, lissageMatrice } = await getCatalogue();
+
+  // Une même catégorie revient chez Femmes, Hommes et Enfants : la photo ne
+  // s'affiche qu'à sa première occurrence, pour éviter de la répéter.
+  const dejaIllustrees = new Set<string>();
+
+  // Les prestations rattachées à une formule sont présentées à part, en deux
+  // blocs « Essentielle » / « Bien-être », comme sur les plaquettes du salon.
+  const formules = ORDRE_FORMULES.map((formule) => ({
+    formule,
+    items: prestations.filter((p) => p.formule === formule),
+  })).filter((f) => f.items.length > 0);
 
   const profils = ["FEMME", "HOMME", "ENFANT"]
     .map((profil) => ({
       profil,
       categories: ORDRE_CATEGORIES.map((categorie) => ({
         categorie,
-        items: prestations.filter((p) => p.profil === profil && p.categorie === categorie),
+        items: prestations.filter(
+          (p) => p.profil === profil && p.categorie === categorie && !p.formule,
+        ),
       })).filter((c) => c.items.length > 0),
     }))
-    .filter((p) => p.categories.length > 0);
+    .filter((p) => p.categories.length > 0)
+    .map((p) => ({
+      ...p,
+      categories: p.categories.map((c) => {
+        const illustree = !dejaIllustrees.has(c.categorie);
+        dejaIllustrees.add(c.categorie);
+        return { ...c, illustree };
+      }),
+    }));
 
   return (
     <div className="flex min-h-full flex-1 flex-col relative">
@@ -58,6 +87,8 @@ export default async function Home() {
           </div>
         </Reveal>
 
+        <BandeAmbiance />
+
         <section className="relative mx-auto max-w-5xl px-6 py-24">
           <Reveal className="mb-16 flex flex-col items-center text-center">
             <span className="font-serif text-4xl italic text-primary/70 animate-text-glow">Le menu</span>
@@ -75,6 +106,65 @@ export default async function Home() {
             </p>
           </Reveal>
 
+          {/* Les deux formules de coiffure femme */}
+          <div className="mb-16 space-y-8">
+            {formules.map(({ formule, items }) => (
+              <Reveal key={formule}>
+                <div className="glass rounded-3xl border border-white/50 p-6 sm:p-8 md:p-10 card-hover">
+                  <h3 className="font-serif text-2xl text-foreground sm:text-3xl">
+                    {LABEL_FORMULE[formule]}
+                  </h3>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                    {DESCRIPTION_FORMULE[formule]}
+                  </p>
+
+                  <div className="mt-5 rounded-2xl bg-muted/40 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-foreground">
+                      Toutes les prestations comprennent
+                    </p>
+                    <ul className="mt-3 space-y-1.5">
+                      {INCLUS_FORMULE[formule]?.map((ligne) => (
+                        <li
+                          key={ligne}
+                          className="flex gap-2 text-sm text-muted-foreground"
+                        >
+                          <span className="text-primary">•</span>
+                          {ligne}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="mt-6 space-y-4">
+                    {items.map((p) => {
+                      const varie = p.estLissage || p.variantesLongueur.length > 0;
+                      const prix = prixAPartirDe(p, lissageMatrice);
+                      return (
+                        <div
+                          key={p.id}
+                          className="flex flex-col gap-2 border-b border-border/30 pb-4 last:border-0 last:pb-0"
+                        >
+                          <div className="service-item flex items-baseline justify-between gap-3">
+                            <span className="font-serif text-base font-medium text-foreground">
+                              {p.nom}
+                            </span>
+                            <span className="price-highlight animate-float whitespace-nowrap text-sm font-semibold text-primary">
+                              {varie && "dès "}
+                              {formatPrix(prix)}
+                            </span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            Durée: {formatDuree(p.dureeMinutes)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+
           <div className="space-y-16">
             {profils.map(({ profil, categories }) => (
               <div key={profil}>
@@ -86,13 +176,26 @@ export default async function Home() {
                 </Reveal>
 
                 <div className="grid gap-6 sm:gap-8 md:grid-cols-2">
-                  {categories.map(({ categorie, items }, catIndex) => (
+                  {categories.map(({ categorie, items, illustree }, catIndex) => (
                     <Reveal
                       key={categorie}
                       delay={catIndex * 60}
                       className={items.length > 4 ? "md:col-span-2" : ""}
                     >
                       <div className="glass h-full rounded-3xl border border-white/50 p-6 sm:p-8 md:p-10 card-hover">
+                        {illustree && IMAGE_CATEGORIE[categorie] && (
+                          <div className="photo-frame relative mb-6 h-44 rounded-2xl sm:h-52">
+                            <Image
+                              src={IMAGE_CATEGORIE[categorie].src}
+                              alt={IMAGE_CATEGORIE[categorie].alt}
+                              fill
+                              sizes="(min-width: 768px) 45vw, 100vw"
+                              className="object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-surface/45 to-transparent" />
+                          </div>
+                        )}
+
                         <div className="flex items-start gap-4 pb-6 border-b border-border/40">
                           <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                             <CategoryIcon categorie={categorie} className="h-7 w-7" />
@@ -140,6 +243,10 @@ export default async function Home() {
             ))}
           </div>
         </section>
+
+        <Reveal>
+          <Galerie />
+        </Reveal>
 
         <Reveal className="glass border-t border-white/40">
           <div className="mx-auto max-w-3xl px-6 py-20 text-center">

@@ -48,6 +48,8 @@ export type PrestationAvecVariantes = {
   dureeMinutes: number;
   tempsNettoyageMinutes: number;
   estLissage: boolean;
+  /** "ESSENTIELLE" | "BIEN_ETRE", ou null hors formule de coiffure. */
+  formule: string | null;
   variantesLongueur: { longueur: Longueur; prixCentimes: number; dureeMinutes: number }[];
 };
 
@@ -134,11 +136,15 @@ export function calculerTotalAvecOptions(
 }
 
 // Détermine quels groupes d'options proposer selon la prestation choisie.
+// Une prestation vendue dans une formule est tout compris : aucune option
+// payante ne s'y ajoute, ce qui est déjà inclus est simplement affiché.
 export function getGroupesOptionsPourPrestation(prestation: {
   categorie: string;
   profil: string;
   estLissage: boolean;
+  formule?: string | null;
 }): string[] {
+  if (prestation.formule) return [];
   if (prestation.estLissage) return [];
   if (prestation.profil === "HOMME") return ["HOMME"];
   if (prestation.profil === "FEMME" && prestation.categorie === "COUPE") {

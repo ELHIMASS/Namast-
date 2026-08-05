@@ -2,7 +2,9 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCreneauxDisponibles } from "@/lib/creneaux";
+import { getFermetures } from "@/lib/fermetures";
 import { estMercredi } from "@/lib/horaires";
+import { genererCodeUnique } from "@/lib/codeReservation";
 import { calculerTotalAvecOptions } from "@/lib/prestations";
 import {
   construireDonneesPrestations,
@@ -48,19 +50,23 @@ async function creneauxPourLignes(dateISO: string, lignes: LigneChoisie[], exclu
   const finJournee = new Date(date);
   finJournee.setHours(23, 59, 59, 999);
 
-  const rendezVousExistants = await prisma.rendezVous.findMany({
-    where: {
-      dateDebut: { gte: debutJournee, lte: finJournee },
-      statut: { in: ["CONFIRME", "EN_ATTENTE"] },
-      ...(excludeRendezVousId ? { id: { not: excludeRendezVousId } } : {}),
-    },
-    select: { dateDebut: true, dateFin: true },
-  });
+  const [rendezVousExistants, fermetures] = await Promise.all([
+    prisma.rendezVous.findMany({
+      where: {
+        dateDebut: { gte: debutJournee, lte: finJournee },
+        statut: { in: ["CONFIRME", "EN_ATTENTE"] },
+        ...(excludeRendezVousId ? { id: { not: excludeRendezVousId } } : {}),
+      },
+      select: { dateDebut: true, dateFin: true },
+    }),
+    getFermetures(date, date),
+  ]);
 
   return getCreneauxDisponibles({
     date,
     dureeTotaleMinutes: dureeTotaleAvecNettoyage,
     rendezVousExistants,
+    fermetures,
   });
 }
 
@@ -99,6 +105,7 @@ export async function creerRendezVousDirectAction({
 
   const rendezVous = await prisma.rendezVous.create({
     data: {
+      code: await genererCodeUnique(),
       clientId,
       statut: "CONFIRME",
       estNouvelleCliente: false,
@@ -110,7 +117,7 @@ export async function creerRendezVousDirectAction({
     },
   });
 
-  return { ok: true as const, rendezVousId: rendezVous.id };
+  return { ok: true as const, rendezVousId: rendezVous.id, code: rendezVous.code };
 }
 
 export async function creerDemandeNouvelleClienteAction({
@@ -156,6 +163,7 @@ export async function creerDemandeNouvelleClienteAction({
 
   const rendezVous = await prisma.rendezVous.create({
     data: {
+      code: await genererCodeUnique(),
       clientId: client.id,
       statut: "EN_ATTENTE",
       estNouvelleCliente: true,
@@ -168,5 +176,5 @@ export async function creerDemandeNouvelleClienteAction({
     },
   });
 
-  return { ok: true as const, rendezVousId: rendezVous.id };
+  return { ok: true as const, rendezVousId: rendezVous.id, code: rendezVous.code };
 }

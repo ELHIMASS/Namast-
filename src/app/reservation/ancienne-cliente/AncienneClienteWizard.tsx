@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { estJourOuvert, estMercredi } from "@/lib/horaires";
 import {
@@ -58,6 +59,7 @@ export function AncienneClienteWizard({
   const [creneaux, setCreneaux] = useState<string[]>([]);
   const [creneauSelectionne, setCreneauSelectionne] = useState<string | null>(null);
   const [erreurConfirmation, setErreurConfirmation] = useState<string | null>(null);
+  const [codeRendezVous, setCodeRendezVous] = useState<string | null>(null);
 
   const total = useMemo(
     () => calculerTotalAvecOptions(lignes, lissageMatrice),
@@ -116,6 +118,7 @@ export function AncienneClienteWizard({
         setErreurConfirmation(resultat.error);
         return;
       }
+      setCodeRendezVous(resultat.code ?? null);
       setStep("confirme");
     });
   }
@@ -277,6 +280,25 @@ export function AncienneClienteWizard({
               minute: "2-digit",
             })}
         </p>
+        {codeRendezVous && (
+          <div className="mt-6 rounded-xl border border-primary/40 bg-primary/5 p-5">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Votre code de rendez-vous
+            </p>
+            <p className="mt-2 font-serif text-3xl tracking-widest text-foreground">
+              {codeRendezVous}
+            </p>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Notez-le : avec votre numéro de téléphone, il vous permet de
+              consulter, déplacer ou annuler ce rendez-vous depuis{" "}
+              <Link href="/mon-rendez-vous" className="text-primary underline">
+                votre espace
+              </Link>
+              , jusqu&apos;à 24 h avant.
+            </p>
+          </div>
+        )}
+
         <p className="mt-4 text-sm text-muted-foreground">
           Un e-mail de confirmation vous sera envoyé.
         </p>

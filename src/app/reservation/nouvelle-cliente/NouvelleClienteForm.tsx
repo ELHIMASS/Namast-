@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { estJourOuvert, estMercredi } from "@/lib/horaires";
 import {
@@ -55,6 +56,7 @@ export function NouvelleClienteForm({
   const [creneaux, setCreneaux] = useState<string[]>([]);
   const [creneauSelectionne, setCreneauSelectionne] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [codeRendezVous, setCodeRendezVous] = useState<string | null>(null);
 
   const total = useMemo(
     () => calculerTotalAvecOptions(lignes, lissageMatrice),
@@ -102,6 +104,7 @@ export function NouvelleClienteForm({
         setErreur(resultat.error);
         return;
       }
+      setCodeRendezVous(resultat.code ?? null);
       setStep("envoyee");
     });
   }
@@ -313,6 +316,25 @@ export function NouvelleClienteForm({
           Votre demande a bien été transmise. La professionnelle vous répondra sous 48
           heures maximum pour confirmer, refuser ou proposer un autre créneau.
         </p>
+        {codeRendezVous && (
+          <div className="mt-6 rounded-xl border border-primary/40 bg-primary/5 p-5">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Votre code de rendez-vous
+            </p>
+            <p className="mt-2 font-serif text-3xl tracking-widest text-foreground">
+              {codeRendezVous}
+            </p>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Notez-le : avec votre numéro de téléphone, il vous permet de
+              suivre, déplacer ou annuler cette demande depuis{" "}
+              <Link href="/mon-rendez-vous" className="text-primary underline">
+                votre espace
+              </Link>
+              , jusqu&apos;à 24 h avant.
+            </p>
+          </div>
+        )}
+
         <p className="mt-4 text-sm text-muted-foreground">
           Vous recevrez une notification dès qu&apos;une décision sera prise.
         </p>

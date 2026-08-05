@@ -36,6 +36,13 @@ enum Profil {
   ENFANT
 }
 
+// Les deux formules de coiffure femme. Les prestations hors formule
+// (Head Spa, massages, homme, enfant) laissent ce champ vide.
+enum Formule {
+  ESSENTIELLE
+  BIEN_ETRE
+}
+
 enum LongueurCheveux {
   COURT
   CARRE
@@ -84,6 +91,7 @@ model Prestation {
   actif                  Boolean             @default(true)
   ordre                  Int                 @default(0)
   estLissage             Boolean             @default(false)
+  formule                Formule?
 
   variantesLongueur      PrestationLongueur[]
   rendezVousPrestations  RendezVousPrestation[]
@@ -142,6 +150,9 @@ model OptionLongueur {
 
 model RendezVous {
   id             String           @id @default(cuid())
+  // Code communiqué à la cliente pour retrouver son rendez-vous (ex. NAM-7K2P).
+  // Nullable : les rendez-vous créés avant cette fonctionnalité n'en ont pas.
+  code           String?          @unique
   clientId       String
   client         Client           @relation(fields: [clientId], references: [id])
   statut         StatutRendezVous @default(EN_ATTENTE)
@@ -167,6 +178,18 @@ model RendezVousPrestation {
   densite      Densite?
 
   options      RendezVousOption[]
+}
+
+// Jours de fermeture posés par le salon (congés, absences). Les deux bornes
+// sont incluses : une fermeture d'un seul jour a la même date des deux côtés.
+model Fermeture {
+  id        String   @id @default(cuid())
+  dateDebut DateTime @db.Date
+  dateFin   DateTime @db.Date
+  motif     String?
+  createdAt DateTime @default(now())
+
+  @@index([dateDebut, dateFin])
 }
 
 model RendezVousOption {

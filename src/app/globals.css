@@ -5,7 +5,7 @@
   --foreground: #3a262b;
   --surface: #ffffff;
   --muted: #f6dfe3;
-  --muted-foreground: #8c6b70;
+  --muted-foreground: #7d5a60; /* 5,4:1 sur --background : conforme WCAG AA */
   --border: #f0d4d8;
   --primary: #c17a90;
   --primary-foreground: #fff8f7;
@@ -26,6 +26,7 @@
   --color-accent-foreground: var(--accent-foreground);
   --font-sans: var(--font-manrope);
   --font-serif: var(--font-fraunces);
+  --font-hand: var(--font-dancing);
 }
 
 html {
@@ -48,18 +49,56 @@ textarea {
   accent-color: var(--primary);
 }
 
-/* Écriture manuscrite pour titre et logo */
-.handwriting {
-  font-family: "Brush Script MT", cursive;
-  font-size: 1.2em;
-  font-style: italic;
-}
-
-h1,
-h2,
+/* Écriture au stylo (Dancing Script) pour le nom du salon et les titres signature.
+   Réservée au branding : les autres titres restent en Fraunces pour la lisibilité. */
+.handwriting,
 .logo-text,
 .title-text {
-  font-family: "Brush Script MT", cursive;
+  font-family: var(--font-dancing), "Segoe Script", "Brush Script MT", cursive;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  /* Un script fin peut baver sur fond clair : on garde des contours nets. */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ================== TRAITEMENT DES PHOTOS ==================
+   Les photos viennent de téléphones, avec des balances des blancs très
+   différentes (LED violette du Head Spa, suspensions chaudes, néon salle d'eau).
+   Ce traitement commun les ramène toutes dans la palette rose poudré du site.
+   Au survol, la photo reprend ses couleurs d'origine : effet « la pièce s'éclaire ». */
+.photo-frame {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.photo-frame img {
+  filter: saturate(0.95) contrast(1.28) brightness(0.99) sepia(0.12)
+    hue-rotate(-8deg);
+  transition: filter 700ms ease;
+}
+
+.photo-frame:hover img {
+  filter: saturate(1.12) contrast(1.18) brightness(1.05) sepia(0) hue-rotate(0deg);
+}
+
+/* Voile rosé + vignetage : unifie les tons et resserre le regard au centre,
+   ce qui masque au passage les bords un peu chargés des photos. */
+.photo-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(110% 110% at 50% 45%, transparent 34%, rgba(28, 16, 21, 0.5) 100%),
+    linear-gradient(160deg, rgba(193, 122, 144, 0.2), rgba(138, 74, 94, 0.16));
+  opacity: 1;
+  transition: opacity 700ms ease;
+}
+
+.photo-frame:hover::after {
+  opacity: 0.35;
 }
 
 .field {
@@ -480,5 +519,9 @@ h2,
   .btn-hover:hover {
     animation: none;
     transform: none;
+  }
+  .photo-frame img,
+  .photo-frame::after {
+    transition: none;
   }
 }

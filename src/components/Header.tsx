@@ -5,7 +5,7 @@ export function Header() {
     <header className="glass sticky top-0 z-20 border-b border-white/50">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4 sm:px-6 sm:py-5">
         <Link href="/" className="flex shrink-0 flex-col leading-tight interactive-hover">
-          <span className="font-serif text-xl tracking-wide sm:text-2xl gradient-text animate-gradient">
+          <span className="handwriting text-2xl leading-none sm:text-3xl gradient-text animate-gradient">
             Namasté
           </span>
           <span className="text-[0.6rem] uppercase tracking-[0.2em] text-primary sm:text-[0.65rem] sm:tracking-[0.25em] animate-pulse-soft">

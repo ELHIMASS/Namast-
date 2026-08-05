@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { getCatalogue } from "@/lib/data";
@@ -30,14 +31,22 @@ export default async function AdminPage() {
                 Tableau de bord
               </h1>
             </div>
-            <form action={logoutAdminAction}>
-              <button
-                type="submit"
+            <div className="flex items-center gap-3">
+              <Link
+                href="/admin/fermetures"
                 className="rounded-full border border-border px-5 py-2 text-sm text-muted-foreground transition-all duration-300 hover:border-primary hover:text-foreground active:scale-95"
               >
-                Se déconnecter
-              </button>
-            </form>
+                Congés &amp; fermetures
+              </Link>
+              <form action={logoutAdminAction}>
+                <button
+                  type="submit"
+                  className="rounded-full border border-border px-5 py-2 text-sm text-muted-foreground transition-all duration-300 hover:border-primary hover:text-foreground active:scale-95"
+                >
+                  Se déconnecter
+                </button>
+              </form>
+            </div>
           </div>
 
           <AdminDashboard

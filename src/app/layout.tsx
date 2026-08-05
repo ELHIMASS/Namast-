@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Manrope } from "next/font/google";
-import { AmbientBlobs } from "@/components/AmbientBlobs";
+import { Dancing_Script, Fraunces, Manrope } from "next/font/google";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import "./globals.css";
 
@@ -13,6 +12,13 @@ const fraunces = Fraunces({
 const manrope = Manrope({
   variable: "--font-manrope",
   subsets: ["latin"],
+});
+
+// Écriture au stylo pour le nom du salon : script manuscrit mais très lisible.
+const dancingScript = Dancing_Script({
+  variable: "--font-dancing",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -29,11 +35,10 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${fraunces.variable} ${manrope.variable} h-full antialiased`}
+      className={`${fraunces.variable} ${manrope.variable} ${dancingScript.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <AnimatedBackground />
-        <AmbientBlobs />
         {children}
       </body>
     </html>

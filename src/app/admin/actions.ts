@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCreneauxDisponibles } from "@/lib/creneaux";
+import { getFermetures } from "@/lib/fermetures";
 import { estMercredi } from "@/lib/horaires";
 import { calculerTotalAvecOptions } from "@/lib/prestations";
 import {
@@ -105,19 +106,23 @@ export async function getCreneauxAdminAction(
   const finJournee = new Date(date);
   finJournee.setHours(23, 59, 59, 999);
 
-  const rendezVousExistants = await prisma.rendezVous.findMany({
-    where: {
-      dateDebut: { gte: debutJournee, lte: finJournee },
-      statut: { in: ["CONFIRME", "EN_ATTENTE"] },
-      ...(excludeRendezVousId ? { id: { not: excludeRendezVousId } } : {}),
-    },
-    select: { dateDebut: true, dateFin: true },
-  });
+  const [rendezVousExistants, fermetures] = await Promise.all([
+    prisma.rendezVous.findMany({
+      where: {
+        dateDebut: { gte: debutJournee, lte: finJournee },
+        statut: { in: ["CONFIRME", "EN_ATTENTE"] },
+        ...(excludeRendezVousId ? { id: { not: excludeRendezVousId } } : {}),
+      },
+      select: { dateDebut: true, dateFin: true },
+    }),
+    getFermetures(date, date),
+  ]);
 
   return getCreneauxDisponibles({
     date,
     dureeTotaleMinutes: dureeTotaleAvecNettoyage,
     rendezVousExistants,
+    fermetures,
   }).map((d) => d.toISOString());
 }
 

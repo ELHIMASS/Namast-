@@ -13,16 +13,21 @@ import {
   formatDuree,
   formatPrix,
   getGroupesOptionsPourPrestation,
+  prixAPartirDe,
   resoudreOption,
   resoudrePrestation,
 } from "@/lib/prestations";
 import {
+  DESCRIPTION_FORMULE,
+  INCLUS_FORMULE,
   LABEL_CATEGORIE,
   LABEL_DENSITE,
+  LABEL_FORMULE,
   LABEL_GROUPE_OPTION,
   LABEL_LONGUEUR,
   LABEL_PROFIL,
   ORDRE_CATEGORIES,
+  ORDRE_FORMULES,
   ORDRE_DENSITES,
   ORDRE_LONGUEURS,
 } from "@/lib/categories";
@@ -51,6 +56,11 @@ export function PrestationChooser({
   onChange: (lignes: LigneReservation[]) => void;
 }) {
   const [profil, setProfil] = useState<string | null>(() => lignes[0]?.prestation.profil ?? null);
+  // Formule retenue par la cliente, et formule dont le détail est déplié.
+  const [formuleChoisie, setFormuleChoisie] = useState<string | null>(
+    () => lignes[0]?.prestation.formule ?? null,
+  );
+  const [detailOuvert, setDetailOuvert] = useState<string | null>(null);
 
   const lignesEtat: LigneEtat[] = lignes.map((l) => ({
     prestation: l.prestation,
@@ -76,9 +86,17 @@ export function PrestationChooser({
     const existe = lignesEtat.find((l) => l.prestation.id === prestation.id);
     if (existe) {
       commit(lignesEtat.filter((l) => l.prestation.id !== prestation.id));
-    } else {
-      commit([...lignesEtat, { prestation, optionIds: [] }]);
+      return;
     }
+
+    // Les prestations d'une formule sont des variantes d'un même forfait
+    // (brushing, coupe + brushing, couleur + coupe + brushing…) : on n'en
+    // retient qu'une, sinon le tarif tout compris serait facturé plusieurs fois.
+    const base = prestation.formule
+      ? lignesEtat.filter((l) => l.prestation.formule !== prestation.formule)
+      : lignesEtat;
+
+    commit([...base, { prestation, optionIds: [] }]);
   }
 
   function setLongueur(prestationId: string, longueur: Longueur) {
@@ -113,11 +131,42 @@ export function PrestationChooser({
     [prestations, profil],
   );
 
-  const categoriesPresentes = useMemo(
+  /** Formules proposées pour ce profil, avec leurs prestations. */
+  const formulesDisponibles = useMemo(
     () =>
-      ORDRE_CATEGORIES.filter((cat) => prestationsDuProfil.some((p) => p.categorie === cat)),
+      ORDRE_FORMULES.map((formule) => ({
+        formule,
+        items: prestationsDuProfil.filter((p) => p.formule === formule),
+      })).filter((f) => f.items.length > 0),
     [prestationsDuProfil],
   );
+
+  /**
+   * Formule et prestations hors formule ne se cumulent pas : c'est l'une ou
+   * les autres. Sans formule choisie, seul le catalogue hors formule est
+   * listé (les deux packs restent présentés comme un choix possible) ; dès
+   * qu'une formule est retenue, seules ses prestations sont proposées.
+   */
+  const groupes = useMemo(() => {
+    if (formuleChoisie) {
+      return [
+        {
+          cle: formuleChoisie,
+          titre: LABEL_FORMULE[formuleChoisie] ?? formuleChoisie,
+          items: prestationsDuProfil.filter((p) => p.formule === formuleChoisie),
+        },
+      ];
+    }
+
+    return ORDRE_CATEGORIES.map((categorie) => ({
+      cle: categorie,
+      titre: LABEL_CATEGORIE[categorie] ?? categorie,
+      items: prestationsDuProfil.filter((p) => p.categorie === categorie && !p.formule),
+    })).filter((g) => g.items.length > 0);
+  }, [prestationsDuProfil, formuleChoisie]);
+
+  /** Prestations hors formule déjà cochées : elles sauteront si on prend une formule. */
+  const horsFormuleSelectionnees = lignesEtat.filter((l) => !l.prestation.formule);
 
   if (!profil) {
     return (
@@ -143,6 +192,8 @@ export function PrestationChooser({
         type="button"
         onClick={() => {
           setProfil(null);
+          setFormuleChoisie(null);
+          setDetailOuvert(null);
           commit([]);
         }}
         className="text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
@@ -156,14 +207,159 @@ export function PrestationChooser({
         </p>
       )}
 
-      {categoriesPresentes.map((categorie) => (
-        <div key={categorie}>
-          <p className="mb-2 text-xs uppercase tracking-[0.2em] text-primary/80">
-            {LABEL_CATEGORIE[categorie] ?? categorie}
+      {/* Choix de la formule : le contenu du pack ne se déplie qu'à la demande. */}
+      {formulesDisponibles.length > 0 && !formuleChoisie && (
+        <div>
+          <p className="mb-1 text-xs uppercase tracking-[0.2em] text-primary/80">
+            Choisissez votre expérience
           </p>
+          <p className="mb-3 text-sm text-muted-foreground">
+            {horsFormuleSelectionnees.length > 0
+              ? "Une formule ne se cumule pas avec le reste de la carte : vos prestations déjà sélectionnées seront retirées."
+              : "Prenez une formule, ou composez librement votre rendez-vous dans la carte ci-dessous."}
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {formulesDisponibles.map(({ formule, items }) => (
+              <div
+                key={formule}
+                className="flex flex-col rounded-2xl border border-border bg-surface p-5"
+              >
+                <h4 className="font-serif text-lg text-foreground">
+                  {LABEL_FORMULE[formule] ?? formule}
+                </h4>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {DESCRIPTION_FORMULE[formule]}
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {items.length} prestations · à partir de{" "}
+                  <span className="font-medium text-primary">
+                    {formatPrix(
+                      Math.min(...items.map((i) => prixAPartirDe(i, lissageMatrice))),
+                    )}
+                  </span>
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDetailOuvert((actuel) => (actuel === formule ? null : formule))
+                  }
+                  className="mt-3 self-start text-sm text-primary underline-offset-2 hover:underline"
+                >
+                  {detailOuvert === formule
+                    ? "Masquer le détail"
+                    : "Voir le détail du pack"}
+                </button>
+
+                {detailOuvert === formule && (
+                  <div className="mt-3 rounded-xl bg-muted/50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.15em] text-foreground">
+                      Comprend
+                    </p>
+                    <ul className="mt-2 space-y-1">
+                      {INCLUS_FORMULE[formule]?.map((ligne) => (
+                        <li key={ligne} className="flex gap-2 text-sm text-muted-foreground">
+                          <span className="text-primary">•</span>
+                          {ligne}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormuleChoisie(formule);
+                    setDetailOuvert(null);
+                    // Une formule ne se cumule pas avec le reste de la carte :
+                    // les prestations hors formule déjà cochées sont retirées.
+                    commit(lignesEtat.filter((l) => l.prestation.formule === formule));
+                  }}
+                  className="mt-5 rounded-full bg-primary px-5 py-2.5 text-sm text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95"
+                >
+                  Choisir cette formule
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Formule retenue : son contenu reste consultable, mais en lecture seule.
+          Rien n'y est modifiable, tout est déjà compris dans le tarif. */}
+      {formuleChoisie && (
+        <div className="rounded-2xl border border-primary/30 bg-surface/70 p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="font-serif text-lg text-foreground">
+                {LABEL_FORMULE[formuleChoisie] ?? formuleChoisie}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {DESCRIPTION_FORMULE[formuleChoisie]}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setDetailOuvert((actuel) =>
+                  actuel === formuleChoisie ? null : formuleChoisie,
+                )
+              }
+              className="shrink-0 text-sm text-primary underline-offset-2 hover:underline"
+            >
+              {detailOuvert === formuleChoisie
+                ? "Masquer ce qui est compris"
+                : "Voir ce qui est compris"}
+            </button>
+          </div>
+
+          {detailOuvert === formuleChoisie && (
+            <div className="mt-4 rounded-xl bg-muted/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-foreground">
+                Compris dans la formule
+              </p>
+              <ul className="mt-2 space-y-1">
+                {INCLUS_FORMULE[formuleChoisie]?.map((ligne) => (
+                  <li key={ligne} className="flex gap-2 text-sm text-muted-foreground">
+                    <span className="text-primary">✓</span>
+                    {ligne}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Tout est inclus dans le tarif : il n&apos;y a aucune option à ajouter.
+              </p>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              setFormuleChoisie(null);
+              setDetailOuvert(null);
+              commit(lignesEtat.filter((l) => !l.prestation.formule));
+            }}
+            className="mt-4 text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          >
+            ‹ Quitter la formule et voir toute la carte
+          </button>
+        </div>
+      )}
+
+      {groupes.map((groupe) => (
+        <div key={groupe.cle}>
+          <p className="mb-2 text-xs uppercase tracking-[0.2em] text-primary/80">
+            {groupe.titre}
+          </p>
+          {groupe.cle === formuleChoisie && (
+            <p className="mb-3 text-sm text-muted-foreground">
+              Choisissez la prestation de votre formule — une seule, tout est
+              compris dans son tarif.
+            </p>
+          )}
           <div className="space-y-3">
-            {prestationsDuProfil
-              .filter((p) => p.categorie === categorie)
+            {groupe.items
               .map((prestation) => {
                 const ligne = lignesEtat.find((l) => l.prestation.id === prestation.id);
                 const selectionnee = !!ligne;
@@ -193,7 +389,10 @@ export function PrestationChooser({
                     <label className="flex cursor-pointer items-start justify-between gap-3">
                       <span className="flex items-start gap-3">
                         <input
-                          type="checkbox"
+                          type={prestation.formule ? "radio" : "checkbox"}
+                          name={
+                            prestation.formule ? `formule-${prestation.formule}` : undefined
+                          }
                           checked={selectionnee}
                           onChange={() => togglePrestation(prestation)}
                           className="mt-1 h-4 w-4 shrink-0"
@@ -203,8 +402,14 @@ export function PrestationChooser({
                         </span>
                       </span>
                       <span className="shrink-0 text-right text-xs text-muted-foreground">
-                        {besoinLongueur && !selectionnee ? (
-                          "selon longueur"
+                        {besoinLongueur && !ligne?.longueur ? (
+                          <>
+                            à partir de
+                            <br />
+                            <span className="font-medium text-primary">
+                              {formatPrix(prixAPartirDe(prestation, lissageMatrice))}
+                            </span>
+                          </>
                         ) : (
                           <>
                             {formatDuree(dureeMinutes)}
@@ -252,6 +457,27 @@ export function PrestationChooser({
                             {LABEL_DENSITE[densite]}
                           </button>
                         ))}
+                      </div>
+                    )}
+
+                    {/* Prestation de formule : ce qui est compris s'affiche,
+                        sans case à cocher — rien n'est modifiable ici. */}
+                    {selectionnee && prestation.formule && (
+                      <div className="mt-3 border-t border-border/60 pt-3 pl-7">
+                        <p className="text-[0.65rem] uppercase tracking-wide text-muted-foreground">
+                          Compris dans la formule
+                        </p>
+                        <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+                          {INCLUS_FORMULE[prestation.formule]?.map((inclus) => (
+                            <li
+                              key={inclus}
+                              className="flex items-center gap-1.5 text-sm text-muted-foreground"
+                            >
+                              <span className="text-primary">✓</span>
+                              {inclus}
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     )}
 

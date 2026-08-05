@@ -1,38 +1,48 @@
 "use client";
 
+// Fond d'écran : un voile dégradé et quelques halos qui dérivent lentement.
+// Aucune trame géométrique, pour garder une impression douce et organique.
 export function AnimatedBackground() {
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      {/* Blob gradient animé 1 */}
+    <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      {/* Voile de base, du blanc rosé vers un rose plus soutenu en bas */}
       <div
-        className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full blur-3xl animate-blob opacity-40"
-        style={{ animation: "blob 7s infinite" }}
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(175deg, #fdf9f8 0%, #fbf2f1 42%, #f8ebec 72%, #f5e3e5 100%)",
+        }}
       />
 
-      {/* Blob gradient animé 2 */}
+      {/* Halo chaud en haut à gauche */}
       <div
-        className="absolute top-1/3 -left-40 w-80 h-80 bg-gradient-to-br from-primary/15 to-primary/0 rounded-full blur-3xl opacity-30"
-        style={{ animation: "blob 9s infinite 2s" }}
+        className="absolute -left-[20%] -top-[25%] h-[75vmax] w-[75vmax] rounded-full blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(193, 122, 144, 0.18) 0%, rgba(193, 122, 144, 0.06) 45%, transparent 70%)",
+          animation: "blob 22s ease-in-out infinite",
+        }}
       />
 
-      {/* Blob gradient animé 3 */}
+      {/* Halo plus profond à droite */}
       <div
-        className="absolute bottom-0 right-1/3 w-96 h-96 bg-gradient-to-br from-primary/10 to-primary/0 rounded-full blur-3xl opacity-20"
-        style={{ animation: "blob 11s infinite 4s" }}
+        className="absolute -right-[25%] top-[20%] h-[65vmax] w-[65vmax] rounded-full blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(138, 74, 94, 0.13) 0%, rgba(138, 74, 94, 0.04) 45%, transparent 70%)",
+          animation: "blob 28s ease-in-out infinite 4s",
+        }}
       />
 
-      {/* Lignes animées de décoration */}
-      <svg
-        className="absolute inset-0 w-full h-full opacity-10"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-            <path d="M 50 0 L 0 0 0 50" fill="none" stroke="currentColor" strokeWidth="0.5" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grid)" />
-      </svg>
+      {/* Éclaircie en bas, pour éviter que la page se ferme sur du sombre */}
+      <div
+        className="absolute -bottom-[20%] left-[15%] h-[60vmax] w-[60vmax] rounded-full blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.15) 50%, transparent 72%)",
+          animation: "blob 25s ease-in-out infinite 8s",
+        }}
+      />
     </div>
   );
 }

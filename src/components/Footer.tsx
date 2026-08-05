@@ -17,7 +17,7 @@ export function Footer() {
         <div className="grid gap-12 md:grid-cols-3">
           {/* Section Branding & Description */}
           <div className="footer-section">
-            <p className="font-serif text-2xl font-medium text-foreground">Namasté</p>
+            <p className="handwriting text-3xl leading-tight text-foreground">Namasté</p>
             <p className="mt-1 text-xs uppercase tracking-[0.25em] text-primary">
               Coiffure &amp; bien-être
             </p>
@@ -63,6 +63,13 @@ export function Footer() {
 
         {/* Liens légaux */}
         <div className="mb-8 flex flex-wrap justify-center gap-4 sm:gap-6 text-xs">
+          <Link
+            href="/mon-rendez-vous"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Mon rendez-vous
+          </Link>
+          <span className="text-border">•</span>
           <Link
             href="/privacy"
             className="text-muted-foreground hover:text-foreground transition-colors"

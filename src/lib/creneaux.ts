@@ -1,3 +1,4 @@
+import { estFerme, type Fermeture } from "./fermetures";
 import { HORAIRES_SALON } from "./horaires";
 
 function parseHeureSurDate(date: Date, heure: string): Date {
@@ -13,13 +14,18 @@ export function getCreneauxDisponibles({
   date,
   dureeTotaleMinutes,
   rendezVousExistants,
+  fermetures = [],
   pasMinutes = 15,
 }: {
   date: Date;
   dureeTotaleMinutes: number;
   rendezVousExistants: Periode[];
+  fermetures?: Fermeture[];
   pasMinutes?: number;
 }): Date[] {
+  // Jour de congé posé par le salon : aucun créneau, quels que soient les horaires.
+  if (estFerme(date, fermetures)) return [];
+
   const plages = HORAIRES_SALON[date.getDay()] ?? [];
   const creneaux: Date[] = [];
   const maintenant = new Date();
