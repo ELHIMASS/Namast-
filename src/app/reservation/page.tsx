@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { SeparateurCiseau } from "@/components/Ciseau";
 import { Reveal } from "@/components/Reveal";
 
 export default function ReservationPage() {
@@ -11,7 +12,8 @@ export default function ReservationPage() {
       <main className="flex flex-1 items-center justify-center px-6 py-20">
         <Reveal className="w-full max-w-2xl text-center">
           <h1 className="font-serif text-4xl text-foreground">Prendre rendez-vous</h1>
-          <p className="mt-3 text-muted-foreground">
+          <SeparateurCiseau className="mt-4" />
+          <p className="mt-4 text-muted-foreground">
             Merci de préciser votre situation pour continuer.
           </p>
 

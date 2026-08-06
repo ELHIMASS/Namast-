@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { VideoCarousel } from "@/components/VideoCarousel";
 import { BandeAmbiance } from "@/components/BandeAmbiance";
 import { Galerie } from "@/components/Galerie";
+import { SeparateurCiseau } from "@/components/Ciseau";
 import { Repliable } from "@/components/Repliable";
 import { Reveal } from "@/components/Reveal";
 import { CategoryIcon } from "@/components/CategoryIcon";
@@ -96,11 +97,7 @@ export default async function Home() {
             <h2 className="mt-2 font-serif text-3xl sm:text-4xl gradient-text animate-gradient">
               Nos prestations
             </h2>
-            <div className="mt-5 flex items-center gap-3 text-primary/50">
-              <span className="h-px w-10 bg-current" />
-              <span className="h-1.5 w-1.5 rotate-45 bg-current" />
-              <span className="h-px w-10 bg-current" />
-            </div>
+            <SeparateurCiseau className="mt-5" />
             <p className="mt-5 max-w-md text-muted-foreground">
               Composez votre rendez-vous à la carte : durée et tarif se calculent
               automatiquement selon vos choix.
@@ -265,6 +262,7 @@ export default async function Home() {
             <h2 className="font-serif text-3xl gradient-text animate-gradient">
               Déjà cliente ou nouvelle venue ?
             </h2>
+            <SeparateurCiseau className="mt-5" />
             <p className="mt-3 text-muted-foreground">
               Le salon fonctionne uniquement sur rendez-vous afin de garantir une
               qualité de service optimale.

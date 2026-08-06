@@ -1,14 +1,20 @@
+import { Ciseau } from "@/components/Ciseau";
+
 export function HaircutIcons() {
   return (
-    <div className="pointer-events-none">
-      {/* Ciseaux animés */}
-      <svg
-        className="absolute top-20 right-10 h-12 w-12 text-primary/40 animate-spin-slow"
-        fill="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path d="M6 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm7-6c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm0 4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm7-4c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2zm0 4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-      </svg>
+    // z-10 : sans lui, ces éléments positionnés sont peints avant les sections
+    // (positionnées elles aussi, mais plus loin dans le DOM) et passent donc
+    // sous leurs panneaux en verre dépoli, où ils deviennent invisibles.
+    <div className="pointer-events-none absolute inset-0 z-10">
+      {/* Le motif ciseau du salon, semé sur toute la hauteur de la page, dans
+          les marges pour ne pas retomber sur le texte. Chaque instance a sa
+          rotation, sa taille et son animation propres : un motif répété à
+          l'identique se verrait comme une trame. */}
+      <Ciseau className="absolute right-2 top-[26%] h-12 w-12 -rotate-12 text-primary/30 animate-float sm:right-4 sm:h-14 sm:w-14" />
+      <Ciseau className="absolute left-2 top-[41%] h-10 w-10 rotate-[24deg] text-primary/25 animate-pulse-soft sm:left-4 sm:h-12 sm:w-12" />
+      <Ciseau className="absolute right-2 top-[58%] h-12 w-12 -rotate-[35deg] text-primary/25 animate-float sm:right-4 sm:h-14 sm:w-14" />
+      <Ciseau className="absolute left-2 top-[73%] h-10 w-10 rotate-[8deg] text-primary/25 animate-wiggle sm:left-4 sm:h-12 sm:w-12" />
+      <Ciseau className="absolute right-3 top-[88%] h-11 w-11 -rotate-6 text-primary/20 animate-pulse-soft sm:right-6 sm:h-12 sm:w-12" />
 
       {/* Peigne animé */}
       <svg

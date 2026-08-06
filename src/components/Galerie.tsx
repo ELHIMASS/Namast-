@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { SeparateurCiseau } from "@/components/Ciseau";
 import { Reveal } from "@/components/Reveal";
 
 const PHOTOS = [
@@ -34,6 +35,7 @@ export function Galerie() {
         <h2 className="mt-2 font-serif text-3xl text-foreground">
           Quelques détails
         </h2>
+        <SeparateurCiseau className="mt-5" />
       </div>
 
       <div className="grid gap-10 sm:grid-cols-3 sm:gap-7">

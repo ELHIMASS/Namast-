@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Ciseau } from "@/components/Ciseau";
 
 const HORAIRES = [
   { jour: "Lundi", heures: "13h30 – 18h00" },
@@ -17,7 +18,10 @@ export function Footer() {
         <div className="grid gap-12 md:grid-cols-3">
           {/* Section Branding & Description */}
           <div className="footer-section">
-            <p className="handwriting text-3xl leading-tight text-foreground">Namasté</p>
+            <div className="flex items-center gap-3">
+              <p className="handwriting text-3xl leading-tight text-foreground">Namasté</p>
+              <Ciseau className="h-7 w-7 -rotate-12 text-primary/45" />
+            </div>
             <p className="mt-1 text-xs uppercase tracking-[0.25em] text-primary">
               Coiffure &amp; bien-être
             </p>

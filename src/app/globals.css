@@ -106,6 +106,21 @@ textarea {
   opacity: 0.35;
 }
 
+/* ================== MOTIF CISEAU ==================
+   Le motif est appliqué en masque : sa couche alpha découpe un aplat de
+   couleur, ce qui permet de le teinter (currentColor) au lieu d'un noir qui
+   jurerait sur le rosé.
+
+   ciseau-motif.png est la version détourée de ciseau.png : l'original est
+   opaque à 100 % (le damier est peint dans l'image, ce n'est pas de la
+   transparence), un masque alpha y aurait donc gardé tout le carré. */
+.motif-ciseau {
+  display: inline-block;
+  background-color: currentColor;
+  -webkit-mask: url("/images/ciseau-motif.png") center / contain no-repeat;
+  mask: url("/images/ciseau-motif.png") center / contain no-repeat;
+}
+
 /* ================== CADRES PHOTO ==================
    Cadre d'accrochage mural : passe-partout clair, filet rosé, ombre portée.
    Les photos sont posées légèrement de travers, comme sur un mur de galerie,
