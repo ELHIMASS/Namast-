@@ -55,9 +55,9 @@ async function creneauxPourLignes(dateISO: string, lignes: LigneChoisie[], exclu
   const { prestations, lignesResolues, lissageMatrice } = await resoudreLignes(lignes);
   if (prestations.length === 0) return [];
 
-  // Réservation mercredi uniquement pour les prestations enfants.
+  // Réservation mercredi uniquement pour les prestations enfants et hommes.
   const date = new Date(dateISO);
-  if (prestations.some((p) => p.profil === "ENFANT") && !estMercredi(date)) {
+  if (prestations.some((p) => p.profil === "ENFANT" || p.profil === "HOMME") && !estMercredi(date)) {
     return [];
   }
 

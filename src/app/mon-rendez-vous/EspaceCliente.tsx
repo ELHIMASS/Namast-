@@ -46,7 +46,7 @@ export function EspaceCliente() {
   const [creneaux, setCreneaux] = useState<string[]>([]);
   const [confirmAnnulation, setConfirmAnnulation] = useState(false);
 
-  const jours = useMemo(() => prochainsJours(28).filter(estJourOuvert), []);
+  const jours = useMemo(() => prochainsJours(90).filter(estJourOuvert), []);
 
   function chercher() {
     setErreur(null);

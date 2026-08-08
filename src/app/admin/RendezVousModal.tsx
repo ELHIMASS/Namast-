@@ -110,6 +110,8 @@ export function RendezVousModal({
   );
   const pretPourCreneau = lignes.length > 0 && lignes.every(ligneEstComplete);
   const contientEnfant = lignes.some((l) => l.prestation.profil === "ENFANT");
+  const contientHomme = lignes.some((l) => l.prestation.profil === "HOMME");
+  const mercrediSeul = contientEnfant || contientHomme;
 
   const lignesChoisies: LigneChoisie[] = lignes.map((l) => ({
     prestationId: l.prestation.id,
@@ -119,9 +121,9 @@ export function RendezVousModal({
   }));
 
   const jours = useMemo(() => {
-    const base = prochainsJours(21).filter(estJourOuvert);
-    return contientEnfant ? base.filter(estMercredi) : base;
-  }, [contientEnfant]);
+    const base = prochainsJours(90).filter(estJourOuvert);
+    return mercrediSeul ? base.filter(estMercredi) : base;
+  }, [mercrediSeul]);
 
   function chargerCreneaux(date: Date) {
     startTransition(async () => {
@@ -411,7 +413,7 @@ export function RendezVousModal({
 
           <div>
             <p className="mb-3 text-sm font-semibold text-foreground">
-              Date{contientEnfant ? " (mercredi uniquement)" : ""}
+              Date{mercrediSeul ? " (mercredi uniquement)" : ""}
             </p>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {jours.map((jour) => {

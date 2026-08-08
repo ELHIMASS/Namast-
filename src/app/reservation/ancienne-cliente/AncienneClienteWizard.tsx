@@ -68,6 +68,8 @@ export function AncienneClienteWizard({
   );
   const pretPourCreneau = lignes.length > 0 && lignes.every(ligneEstComplete);
   const contientEnfant = lignes.some((l) => l.prestation.profil === "ENFANT");
+  const contientHomme = lignes.some((l) => l.prestation.profil === "HOMME");
+  const mercrediSeul = contientEnfant || contientHomme;
 
   const lignesChoisies: LigneChoisie[] = lignes.map((l) => ({
     prestationId: l.prestation.id,
@@ -77,9 +79,9 @@ export function AncienneClienteWizard({
   }));
 
   const jours = useMemo(() => {
-    const base = prochainsJours(21).filter(estJourOuvert);
-    return contientEnfant ? base.filter(estMercredi) : base;
-  }, [contientEnfant]);
+    const base = prochainsJours(90).filter(estJourOuvert);
+    return mercrediSeul ? base.filter(estMercredi) : base;
+  }, [mercrediSeul]);
 
   function soumettreIdentification(e: React.FormEvent) {
     e.preventDefault();
@@ -213,7 +215,7 @@ export function AncienneClienteWizard({
       <div className="space-y-6">
         <div>
           <p className="mb-3 text-sm text-muted-foreground">
-            Choisissez une date{contientEnfant ? " (mercredi uniquement)" : ""}
+            Choisissez une date{mercrediSeul ? " (mercredi uniquement)" : ""}
           </p>
           <div className="flex gap-2 overflow-x-auto pb-2">
             {jours.map((jour) => {

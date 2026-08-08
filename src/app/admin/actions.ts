@@ -124,7 +124,7 @@ export async function getCreneauxAdminAction(
   if (prestations.length === 0) return [];
 
   const date = new Date(dateISO);
-  if (prestations.some((p) => p.profil === "ENFANT") && !estMercredi(date)) {
+  if (prestations.some((p) => p.profil === "ENFANT" || p.profil === "HOMME") && !estMercredi(date)) {
     return [];
   }
 

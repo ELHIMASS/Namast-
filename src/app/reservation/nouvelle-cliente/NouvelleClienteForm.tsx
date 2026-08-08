@@ -65,6 +65,8 @@ export function NouvelleClienteForm({
   );
   const pretPourCreneau = lignes.length > 0 && lignes.every(ligneEstComplete);
   const contientEnfant = lignes.some((l) => l.prestation.profil === "ENFANT");
+  const contientHomme = lignes.some((l) => l.prestation.profil === "HOMME");
+  const mercrediSeul = contientEnfant || contientHomme;
 
   const lignesChoisies: LigneChoisie[] = lignes.map((l) => ({
     prestationId: l.prestation.id,
@@ -74,9 +76,9 @@ export function NouvelleClienteForm({
   }));
 
   const jours = useMemo(() => {
-    const base = prochainsJours(21).filter(estJourOuvert);
-    return contientEnfant ? base.filter(estMercredi) : base;
-  }, [contientEnfant]);
+    const base = prochainsJours(90).filter(estJourOuvert);
+    return mercrediSeul ? base.filter(estMercredi) : base;
+  }, [mercrediSeul]);
 
   function choisirDate(date: Date) {
     setDateSelectionnee(date);
@@ -261,7 +263,7 @@ export function NouvelleClienteForm({
       <div className="space-y-6">
         <div>
           <p className="mb-3 text-sm text-muted-foreground">
-            Date souhaitée{contientEnfant ? " (mercredi uniquement)" : ""}
+            Date souhaitée{mercrediSeul ? " (mercredi uniquement)" : ""}
           </p>
           <div className="flex gap-2 overflow-x-auto pb-2">
             {jours.map((jour) => {

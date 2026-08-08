@@ -54,7 +54,8 @@ export const LABEL_FORMULE: Record<string, string> = {
 };
 
 export const DESCRIPTION_FORMULE: Record<string, string> = {
-  PRIVILEGE: "L'entretien de vos cheveux avec efficacité et qualité, soin classique inclus.",
+  PRIVILEGE:
+    "L'essentiel : shampooing, coupe et brushing. Pour un soin, une mousse coiffante ou toute autre prestation supplémentaire, cochez les options proposées.",
   BIEN_ETRE:
     "Les mêmes prestations, enrichies d'un soin profond, du bac massant et d'un modelage du cuir chevelu.",
 };
@@ -63,8 +64,8 @@ export const DESCRIPTION_FORMULE: Record<string, string> = {
 export const INCLUS_FORMULE: Record<string, string[]> = {
   PRIVILEGE: [
     "Shampooing adapté",
-    "Soin classique",
     "Coupe et/ou coiffage selon la prestation",
+    "→ Soins, mousse coiffante et autres prestations disponibles en options",
   ],
   BIEN_ETRE: [
     "Shampooing adapté",
