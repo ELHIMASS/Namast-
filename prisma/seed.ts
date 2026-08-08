@@ -149,12 +149,28 @@ const OPTIONS: {
   variantes?: Partial<Record<Longueur, number>>;
 }[] = [
   {
+    nom: "Soin classique",
+    groupe: "RITUEL_FEMME",
+    description: "Soin hydratant express au bac",
+    prixCentimes: 500,
+    dureeMinutes: 5,
+    ordre: 1,
+  },
+  {
+    nom: "Soin profond",
+    groupe: "RITUEL_FEMME",
+    description: "Soin réparateur intense avec massage",
+    prixCentimes: 1200,
+    dureeMinutes: 15,
+    ordre: 2,
+  },
+  {
     nom: "Rituel Coiffure Détente",
     groupe: "RITUEL_FEMME",
     description: "Bac massant, massage cuir chevelu, soin Belmakosmetik, moment relaxation.",
     prixCentimes: 1000,
     dureeMinutes: 10,
-    ordre: 1,
+    ordre: 3,
   },
   {
     nom: "Massage cuir chevelu prolongé",
@@ -162,7 +178,7 @@ const OPTIONS: {
     description: "",
     prixCentimes: 1000,
     dureeMinutes: 10,
-    ordre: 2,
+    ordre: 4,
   },
   {
     nom: "Massage des mains pendant la pause couleur",
@@ -170,7 +186,15 @@ const OPTIONS: {
     description: "",
     prixCentimes: 1000,
     dureeMinutes: 10,
-    ordre: 3,
+    ordre: 5,
+  },
+  {
+    nom: "Mousse coiffante / Produit de finition",
+    groupe: "COIFFAGE",
+    description: "",
+    prixCentimes: 300,
+    dureeMinutes: 5,
+    ordre: 6,
   },
   {
     nom: "Wavy",
@@ -178,7 +202,7 @@ const OPTIONS: {
     description: "",
     prixCentimes: null,
     dureeMinutes: 10,
-    ordre: 4,
+    ordre: 7,
     variantes: { COURT: 500, CARRE: 500, MI_LONG: 1000, LONG: 1500, TRES_LONG: 1500 },
   },
   {
@@ -187,7 +211,7 @@ const OPTIONS: {
     description: "",
     prixCentimes: 1500,
     dureeMinutes: 15,
-    ordre: 5,
+    ordre: 8,
   },
   {
     nom: "Allongement couleur",
@@ -195,7 +219,7 @@ const OPTIONS: {
     description: "",
     prixCentimes: 800,
     dureeMinutes: 10,
-    ordre: 6,
+    ordre: 9,
   },
   {
     nom: "Rituel Détente Homme",
@@ -203,7 +227,7 @@ const OPTIONS: {
     description: "Bac massant, massage cuir chevelu, soin.",
     prixCentimes: 1000,
     dureeMinutes: 10,
-    ordre: 7,
+    ordre: 10,
   },
 ];
 

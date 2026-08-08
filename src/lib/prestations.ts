@@ -144,14 +144,13 @@ export function getGroupesOptionsPourPrestation(prestation: {
   estLissage: boolean;
   formule?: string | null;
 }): string[] {
-  if (prestation.formule) return [];
   if (prestation.estLissage) return [];
   if (prestation.profil === "HOMME") return ["HOMME"];
-  if (prestation.profil === "FEMME" && prestation.categorie === "COUPE") {
+  if (prestation.profil === "FEMME") {
+    if (prestation.categorie === "COULEUR") {
+      return ["BIEN_ETRE", "COULEUR"];
+    }
     return ["RITUEL_FEMME", "BIEN_ETRE", "COIFFAGE"];
-  }
-  if (prestation.profil === "FEMME" && prestation.categorie === "COULEUR") {
-    return ["BIEN_ETRE", "COULEUR"];
   }
   return [];
 }
