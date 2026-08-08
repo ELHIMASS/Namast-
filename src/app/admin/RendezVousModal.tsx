@@ -110,17 +110,6 @@ export function RendezVousModal({
     [lignes, lissageMatrice],
   );
   const pretPourCreneau = lignes.length > 0 && lignes.every(ligneEstComplete);
-  const prestationsFiltre = useMemo(
-    () =>
-      lignes.map((l) => ({
-        profil: l.prestation.profil,
-        categorie: l.prestation.categorie,
-        estLissage: l.prestation.estLissage,
-        formule: l.prestation.formule,
-      })),
-    [lignes],
-  );
-
   const lignesChoisies: LigneChoisie[] = lignes.map((l) => ({
     prestationId: l.prestation.id,
     longueur: l.longueur,
@@ -128,11 +117,7 @@ export function RendezVousModal({
     optionIds: l.options.map((o) => o.id),
   }));
 
-  const jours = useMemo(() => {
-    const base = prochainsJours(90).filter(estJourOuvert);
-    if (prestationsFiltre.length === 0) return base;
-    return base.filter((date) => estJourAutorisePourPrestations(date, prestationsFiltre));
-  }, [prestationsFiltre]);
+  const jours = useMemo(() => prochainsJours(90).filter(estJourOuvert), []);
 
   function chargerCreneaux(date: Date) {
     startTransition(async () => {

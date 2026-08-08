@@ -54,6 +54,88 @@ function heureCourte(date: Date): string {
   return date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 }
 
+export type StyleCouleurRDV = {
+  bg: string;
+  text: string;
+  subtext: string;
+  badgeBg: string;
+};
+
+export function getCouleurRendezVous(rdv: RendezVousCalendrier): StyleCouleurRDV {
+  const prestations = rdv.prestations.map((p) => p.prestation);
+
+  // 1. Profils spécifiques : Homme et Enfants
+  const estHomme = prestations.some((p) => p.profil === "HOMME");
+  const estEnfant = prestations.some((p) => p.profil === "ENFANT");
+
+  if (estHomme) {
+    // Bleu pour Homme
+    return {
+      bg: "bg-blue-600 hover:bg-blue-700",
+      text: "text-white font-medium",
+      subtext: "text-blue-100",
+      badgeBg: "bg-blue-600",
+    };
+  }
+
+  if (estEnfant) {
+    const noms = prestations.map((p) => p.nom.toLowerCase()).join(" ");
+    const estGarcon = noms.includes("garçon") || noms.includes("garcon") || noms.includes("ado");
+
+    if (estGarcon) {
+      // Bleu ciel pour Garçon
+      return {
+        bg: "bg-sky-400 hover:bg-sky-500",
+        text: "text-sky-950 font-semibold",
+        subtext: "text-sky-900/80",
+        badgeBg: "bg-sky-400",
+      };
+    } else {
+      // Rose clair pour Fille
+      return {
+        bg: "bg-pink-300 hover:bg-pink-400",
+        text: "text-pink-950 font-semibold",
+        subtext: "text-pink-900/80",
+        badgeBg: "bg-pink-300",
+      };
+    }
+  }
+
+  // 2. Formules Femmes : Privilège vs Bien-être
+  const aPrivilege = prestations.some((p) => p.formule === "PRIVILEGE");
+  const aBienEtre = prestations.some(
+    (p) => p.formule === "BIEN_ETRE" || p.categorie === "HEAD_SPA" || p.categorie === "MASSAGE"
+  );
+
+  if (aPrivilege) {
+    // Rose foncé pour Privilège
+    return {
+      bg: "bg-rose-700 hover:bg-rose-800",
+      text: "text-white font-medium",
+      subtext: "text-rose-100",
+      badgeBg: "bg-rose-700",
+    };
+  }
+
+  if (aBienEtre) {
+    // Rose pastel pour Bien-être
+    return {
+      bg: "bg-rose-200 hover:bg-rose-300",
+      text: "text-rose-950 font-semibold",
+      subtext: "text-rose-900/80",
+      badgeBg: "bg-rose-200",
+    };
+  }
+
+  // Défaut : Rose doux
+  return {
+    bg: "bg-rose-300 hover:bg-rose-400",
+    text: "text-rose-950 font-semibold",
+    subtext: "text-rose-900/80",
+    badgeBg: "bg-rose-300",
+  };
+}
+
 export function WeekCalendar({
   rendezVous,
   onSelect,
@@ -87,8 +169,9 @@ export function WeekCalendar({
   }, [jours, rendezVous]);
 
   return (
-    <div className="glass overflow-hidden rounded-2xl border border-white/50">
-      <div className="flex items-center justify-between border-b border-border/60 px-6 py-4">
+    <div className="glass overflow-hidden rounded-2xl border border-white/50 space-y-4">
+      {/* En-tête calendrier & Navigation */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 px-6 py-4">
         <button
           type="button"
           onClick={() => setWeekStart((w) => new Date(w.getFullYear(), w.getMonth(), w.getDate() - 7))}
@@ -110,6 +193,30 @@ export function WeekCalendar({
         >
           ›
         </button>
+      </div>
+
+      {/* Légende des couleurs */}
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 px-6 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full bg-rose-700 border border-rose-800" />
+          <span>Privilège (Rose foncé)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full bg-rose-200 border border-rose-300" />
+          <span>Bien-être (Rose pastel)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full bg-blue-600 border border-blue-700" />
+          <span>Homme (Bleu)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full bg-sky-400 border border-sky-500" />
+          <span>Garçon (Bleu ciel)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3 rounded-full bg-pink-300 border border-pink-400" />
+          <span>Fille (Rose clair)</span>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -207,21 +314,23 @@ export function WeekCalendar({
                   const finMin = minutesDepuisDebut(new Date(rdv.dateFin));
                   const top = pourcentage(debutMin);
                   const height = Math.max(pourcentage(finMin - debutMin), 4);
+                  const styleCouleur = getCouleurRendezVous(rdv);
+
                   return (
                     <button
                       key={rdv.id}
                       type="button"
                       onClick={() => onSelect?.(rdv)}
-                      className="absolute inset-x-1 overflow-hidden rounded-md bg-primary px-1.5 py-1 text-left text-primary-foreground shadow-sm transition-transform hover:z-10 hover:scale-[1.02] hover:shadow-md"
+                      className={`absolute inset-x-1 overflow-hidden rounded-md ${styleCouleur.bg} px-1.5 py-1 text-left shadow-sm transition-transform hover:z-10 hover:scale-[1.02] hover:shadow-md`}
                       style={{ top: `${top}%`, height: `${height}%` }}
                       title={`${rdv.client.prenom} ${rdv.client.nom} — ${rdv.prestations
                         .map((p) => p.prestation.nom)
                         .join(", ")}`}
                     >
-                      <p className="truncate text-[0.7rem] font-medium leading-tight">
+                      <p className={`truncate text-[0.7rem] leading-tight ${styleCouleur.text}`}>
                         {heureCourte(new Date(rdv.dateDebut))} {rdv.client.prenom}
                       </p>
-                      <p className="truncate text-[0.65rem] leading-tight text-primary-foreground/80">
+                      <p className={`truncate text-[0.65rem] leading-tight ${styleCouleur.subtext}`}>
                         {rdv.prestations.map((p) => p.prestation.nom).join(", ")}
                       </p>
                     </button>

@@ -124,10 +124,6 @@ export async function getCreneauxAdminAction(
   if (prestations.length === 0) return [];
 
   const date = new Date(dateISO);
-  if (!estJourAutorisePourPrestations(date, prestations)) {
-    return [];
-  }
-
   const { dureeTotaleAvecNettoyage } = calculerTotalAvecOptions(lignesResolues, lissageMatrice);
   const debutJournee = new Date(date);
   debutJournee.setHours(0, 0, 0, 0);
@@ -152,6 +148,7 @@ export async function getCreneauxAdminAction(
     prestations,
     rendezVousExistants,
     fermetures,
+    estAdmin: true,
   }).map((d) => d.toISOString());
 }
 
@@ -316,6 +313,7 @@ async function poserOccurrences({
       dateFin: fin,
       rendezVousExistants: existants,
       fermetures,
+      estAdmin: true,
     });
 
     if (!verdict.libre) {
