@@ -14,7 +14,7 @@ import {
 function prochainsJours(nombre: number): Date[] {
   const jours: Date[] = [];
   const aujourdhui = new Date();
-  aujourdhui.setHours(0, 0, 0, 0);
+  aujourdhui.setHours(12, 0, 0, 0);
   for (let i = 0; i < nombre; i++) {
     const d = new Date(aujourdhui);
     d.setDate(d.getDate() + i);
