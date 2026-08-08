@@ -5,8 +5,8 @@ const HORAIRES = [
   { jour: "Lundi", heures: "13h30 – 18h00" },
   { jour: "Mardi", heures: "Fermé" },
   { jour: "Mercredi", heures: "9h00 – 13h00 / 14h00 – 18h00" },
-  { jour: "Jeudi", heures: "9h00 – 13h00 / 14h00 – 18h30" },
-  { jour: "Vendredi", heures: "9h00 – 13h00 / 14h00 – 18h30" },
+  { jour: "Jeudi", heures: "9h00 – 13h00 / 14h00 – 18h00" },
+  { jour: "Vendredi", heures: "9h00 – 13h00 / 14h00 – 18h00" },
   { jour: "Samedi", heures: "9h00 – 14h00" },
 ];
 

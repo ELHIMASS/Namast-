@@ -33,8 +33,9 @@ export function getCreneauxDisponibles({
   pasMinutes?: number;
   estAdmin?: boolean;
 }): Date[] {
-  // Jour de congé posé par le salon : aucun créneau.
-  if (estFerme(date, fermetures)) return [];
+  // Jour de congé posé par le salon : aucun créneau. L'espace pro n'est pas
+  // concerné, il doit pouvoir poser un rendez-vous même un jour de fermeture.
+  if (!estAdmin && estFerme(date, fermetures)) return [];
 
   // Pour les clientes (non-admin), vérification de la compatibilité des prestations pour ce jour
   if (!estAdmin && prestations.length > 0 && !estJourAutorisePourPrestations(date, prestations)) {
@@ -42,7 +43,11 @@ export function getCreneauxDisponibles({
   }
 
   const tempsMiseEnPlace = getTempsMiseEnPlaceMinutes(prestations);
-  const plages = HORAIRES_SALON[date.getDay()] ?? [];
+  // Espace pro : la journée entière, de 00:00 à minuit, sans égard pour les
+  // horaires d'ouverture — dimanche et mardi compris.
+  const plages = estAdmin
+    ? [{ debut: "00:00", fin: "24:00" }]
+    : (HORAIRES_SALON[date.getDay()] ?? []);
   const creneaux: Date[] = [];
   const maintenant = new Date();
 
@@ -59,7 +64,11 @@ export function getCreneauxDisponibles({
       const debutReel = new Date(curseur.getTime() - tempsMiseEnPlace * 60000);
 
       // La mise en place ne peut pas dépasser avant l'ouverture du salon
-      const horsPlageOuverture = debutReel < debutPlage && (debutPlage.getTime() - debutReel.getTime() > 15 * 60000);
+      // (sans objet pour l'espace pro, qui n'a pas d'heure d'ouverture).
+      const horsPlageOuverture =
+        !estAdmin &&
+        debutReel < debutPlage &&
+        debutPlage.getTime() - debutReel.getTime() > 15 * 60000;
 
       // Pour les clientes, vérification des règles d'horaires (ex: Privilège 9h-11h & 16h-18h30)
       const horaireValide =
@@ -68,7 +77,9 @@ export function getCreneauxDisponibles({
       const chevauche = rendezVousExistants.some(
         (rdv) => debutReel < rdv.dateFin && finPrestation > rdv.dateDebut,
       );
-      const estPasse = curseur < maintenant;
+      // L'espace pro peut aussi noter un rendez-vous sur une heure déjà passée
+      // dans la journée en cours (saisie après coup).
+      const estPasse = !estAdmin && curseur < maintenant;
 
       if (!chevauche && !estPasse && !horsPlageOuverture && horaireValide) {
         creneaux.push(new Date(curseur));

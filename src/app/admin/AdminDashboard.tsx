@@ -21,6 +21,8 @@ type RendezVous = {
   dateFin: Date;
   message: string | null;
   createdAt: Date;
+  /** Posé par le salon depuis l'espace pro, et non pris en ligne par la cliente. */
+  creeParAdmin: boolean;
   client: {
     id: string;
     nom: string;

@@ -233,6 +233,9 @@ export async function creerRendezVousAdminAction({
     data: {
       clientId: idClient,
       statut: "CONFIRME",
+      // Posé par le salon, et non pris par la cliente en ligne : le
+      // calendrier le signale.
+      creeParAdmin: true,
       dateDebut,
       dateFin,
       prestations: {
@@ -330,6 +333,7 @@ async function poserOccurrences({
       data: {
         clientId,
         statut: "CONFIRME",
+        creeParAdmin: true,
         serieId: premier.id,
         dateDebut: debut,
         dateFin: fin,

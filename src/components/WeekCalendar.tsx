@@ -20,6 +20,8 @@ export type RendezVousCalendrier = {
   id: string;
   dateDebut: Date;
   dateFin: Date;
+  /** Posé par le salon depuis l'espace pro, et non pris en ligne par la cliente. */
+  creeParAdmin?: boolean;
   client: { id: string; prenom: string; nom: string; telephone: string | null; email: string };
   prestations: {
     prestation: PrestationAvecVariantes;
@@ -325,10 +327,22 @@ export function WeekCalendar({
                       style={{ top: `${top}%`, height: `${height}%` }}
                       title={`${rdv.client.prenom} ${rdv.client.nom} — ${rdv.prestations
                         .map((p) => p.prestation.nom)
-                        .join(", ")}`}
+                        .join(", ")}${rdv.creeParAdmin ? " — ajouté par le salon" : ""}`}
                     >
-                      <p className={`truncate text-[0.7rem] leading-tight ${styleCouleur.text}`}>
-                        {heureCourte(new Date(rdv.dateDebut))} {rdv.client.prenom}
+                      <p
+                        className={`flex items-center gap-1 truncate text-[0.7rem] leading-tight ${styleCouleur.text}`}
+                      >
+                        {rdv.creeParAdmin && (
+                          <span
+                            className="shrink-0 rounded-sm bg-current/20 px-1 text-[0.55rem] font-semibold uppercase tracking-wide"
+                            title="Rendez-vous ajouté par le salon"
+                          >
+                            Admin
+                          </span>
+                        )}
+                        <span className="truncate">
+                          {heureCourte(new Date(rdv.dateDebut))} {rdv.client.prenom}
+                        </span>
                       </p>
                       <p className={`truncate text-[0.65rem] leading-tight ${styleCouleur.subtext}`}>
                         {rdv.prestations.map((p) => p.prestation.nom).join(", ")}

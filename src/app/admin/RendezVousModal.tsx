@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { estJourAutorisePourPrestations } from "@/lib/reglesCreneaux";
-import { estJourOuvert, estMercredi } from "@/lib/horaires";
 import {
   calculerTotalAvecOptions,
   formatDuree,
@@ -117,7 +116,9 @@ export function RendezVousModal({
     optionIds: l.options.map((o) => o.id),
   }));
 
-  const jours = useMemo(() => prochainsJours(90).filter(estJourOuvert), []);
+  // Aucun filtre de jour dans l'espace pro : dimanche, mardi et jours de
+  // fermeture sont proposés comme les autres.
+  const jours = useMemo(() => prochainsJours(90), []);
 
   function chargerCreneaux(date: Date) {
     startTransition(async () => {
