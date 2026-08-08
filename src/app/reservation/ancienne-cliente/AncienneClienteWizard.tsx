@@ -21,7 +21,7 @@ import {
   getCreneauxAction,
 } from "../actions";
 
-type ClientTrouve = { id: string; nom: string; prenom: string; telephone: string };
+type ClientTrouve = { id: string; nom: string; prenom: string; telephone: string | null };
 
 type Step = "identification" | "prestations" | "creneau" | "confirme";
 

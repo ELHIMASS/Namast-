@@ -23,20 +23,20 @@ export const IMAGE_CATEGORIE: Record<string, { src: string; alt: string }> = {
     alt: "Poste de coiffage du salon : miroir rond, fauteuil et produits de coiffage",
   },
   COULEUR: {
-    src: "/images/i5.png",
-    alt: "Bac de lavage avec fauteuil relax et gamme de soins colorants",
+    src: "/images/bac-lavage.jpg",
+    alt: "Bac de lavage du salon, fauteuil en cuir et gamme de soins colorants",
   },
   SOIN: {
     src: "/images/i3.png",
-    alt: "Espace soins du salon et étagères de produits capillaires",
+    alt: "Espace soins du salon, bac massant et étagères de produits capillaires",
   },
   HEAD_SPA: {
-    src: "/images/i2.png",
-    alt: "Bac Head Spa en chromothérapie, dans la salle de soin tamisée",
+    src: "/images/headspa-chromotherapie.jpg",
+    alt: "Bac Head Spa en chromothérapie violette, dans la salle de soin tamisée",
   },
   MASSAGE: {
-    src: "/images/i6.png",
-    alt: "Table de massage préparée, huiles essentielles et arbre de vie",
+    src: "/images/salle-soin-table.jpg",
+    alt: "Table de massage préparée face au bac Head Spa et aux étagères de soins",
   },
   EVENEMENTIEL: {
     src: "/images/i8.png",
@@ -46,32 +46,31 @@ export const IMAGE_CATEGORIE: Record<string, { src: string; alt: string }> = {
 
 // Les deux formules de coiffure femme, telles qu'elles figurent sur les
 // plaquettes du salon.
-export const ORDRE_FORMULES = ["ESSENTIELLE", "BIEN_ETRE"];
+export const ORDRE_FORMULES = ["PRIVILEGE", "BIEN_ETRE"];
 
 export const LABEL_FORMULE: Record<string, string> = {
-  ESSENTIELLE: "Coiffure Essentielle",
-  BIEN_ETRE: "Coiffure Bien-être",
+  PRIVILEGE: "Tarifs Privilège",
+  BIEN_ETRE: "Tarifs Bien-être",
 };
 
 export const DESCRIPTION_FORMULE: Record<string, string> = {
-  ESSENTIELLE: "L'entretien de vos cheveux avec efficacité et qualité.",
+  PRIVILEGE: "L'entretien de vos cheveux avec efficacité et qualité, soin classique inclus.",
   BIEN_ETRE:
-    "Les mêmes prestations que la Coiffure Essentielle, enrichies d'une véritable expérience de détente.",
+    "Les mêmes prestations, enrichies d'un soin profond, du bac massant et d'un modelage du cuir chevelu.",
 };
 
 /** Ce que comprend chaque formule, quelle que soit la prestation choisie. */
 export const INCLUS_FORMULE: Record<string, string[]> = {
-  ESSENTIELLE: [
+  PRIVILEGE: [
     "Shampooing adapté",
     "Soin classique",
     "Coupe et/ou coiffage selon la prestation",
   ],
   BIEN_ETRE: [
     "Shampooing adapté",
-    "Soin professionnel Belmakosmetik",
+    "Soin profond",
     "Bac massant",
-    "Massage relaxant du cuir chevelu",
-    "Temps de détente personnalisé",
+    "Modelage du cuir chevelu",
     "Coupe et/ou coiffage selon la prestation",
   ],
 };

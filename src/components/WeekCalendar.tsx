@@ -20,7 +20,7 @@ export type RendezVousCalendrier = {
   id: string;
   dateDebut: Date;
   dateFin: Date;
-  client: { id: string; prenom: string; nom: string; telephone: string; email: string };
+  client: { id: string; prenom: string; nom: string; telephone: string | null; email: string };
   prestations: {
     prestation: PrestationAvecVariantes;
     longueur?: Longueur | null;

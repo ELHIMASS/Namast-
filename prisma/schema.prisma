@@ -39,7 +39,7 @@ enum Profil {
 // Les deux formules de coiffure femme. Les prestations hors formule
 // (Head Spa, massages, homme, enfant) laissent ce champ vide.
 enum Formule {
-  ESSENTIELLE
+  PRIVILEGE
   BIEN_ETRE
 }
 
@@ -69,7 +69,10 @@ model Client {
   id             String   @id @default(cuid())
   nom            String
   prenom         String
-  telephone      String   @unique
+  // Facultatif et non unique : une partie du fichier clientes n'a pas de
+  // numéro, et des proches partagent la même ligne fixe. La cliente est
+  // identifiée par son prénom et son nom, plus par son téléphone.
+  telephone      String?
   email          String
   dateNaissance  DateTime?
   commentConnue  String?

@@ -27,7 +27,7 @@ type ClientResume = {
   id: string;
   nom: string;
   prenom: string;
-  telephone: string;
+  telephone: string | null;
   email: string;
 };
 
@@ -61,8 +61,8 @@ export function RendezVousModal({
   const modeEdition = !!rendezVous;
 
   // La cliente se retrouve par son nom ou son prénom. Le téléphone n'est
-  // demandé que pour créer une fiche : il sert de clé unique en base et
-  // permet à la cliente d'accéder ensuite à son espace.
+  // demandé que pour créer une fiche : il n'identifie plus une cliente à lui
+  // seul, mais reste utile pour la joindre et pour son espace en ligne.
   const [recherche, setRecherche] = useState("");
   const [resultats, setResultats] = useState<ClientResume[] | null>(
     modeEdition ? [] : null,
@@ -153,7 +153,7 @@ export function RendezVousModal({
     setNom(client.nom);
     setPrenom(client.prenom);
     setEmail(client.email);
-    setTelephone(client.telephone);
+    setTelephone(client.telephone ?? "");
   }
 
   /** Prépare la création d'une fiche à partir de ce qui a été tapé. */

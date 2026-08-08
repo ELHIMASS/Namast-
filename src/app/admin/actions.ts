@@ -79,9 +79,14 @@ export async function getRendezVousConfirmes() {
   });
 }
 
+/**
+ * Un numéro peut désormais correspondre à plusieurs fiches (proches partageant
+ * une ligne fixe), d'où un findFirst et non un findUnique.
+ */
 export async function chercherClientParTelephoneAction(telephone: string) {
-  return prisma.client.findUnique({
+  return prisma.client.findFirst({
     where: { telephone: normaliserTelephone(telephone) },
+    orderBy: { createdAt: "asc" },
   });
 }
 
@@ -184,16 +189,27 @@ export async function creerRendezVousAdminAction({
 
   let idClient = clientId;
   if (!idClient && nouveauClient) {
-    const client = await prisma.client.upsert({
-      where: { telephone: normaliserTelephone(nouveauClient.telephone) },
-      update: {},
-      create: {
-        nom: nouveauClient.nom,
-        prenom: nouveauClient.prenom,
-        telephone: normaliserTelephone(nouveauClient.telephone),
-        email: nouveauClient.email,
+    const telephone = normaliserTelephone(nouveauClient.telephone);
+    // Le téléphone n'identifie plus une fiche à lui seul : on ne réutilise une
+    // fiche existante que si le nom concorde aussi, sinon on en crée une.
+    const existante = await prisma.client.findFirst({
+      where: {
+        telephone,
+        nom: { equals: nouveauClient.nom, mode: "insensitive" },
+        prenom: { equals: nouveauClient.prenom, mode: "insensitive" },
       },
     });
+
+    const client =
+      existante ??
+      (await prisma.client.create({
+        data: {
+          nom: nouveauClient.nom,
+          prenom: nouveauClient.prenom,
+          telephone,
+          email: nouveauClient.email,
+        },
+      }));
     idClient = client.id;
   }
 

@@ -167,17 +167,27 @@ export async function creerDemandeNouvelleClienteAction({
   const dateFin = new Date(dateDebut.getTime() + dureeTotaleAvecNettoyage * 60000);
   const telephoneNormalise = normaliserTelephone(telephone);
 
-  const client = await prisma.client.upsert({
-    where: { telephone: telephoneNormalise },
-    update: {},
-    create: {
-      nom,
-      prenom,
+  // Le téléphone n'est plus unique (proches partageant une ligne fixe) : une
+  // fiche n'est réutilisée que si le nom concorde également.
+  const existante = await prisma.client.findFirst({
+    where: {
       telephone: telephoneNormalise,
-      email,
-      commentConnue: commentConnue || undefined,
+      nom: { equals: nom, mode: "insensitive" },
+      prenom: { equals: prenom, mode: "insensitive" },
     },
   });
+
+  const client =
+    existante ??
+    (await prisma.client.create({
+      data: {
+        nom,
+        prenom,
+        telephone: telephoneNormalise,
+        email,
+        commentConnue: commentConnue || undefined,
+      },
+    }));
 
   const rendezVous = await prisma.rendezVous.create({
     data: {

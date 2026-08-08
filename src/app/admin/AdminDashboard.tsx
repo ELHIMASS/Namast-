@@ -25,7 +25,7 @@ type RendezVous = {
     id: string;
     nom: string;
     prenom: string;
-    telephone: string;
+    telephone: string | null;
     email: string;
     commentConnue: string | null;
   };

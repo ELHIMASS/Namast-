@@ -8,8 +8,8 @@ export function BandeAmbiance() {
           se fond dans la page en haut et en bas, sans bord marqué. */}
       <div className="photo-frame photo-fondue-verticale absolute inset-0">
         <Image
-          src="/images/i1.png"
-          alt="Salle de soin du salon en lumière tamisée : table de massage, bac Head Spa et décoration zen"
+          src="/images/salle-soin-ensemble.jpg"
+          alt="Salle de soin du salon : table de massage, bac Head Spa en chromothérapie, toile de Bouddha et arbre de vie"
           fill
           sizes="100vw"
           className="object-cover"

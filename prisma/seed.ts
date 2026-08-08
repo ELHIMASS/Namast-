@@ -391,17 +391,21 @@ async function main() {
   }
 
   // --- Cliente de test ---
-  await prisma.client.upsert({
-    where: { telephone: "0612345678" },
-    update: {},
-    create: {
-      nom: "Martin",
-      prenom: "Sophie",
-      telephone: "0612345678",
-      email: "sophie.martin@example.com",
-      commentConnue: "Cliente historique du salon",
-    },
+  // Le téléphone n'étant plus unique, on cherche la fiche avant de la créer.
+  const clienteTest = await prisma.client.findFirst({
+    where: { nom: "Martin", prenom: "Sophie" },
   });
+  if (!clienteTest) {
+    await prisma.client.create({
+      data: {
+        nom: "Martin",
+        prenom: "Sophie",
+        telephone: "0612345678",
+        email: "sophie.martin@example.com",
+        commentConnue: "Cliente historique du salon",
+      },
+    });
+  }
 
   console.log("Seed terminé : carte finale (femmes/hommes/enfants, options, lissage).");
 }

@@ -9,14 +9,14 @@ const PHOTOS = [
     alt: "Toile représentant un Bouddha doré sur fond noir, accrochée dans le salon",
   },
   {
-    src: "/images/i9.png",
-    legende: "Visage serein",
-    alt: "Peinture colorée d'un visage de Bouddha, accrochée près de l'entrée",
+    src: "/images/bouddha-statue.jpg",
+    legende: "Bouddha",
+    alt: "Statue de Bouddha en méditation, patinée argent, posée sur une console en bois",
   },
   {
-    src: "/images/i8.png",
-    legende: "Arbre de vie",
-    alt: "Plateau en bois gravé d'un arbre de vie, posé près d'un bonsaï",
+    src: "/images/detail-lampe-sel.jpg",
+    legende: "Coin détente",
+    alt: "Lampe de sel allumée, terrarium suspendu et fontaine de galets sur une étagère",
   },
 ];
 

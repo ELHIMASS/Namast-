@@ -48,7 +48,7 @@ export type PrestationAvecVariantes = {
   dureeMinutes: number;
   tempsNettoyageMinutes: number;
   estLissage: boolean;
-  /** "ESSENTIELLE" | "BIEN_ETRE", ou null hors formule de coiffure. */
+  /** "PRIVILEGE" | "BIEN_ETRE", ou null hors formule de coiffure. */
   formule: string | null;
   variantesLongueur: { longueur: Longueur; prixCentimes: number; dureeMinutes: number }[];
 };
