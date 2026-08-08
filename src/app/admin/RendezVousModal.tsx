@@ -97,6 +97,13 @@ export function RendezVousModal({
   const [erreur, setErreur] = useState<string | null>(null);
   const [confirmSuppression, setConfirmSuppression] = useState(false);
 
+  // Récurrence : uniquement à la création. Modifier une occurrence existante
+  // ne touche qu'elle, pas la série.
+  const [recurrent, setRecurrent] = useState(false);
+  const [semaines, setSemaines] = useState(4);
+  const [occurrences, setOccurrences] = useState(6);
+  const [bilan, setBilan] = useState<{ creees: number; ignorees: string[] } | null>(null);
+
   const total = useMemo(
     () => calculerTotalAvecOptions(lignes, lissageMatrice),
     [lignes, lissageMatrice],
@@ -196,9 +203,15 @@ export function RendezVousModal({
             : { nom, prenom, telephone, email },
           lignes: lignesChoisies,
           dateDebutISO: creneauSelectionne,
+          recurrence: recurrent ? { semaines, occurrences } : undefined,
         });
         if (!resultat.ok) {
           setErreur(resultat.error);
+          return;
+        }
+        // Des occurrences ont pu être écartées : on le dit avant de fermer.
+        if (resultat.ignorees.length > 0) {
+          setBilan({ creees: resultat.creees, ignorees: resultat.ignorees });
           return;
         }
       }
@@ -456,6 +469,92 @@ export function RendezVousModal({
                   </p>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* ── Récurrence (création uniquement) ── */}
+          {!modeEdition && creneauSelectionne && (
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={recurrent}
+                  onChange={(e) => setRecurrent(e.target.checked)}
+                  className="accent-primary h-4 w-4 rounded"
+                />
+                <span className="text-sm font-semibold text-foreground">
+                  Rendez-vous récurrent
+                </span>
+              </label>
+
+              {recurrent && (
+                <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <label className="block text-xs text-muted-foreground">
+                      Toutes les
+                      <select
+                        value={semaines}
+                        onChange={(e) => setSemaines(Number(e.target.value))}
+                        className="field mt-1"
+                      >
+                        {[1, 2, 3, 4, 5, 6, 8].map((n) => (
+                          <option key={n} value={n}>
+                            {n} semaine{n > 1 ? "s" : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="block text-xs text-muted-foreground">
+                      Nombre de séances
+                      <select
+                        value={occurrences}
+                        onChange={(e) => setOccurrences(Number(e.target.value))}
+                        className="field mt-1"
+                      >
+                        {Array.from({ length: 11 }, (_, i) => i + 2).map((n) => (
+                          <option key={n} value={n}>
+                            {n} séances
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {occurrences} rendez-vous seront créés, le premier le jour choisi puis
+                    un tous les {semaines > 1 ? `${semaines} ` : ""}
+                    {semaines === 1 ? "semaine" : "semaines"}.
+                    Les créneaux occupés ou jours fermés seront ignorés.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Bilan récurrence ── */}
+          {bilan && (
+            <div className="rounded-xl border border-primary/30 bg-surface p-5 space-y-3">
+              <p className="text-sm font-semibold text-foreground">
+                ✓ {bilan.creees} rendez-vous créé{bilan.creees > 1 ? "s" : ""}
+              </p>
+              {bilan.ignorees.length > 0 && (
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    {bilan.ignorees.length} occurrence{bilan.ignorees.length > 1 ? "s" : ""} non posée{bilan.ignorees.length > 1 ? "s" : ""} :
+                  </p>
+                  <ul className="space-y-1">
+                    {bilan.ignorees.map((msg, i) => (
+                      <li key={i} className="text-xs text-rose-600">• {msg}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => { setBilan(null); onSaved(); }}
+                className="rounded-full bg-primary px-5 py-2 text-sm text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                Fermer
+              </button>
             </div>
           )}
 

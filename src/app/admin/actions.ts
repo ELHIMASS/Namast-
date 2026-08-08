@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getCreneauxDisponibles } from "@/lib/creneaux";
+import { creneauEstLibre, getCreneauxDisponibles } from "@/lib/creneaux";
 import { getFermetures } from "@/lib/fermetures";
 import { estMercredi } from "@/lib/horaires";
 import { calculerTotalAvecOptions } from "@/lib/prestations";
@@ -172,16 +172,25 @@ export async function refuserDemandeAction(rendezVousId: string, motif?: string)
   await notifierDemandeRefusee(rdv, motif);
 }
 
+export type Recurrence = {
+  /** Périodicité en semaines (1 = chaque semaine, 4 = toutes les 4 semaines). */
+  semaines: number;
+  /** Nombre total de rendez-vous, le premier compris. */
+  occurrences: number;
+};
+
 export async function creerRendezVousAdminAction({
   clientId,
   nouveauClient,
   lignes,
   dateDebutISO,
+  recurrence,
 }: {
   clientId?: string;
   nouveauClient?: { nom: string; prenom: string; telephone: string; email: string };
   lignes: LigneChoisie[];
   dateDebutISO: string;
+  recurrence?: Recurrence;
 }) {
   if (lignes.length === 0) {
     return { ok: false as const, error: "Merci de choisir au moins une prestation." };
@@ -236,7 +245,110 @@ export async function creerRendezVousAdminAction({
   });
 
   await notifierRdvCreeParAdmin(rdv);
-  return { ok: true as const, id: rdv.id };
+
+  if (!recurrence || recurrence.occurrences <= 1) {
+    return { ok: true as const, id: rdv.id, creees: 1, ignorees: [] as string[] };
+  }
+
+  const suite = await poserOccurrences({
+    premier: rdv,
+    clientId: idClient,
+    lignes,
+    dureeMinutes: dureeTotaleAvecNettoyage,
+    recurrence,
+  });
+
+  return { ok: true as const, id: rdv.id, creees: 1 + suite.creees, ignorees: suite.ignorees };
+}
+
+/**
+ * Crée les occurrences suivantes d'une série. Chacune tombe le même jour de
+ * la semaine à la même heure, N semaines plus tard, et n'est posée que si le
+ * créneau est réellement libre : une occurrence qui tomberait un jour de
+ * fermeture ou sur un rendez-vous existant est signalée, pas écrasée.
+ */
+async function poserOccurrences({
+  premier,
+  clientId,
+  lignes,
+  dureeMinutes,
+  recurrence,
+}: {
+  premier: { id: string; dateDebut: Date };
+  clientId: string;
+  lignes: LigneChoisie[];
+  dureeMinutes: number;
+  recurrence: Recurrence;
+}) {
+  const ignorees: string[] = [];
+  let creees = 0;
+
+  // La première occurrence devient la référence de la série.
+  await prisma.rendezVous.update({
+    where: { id: premier.id },
+    data: { serieId: premier.id },
+  });
+
+  for (let i = 1; i < recurrence.occurrences; i++) {
+    const debut = new Date(premier.dateDebut);
+    debut.setDate(debut.getDate() + i * recurrence.semaines * 7);
+    const fin = new Date(debut.getTime() + dureeMinutes * 60000);
+
+    const debutJournee = new Date(debut);
+    debutJournee.setHours(0, 0, 0, 0);
+    const finJournee = new Date(debut);
+    finJournee.setHours(23, 59, 59, 999);
+
+    const [existants, fermetures] = await Promise.all([
+      prisma.rendezVous.findMany({
+        where: {
+          dateDebut: { gte: debutJournee, lte: finJournee },
+          statut: { in: ["CONFIRME", "EN_ATTENTE"] },
+        },
+        select: { dateDebut: true, dateFin: true },
+      }),
+      getFermetures(debut, debut),
+    ]);
+
+    const verdict = creneauEstLibre({
+      dateDebut: debut,
+      dateFin: fin,
+      rendezVousExistants: existants,
+      fermetures,
+    });
+
+    if (!verdict.libre) {
+      const motif = {
+        ferme: "salon fermé",
+        "hors-horaires": "hors des horaires d'ouverture",
+        occupe: "créneau déjà pris",
+      }[verdict.raison];
+      ignorees.push(`${formatDateCourte(debut)} — ${motif}`);
+      continue;
+    }
+
+    await prisma.rendezVous.create({
+      data: {
+        clientId,
+        statut: "CONFIRME",
+        serieId: premier.id,
+        dateDebut: debut,
+        dateFin: fin,
+        prestations: { create: construireDonneesPrestations(lignes) },
+      },
+    });
+    creees++;
+  }
+
+  return { creees, ignorees };
+}
+
+function formatDateCourte(d: Date): string {
+  return d.toLocaleDateString("fr-FR", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }) + ` à ${d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`;
 }
 
 export async function modifierRendezVousAction({

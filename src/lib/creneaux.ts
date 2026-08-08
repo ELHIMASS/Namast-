@@ -54,3 +54,39 @@ export function getCreneauxDisponibles({
 
   return creneaux;
 }
+
+/**
+ * Vérifie qu'un créneau précis tient : salon ouvert, prestation entièrement
+ * contenue dans une plage d'ouverture, et aucun chevauchement.
+ *
+ * Utilisé pour les rendez-vous récurrents, où la date est imposée par la
+ * périodicité et non choisie dans une liste de créneaux disponibles.
+ */
+export function creneauEstLibre({
+  dateDebut,
+  dateFin,
+  rendezVousExistants,
+  fermetures = [],
+}: {
+  dateDebut: Date;
+  dateFin: Date;
+  rendezVousExistants: Periode[];
+  fermetures?: Fermeture[];
+}): { libre: true } | { libre: false; raison: "ferme" | "hors-horaires" | "occupe" } {
+  if (estFerme(dateDebut, fermetures)) return { libre: false, raison: "ferme" };
+
+  const plages = HORAIRES_SALON[dateDebut.getDay()] ?? [];
+  const tientDansUnePlage = plages.some((plage) => {
+    const debutPlage = parseHeureSurDate(dateDebut, plage.debut);
+    const finPlage = parseHeureSurDate(dateDebut, plage.fin);
+    return dateDebut >= debutPlage && dateFin <= finPlage;
+  });
+  if (!tientDansUnePlage) return { libre: false, raison: "hors-horaires" };
+
+  const chevauche = rendezVousExistants.some(
+    (rdv) => dateDebut < rdv.dateFin && dateFin > rdv.dateDebut,
+  );
+  if (chevauche) return { libre: false, raison: "occupe" };
+
+  return { libre: true };
+}

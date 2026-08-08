@@ -160,6 +160,10 @@ model RendezVous {
   client         Client           @relation(fields: [clientId], references: [id])
   statut         StatutRendezVous @default(EN_ATTENTE)
   estNouvelleCliente Boolean      @default(false)
+  // Rendez-vous récurrents : toutes les occurrences d'une même série
+  // partagent cet identifiant (celui de la première). Les occurrences sont
+  // de vrais rendez-vous, chacun modifiable et annulable séparément.
+  serieId        String?
   dateDebut      DateTime
   dateFin        DateTime
   message        String?
@@ -168,6 +172,8 @@ model RendezVous {
   updatedAt      DateTime         @updatedAt
 
   prestations    RendezVousPrestation[]
+
+  @@index([serieId])
 }
 
 model RendezVousPrestation {
