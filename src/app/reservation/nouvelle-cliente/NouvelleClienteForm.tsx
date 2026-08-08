@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
-import { estJourOuvert, estMercredi } from "@/lib/horaires";
+import { estJourOuvert } from "@/lib/horaires";
+import { estJourAutorisePourPrestations } from "@/lib/reglesCreneaux";
 import {
   calculerTotalAvecOptions,
   formatDuree,
@@ -64,9 +65,16 @@ export function NouvelleClienteForm({
     [lignes, lissageMatrice],
   );
   const pretPourCreneau = lignes.length > 0 && lignes.every(ligneEstComplete);
-  const contientEnfant = lignes.some((l) => l.prestation.profil === "ENFANT");
-  const contientHomme = lignes.some((l) => l.prestation.profil === "HOMME");
-  const mercrediSeul = contientEnfant || contientHomme;
+  const prestationsFiltre = useMemo(
+    () =>
+      lignes.map((l) => ({
+        profil: l.prestation.profil,
+        categorie: l.prestation.categorie,
+        estLissage: l.prestation.estLissage,
+        formule: l.prestation.formule,
+      })),
+    [lignes],
+  );
 
   const lignesChoisies: LigneChoisie[] = lignes.map((l) => ({
     prestationId: l.prestation.id,
@@ -77,8 +85,9 @@ export function NouvelleClienteForm({
 
   const jours = useMemo(() => {
     const base = prochainsJours(90).filter(estJourOuvert);
-    return mercrediSeul ? base.filter(estMercredi) : base;
-  }, [mercrediSeul]);
+    if (prestationsFiltre.length === 0) return base;
+    return base.filter((date) => estJourAutorisePourPrestations(date, prestationsFiltre));
+  }, [prestationsFiltre]);
 
   function choisirDate(date: Date) {
     setDateSelectionnee(date);
@@ -263,7 +272,7 @@ export function NouvelleClienteForm({
       <div className="space-y-6">
         <div>
           <p className="mb-3 text-sm text-muted-foreground">
-            Date souhaitée{mercrediSeul ? " (mercredi uniquement)" : ""}
+            Date souhaitée
           </p>
           <div className="flex gap-2 overflow-x-auto pb-2">
             {jours.map((jour) => {

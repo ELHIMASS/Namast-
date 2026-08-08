@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCreneauxDisponibles } from "@/lib/creneaux";
 import { getFermetures } from "@/lib/fermetures";
-import { estMercredi } from "@/lib/horaires";
+import { estJourAutorisePourPrestations } from "@/lib/reglesCreneaux";
 import { genererCodeUnique } from "@/lib/codeReservation";
 import { calculerTotalAvecOptions } from "@/lib/prestations";
 import {
@@ -55,9 +55,8 @@ async function creneauxPourLignes(dateISO: string, lignes: LigneChoisie[], exclu
   const { prestations, lignesResolues, lissageMatrice } = await resoudreLignes(lignes);
   if (prestations.length === 0) return [];
 
-  // Réservation mercredi uniquement pour les prestations enfants et hommes.
   const date = new Date(dateISO);
-  if (prestations.some((p) => p.profil === "ENFANT" || p.profil === "HOMME") && !estMercredi(date)) {
+  if (!estJourAutorisePourPrestations(date, prestations)) {
     return [];
   }
 
@@ -83,6 +82,7 @@ async function creneauxPourLignes(dateISO: string, lignes: LigneChoisie[], exclu
   return getCreneauxDisponibles({
     date,
     dureeTotaleMinutes: dureeTotaleAvecNettoyage,
+    prestations,
     rendezVousExistants,
     fermetures,
   });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { estJourAutorisePourPrestations } from "@/lib/reglesCreneaux";
 import { estJourOuvert, estMercredi } from "@/lib/horaires";
 import {
   calculerTotalAvecOptions,
@@ -109,9 +110,16 @@ export function RendezVousModal({
     [lignes, lissageMatrice],
   );
   const pretPourCreneau = lignes.length > 0 && lignes.every(ligneEstComplete);
-  const contientEnfant = lignes.some((l) => l.prestation.profil === "ENFANT");
-  const contientHomme = lignes.some((l) => l.prestation.profil === "HOMME");
-  const mercrediSeul = contientEnfant || contientHomme;
+  const prestationsFiltre = useMemo(
+    () =>
+      lignes.map((l) => ({
+        profil: l.prestation.profil,
+        categorie: l.prestation.categorie,
+        estLissage: l.prestation.estLissage,
+        formule: l.prestation.formule,
+      })),
+    [lignes],
+  );
 
   const lignesChoisies: LigneChoisie[] = lignes.map((l) => ({
     prestationId: l.prestation.id,
@@ -122,8 +130,9 @@ export function RendezVousModal({
 
   const jours = useMemo(() => {
     const base = prochainsJours(90).filter(estJourOuvert);
-    return mercrediSeul ? base.filter(estMercredi) : base;
-  }, [mercrediSeul]);
+    if (prestationsFiltre.length === 0) return base;
+    return base.filter((date) => estJourAutorisePourPrestations(date, prestationsFiltre));
+  }, [prestationsFiltre]);
 
   function chargerCreneaux(date: Date) {
     startTransition(async () => {
@@ -412,9 +421,7 @@ export function RendezVousModal({
           </div>
 
           <div>
-            <p className="mb-3 text-sm font-semibold text-foreground">
-              Date{mercrediSeul ? " (mercredi uniquement)" : ""}
-            </p>
+            <p className="mb-3 text-sm font-semibold text-foreground">Date</p>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {jours.map((jour) => {
                 const actif = dateSelectionnee?.toDateString() === jour.toDateString();

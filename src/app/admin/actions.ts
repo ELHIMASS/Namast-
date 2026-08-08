@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { creneauEstLibre, getCreneauxDisponibles } from "@/lib/creneaux";
 import { getFermetures } from "@/lib/fermetures";
-import { estMercredi } from "@/lib/horaires";
+import { estJourAutorisePourPrestations } from "@/lib/reglesCreneaux";
 import { calculerTotalAvecOptions } from "@/lib/prestations";
 import {
   construireDonneesPrestations,
@@ -124,7 +124,7 @@ export async function getCreneauxAdminAction(
   if (prestations.length === 0) return [];
 
   const date = new Date(dateISO);
-  if (prestations.some((p) => p.profil === "ENFANT" || p.profil === "HOMME") && !estMercredi(date)) {
+  if (!estJourAutorisePourPrestations(date, prestations)) {
     return [];
   }
 
@@ -149,6 +149,7 @@ export async function getCreneauxAdminAction(
   return getCreneauxDisponibles({
     date,
     dureeTotaleMinutes: dureeTotaleAvecNettoyage,
+    prestations,
     rendezVousExistants,
     fermetures,
   }).map((d) => d.toISOString());
