@@ -1,0 +1,23 @@
+# Le contexte de build est envoyé au démon Docker : on en exclut tout ce qui
+# est lourd, reconstruit, ou secret.
+
+node_modules
+.next
+.git
+.gitignore
+
+# Secrets : les valeurs sont fournies à l'exécution par docker-compose. Un .env
+# copié dans l'image y resterait lisible.
+.env
+.env.*
+!.env.exemple
+
+# Outils et fichiers de travail
+.claude
+.agents
+.windsurf
+*.tsbuildinfo
+npm-debug.log*
+Dockerfile
+docker-compose.yml
+backend.rar

@@ -1,0 +1,48 @@
+# Pile complète du site Namasté sur le NAS : le site et sa base.
+#
+#   docker compose up -d --build
+#
+# Les valeurs sensibles sont lues dans un fichier .env placé à côté de ce
+# fichier (voir .env.exemple). Ce .env ne doit pas être versionné.
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: namaste
+      POSTGRES_USER: namaste
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?mot de passe de la base manquant dans .env}
+      # Le fichier clientes est en français : collation et encodage explicites.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - donnees-postgres:/var/lib/postgresql/data
+    # Aucun port publié : la base n'est joignable que par le site, sur le
+    # réseau interne de Docker. Rien à exposer vers l'internet.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U namaste -d namaste"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  web:
+    build:
+      context: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        # Le site attend que la base réponde : les migrations du point d'entrée
+        # échoueraient sinon au premier démarrage.
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://namaste:${POSTGRES_PASSWORD}@db:5432/namaste?schema=public
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?mot de passe de l espace pro manquant dans .env}
+      TZ: Europe/Paris
+    ports:
+      # Exposé sur le NAS uniquement ; c'est le reverse proxy du NAS qui
+      # publiera le site en HTTPS vers l'internet.
+      - "3000:3000"
+
+volumes:
+  donnees-postgres:
