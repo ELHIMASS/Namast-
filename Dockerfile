@@ -48,20 +48,13 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Nécessaires aux migrations lancées au démarrage du conteneur. prisma.config.ts
-# n'est volontairement pas embarqué : il est écrit en TypeScript, que le CLI
-# tenterait de charger alors que TypeScript n'est plus installé ici. Le schéma
-# est donc passé en argument (voir docker-entrypoint.sh).
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
-
-COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
-RUN chmod +x docker-entrypoint.sh
+# Les migrations ne sont pas appliquées ici : le CLI Prisma dépend de paquets
+# absents de la sortie autonome (effect, entre autres), et les copier un à un
+# serait sans fin. C'est le service « migrate » de docker-compose, construit sur
+# l'étape builder qui possède toutes les dépendances, qui s'en charge avant le
+# démarrage du site.
 
 USER nextjs
 EXPOSE 3000
 
-ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "server.js"]

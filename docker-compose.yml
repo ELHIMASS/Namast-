@@ -26,15 +26,33 @@ services:
       retries: 10
       start_period: 30s
 
+  # Applique les migrations en attente, puis s'arrête. Construit sur l'étape
+  # « builder », la seule à disposer de toutes les dépendances du CLI Prisma :
+  # la sortie autonome du site, volontairement minimale, ne les contient pas.
+  # `migrate deploy` n'applique que ce qui existe, il ne génère et ne supprime
+  # rien : le relancer à chaque démarrage est sans danger.
+  migrate:
+    build:
+      context: .
+      target: builder
+    command: npx prisma migrate deploy --schema=prisma/schema.prisma
+    environment:
+      DATABASE_URL: postgresql://namaste:${POSTGRES_PASSWORD}@db:5432/namaste?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
   web:
     build:
       context: .
     restart: unless-stopped
     depends_on:
       db:
-        # Le site attend que la base réponde : les migrations du point d'entrée
-        # échoueraient sinon au premier démarrage.
         condition: service_healthy
+      migrate:
+        # Le site ne démarre qu'une fois les migrations passées.
+        condition: service_completed_successfully
     environment:
       DATABASE_URL: postgresql://namaste:${POSTGRES_PASSWORD}@db:5432/namaste?schema=public
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?mot de passe de l espace pro manquant dans .env}
