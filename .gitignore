@@ -53,3 +53,6 @@ next-env.d.ts
 /.windsurf/
 /.claude/skills/
 skills-lock.json
+
+# Journaux de build produits sur le NAS
+*.log

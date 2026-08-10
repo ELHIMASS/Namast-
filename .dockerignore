@@ -18,6 +18,9 @@ node_modules
 .windsurf
 *.tsbuildinfo
 npm-debug.log*
+# Journaux de build : ils vivent dans le dossier du projet, donc dans le
+# contexte, et invalideraient le cache à chaque compilation en grossissant.
+*.log
 Dockerfile
 docker-compose.yml
 backend.rar
