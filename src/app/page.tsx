@@ -25,6 +25,12 @@ import {
   ORDRE_FORMULES,
 } from "@/lib/categories";
 
+// La carte des prestations est lue en base à chaque affichage. Sans cela, Next
+// prégénérerait cette page pendant la compilation, ce qui exigerait une base
+// joignable au moment du build — impossible dans un conteneur — et figerait les
+// tarifs jusqu'au prochain déploiement.
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const { prestations, lissageMatrice } = await getCatalogue();
 

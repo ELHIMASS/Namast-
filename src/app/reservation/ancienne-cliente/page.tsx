@@ -4,6 +4,10 @@ import { Reveal } from "@/components/Reveal";
 import { getCatalogue } from "@/lib/data";
 import { AncienneClienteWizard } from "./AncienneClienteWizard";
 
+// Carte lue en base à chaque affichage : pas de prégénération au build, qui
+// exigerait une base joignable pendant la compilation.
+export const dynamic = "force-dynamic";
+
 export default async function AncienneClientePage() {
   const { prestations, options, lissageMatrice } = await getCatalogue();
 

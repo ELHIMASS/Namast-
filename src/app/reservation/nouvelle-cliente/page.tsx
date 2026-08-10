@@ -4,6 +4,10 @@ import { Reveal } from "@/components/Reveal";
 import { getCatalogue } from "@/lib/data";
 import { NouvelleClienteForm } from "./NouvelleClienteForm";
 
+// Carte lue en base à chaque affichage : pas de prégénération au build, qui
+// exigerait une base joignable pendant la compilation.
+export const dynamic = "force-dynamic";
+
 export default async function NouvelleClientePage() {
   const { prestations, options, lissageMatrice } = await getCatalogue();
 
