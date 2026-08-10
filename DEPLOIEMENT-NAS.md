@@ -54,8 +54,19 @@ et **sans fichier d'export à faire circuler**.
 
 ```bash
 docker compose exec -T db sh -c \
-  'pg_dump --no-owner --no-privileges --data-only "LA_DATABASE_URL_NEON" | psql -U namaste -d namaste'
+  'pg_dump --no-owner --no-privileges --data-only --disable-triggers \
+     --exclude-table=_prisma_migrations "LA_DATABASE_URL_NEON" \
+   | psql -U namaste -d namaste'
 ```
+
+Deux options méritent une explication :
+
+- `--exclude-table=_prisma_migrations` : le conteneur `migrate` a déjà inscrit
+  les migrations appliquées dans cette table. Copier celles de Neon
+  provoquerait un conflit de clé.
+- `--disable-triggers` : les contraintes de clé étrangère sont suspendues le
+  temps de l'insertion, ce qui évite les échecs liés à l'ordre des tables (un
+  rendez-vous inséré avant sa cliente, par exemple).
 
 `--data-only` n'apporte que les lignes : le schéma est déjà en place, posé par
 les migrations. Vérifier ensuite le décompte, qui doit afficher 142 :
