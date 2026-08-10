@@ -20,7 +20,9 @@ puis remplir les deux valeurs :
 cp .env.exemple .env
 ```
 
-- `POSTGRES_PASSWORD` : à générer, par exemple avec `openssl rand -base64 24`
+- `POSTGRES_PASSWORD` : à générer avec `openssl rand -hex 24`. En hexadécimal
+  et non en base64 : ce mot de passe est inséré dans une URL de connexion, où
+  les `/` et `+` produits par base64 cassent l'analyse de l'URL.
 - `ADMIN_PASSWORD` : celui de l'espace pro, à reprendre du `.env` actuel
 
 Ce fichier ne doit jamais être versionné : le dépôt GitHub est public.
