@@ -1,0 +1,6 @@
+# Les scripts exécutés dans les conteneurs doivent garder des fins de ligne
+# Unix. Avec des fins de ligne Windows, Docker echoue au demarrage sur un
+# « no such file or directory » qui ne designe pas le vrai probleme.
+*.sh text eol=lf
+Dockerfile text eol=lf
+docker-compose.yml text eol=lf
