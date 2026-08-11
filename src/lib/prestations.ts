@@ -146,6 +146,7 @@ export function getGroupesOptionsPourPrestation(prestation: {
 }): string[] {
   if (prestation.estLissage) return [];
   if (prestation.profil === "HOMME") return ["HOMME"];
+  if (prestation.profil === "ENFANT") return ["ENFANT"];
   if (prestation.profil === "FEMME") {
     if (prestation.categorie === "COULEUR") {
       return ["BIEN_ETRE", "COULEUR"];

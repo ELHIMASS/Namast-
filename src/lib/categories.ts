@@ -27,16 +27,16 @@ export const IMAGE_CATEGORIE: Record<string, { src: string; alt: string }> = {
     alt: "Bac de lavage du salon, fauteuil en cuir et gamme de soins colorants",
   },
   SOIN: {
-    src: "/images/i3.png",
-    alt: "Espace soins du salon, bac massant et étagères de produits capillaires",
+    src: "/images/soins-belma.jpg",
+    alt: "Carte des soins capillaires Belmakosmetik posée sur le plan de travail",
   },
   HEAD_SPA: {
     src: "/images/headspa-chromotherapie.jpg",
     alt: "Bac Head Spa en chromothérapie violette, dans la salle de soin tamisée",
   },
   MASSAGE: {
-    src: "/images/salle-soin-table.jpg",
-    alt: "Table de massage préparée face au bac Head Spa et aux étagères de soins",
+    src: "/images/massage.jpeg",
+    alt: "Salle de massage : table préparée, huiles essentielles, toile de Bouddha et arbre de vie",
   },
   EVENEMENTIEL: {
     src: "/images/i8.png",
@@ -116,4 +116,5 @@ export const LABEL_GROUPE_OPTION: Record<string, string> = {
   COIFFAGE: "Options coiffage",
   COULEUR: "Options couleur",
   HOMME: "Options",
+  ENFANT: "Options",
 };

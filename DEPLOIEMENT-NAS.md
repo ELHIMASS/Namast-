@@ -110,3 +110,12 @@ docker compose exec -T db pg_dump -U namaste --no-owner namaste \
 
 Penser aussi aux photos et vidéos de `public/images` et `public/videos`, qui
 sont dans le dépôt mais pas dans la base.
+
+## Fuseau horaire
+
+Les créneaux sont calculés avec l heure du serveur. Sans réglage, un serveur en
+UTC décale tout affichage de deux heures en été : « 9h00 » apparaît à 11h00.
+
+Sur le NAS, `TZ: Europe/Paris` est posé dans docker-compose.yml. Sur tout autre
+hébergement (Netlify, Vercel), ajouter la variable d environnement
+`TZ=Europe/Paris`.

@@ -68,6 +68,7 @@ enum GroupeOption {
   COIFFAGE
   COULEUR
   HOMME
+  ENFANT
 }
 
 model Client {
