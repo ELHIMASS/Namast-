@@ -16,7 +16,12 @@ services:
       # Le fichier clientes est en français : collation et encodage explicites.
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     volumes:
-      - donnees-postgres:/var/lib/postgresql/data
+      # Montage sur /var/lib/postgresql et non sur .../data : depuis la
+      # version 18, l'image range les données dans un sous-dossier propre à la
+      # version majeure (18/docker) et refuse de démarrer si elle détecte un
+      # montage à l'ancien emplacement. Ce choix permet aussi les futures
+      # montées de version avec pg_upgrade.
+      - donnees-postgres:/var/lib/postgresql
     # Aucun port publié : la base n'est joignable que par le site, sur le
     # réseau interne de Docker. Rien à exposer vers l'internet.
     healthcheck:
