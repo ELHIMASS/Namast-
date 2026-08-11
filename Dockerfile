@@ -29,6 +29,10 @@ RUN npx prisma generate
 # la vraie valeur est fournie à l'exécution par docker-compose.
 ENV DATABASE_URL="postgresql://build:build@localhost:5432/build"
 ENV NEXT_TELEMETRY_DISABLED=1
+# Déclenche la sortie autonome de Next, qui n'est activée que pour cette image
+# (voir next.config.ts) : les hébergeurs comme Netlify attendent la sortie
+# par défaut.
+ENV BUILD_STANDALONE=1
 RUN npm run build
 
 # ── 3. Exécution ──────────────────────────────────────────────────────────────

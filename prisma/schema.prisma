@@ -6,6 +6,11 @@
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
+  // rhel-openssl-3.0.x est le binaire des fonctions serverless (Netlify,
+  // Vercel), qui tournent sur Amazon Linux alors que la compilation se fait
+  // sur Ubuntu. Sans lui : « Query engine library for current platform could
+  // not be found » au premier appel à la base.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
