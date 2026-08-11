@@ -66,6 +66,24 @@ export default async function Home() {
       }),
     }));
 
+  const IMAGE_PROFIL: Record<
+    string,
+    { src: string; alt: string; largeur: number; hauteur: number }
+  > = {
+    HOMME: {
+      src: "/images/i15.png",
+      alt: "Photo d'un homme en salon de coiffure",
+      largeur: 800,
+      hauteur: 1322,
+    },
+    ENFANT: {
+      src: "/images/i16.png",
+      alt: "Photo d'un enfant en salon de coiffure",
+      largeur: 800,
+      hauteur: 1322,
+    },
+  };
+
   return (
     <div className="relative flex min-h-full flex-1 flex-col pb-24 md:pb-0">
       <HaircutIcons />
@@ -190,27 +208,37 @@ export default async function Home() {
 
           <div className="space-y-16">
             {profils.map(({ profil, categories }) => (
-              <div key={profil}>
-                <Reveal className="mb-6 flex items-center gap-3">
-                  <ProfilIcon profil={profil} className="h-6 w-6 text-primary" />
-                  <h3 className="font-serif text-2xl text-foreground sm:text-3xl">
-                    {LABEL_PROFIL[profil]}
-                  </h3>
-                </Reveal>
+              <div key={profil} className="space-y-8 max-w-6xl mx-auto">
+                <div>
+                  <Reveal className="mb-6 flex items-center gap-3">
+                    <ProfilIcon profil={profil} className="h-6 w-6 text-primary" />
+                    <h3 className="font-serif text-2xl text-foreground sm:text-3xl">
+                      {LABEL_PROFIL[profil]}
+                    </h3>
+                  </Reveal>
 
-                <div className="grid gap-6 sm:gap-8 md:grid-cols-2">
+                  {IMAGE_PROFIL[profil] ? (
+                    <div className="mb-8 flex justify-center photo-card">
+                      <img
+                        src={IMAGE_PROFIL[profil].src}
+                        alt={IMAGE_PROFIL[profil].alt}
+                        width={IMAGE_PROFIL[profil].largeur}
+                        height={IMAGE_PROFIL[profil].hauteur}
+                        className="photo-libre h-auto max-h-[32rem] w-full max-w-5xl rounded-[28px] object-cover"
+                      />
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="grid gap-6 sm:gap-8 lg:grid-cols-2">
                   {categories.map(({ categorie, items, illustree }, catIndex) => (
                     <Reveal
                       key={categorie}
                       delay={catIndex * 60}
-                      className={items.length > 4 ? "md:col-span-2" : ""}
+                      className={categories.length === 1 || items.length > 4 ? "md:col-span-2" : ""}
                     >
                       <div className="glass h-full rounded-3xl border border-white/50 p-6 sm:p-8 md:p-10 card-hover">
                         {illustree && IMAGE_CATEGORIE[categorie] && (
-                          // Photo entière, jamais rognée : la hauteur est
-                          // plafonnée et la largeur suit les proportions, donc
-                          // les portraits s'affichent plus étroits que les
-                          // paysages au lieu d'être coupés.
                           <div className="mb-6 flex justify-center">
                             <Image
                               src={IMAGE_CATEGORIE[categorie].src}
@@ -242,31 +270,31 @@ export default async function Home() {
                             Math.min(...items.map((p) => prixAPartirDe(p, lissageMatrice))),
                           )}`}
                         >
-                        <div className="mt-6 space-y-4">
-                          {items.map((p) => {
-                            const varie = p.estLissage || p.variantesLongueur.length > 0;
-                            const prix = prixAPartirDe(p, lissageMatrice);
-                            return (
-                              <div
-                                key={p.id}
-                                className="flex flex-col gap-2 pb-4 border-b border-border/30 last:border-0 last:pb-0"
-                              >
-                                <div className="flex items-baseline justify-between gap-3 service-item">
-                                  <span className="font-serif font-medium text-base text-foreground">
-                                    {p.nom}
-                                  </span>
-                                  <span className="whitespace-nowrap text-sm font-semibold text-primary animate-float price-highlight">
-                                    {varie && "dès "}
-                                    {formatPrix(prix)}
+                          <div className="mt-6 space-y-4">
+                            {items.map((p) => {
+                              const varie = p.estLissage || p.variantesLongueur.length > 0;
+                              const prix = prixAPartirDe(p, lissageMatrice);
+                              return (
+                                <div
+                                  key={p.id}
+                                  className="flex flex-col gap-2 pb-4 border-b border-border/30 last:border-0 last:pb-0"
+                                >
+                                  <div className="flex items-baseline justify-between gap-3 service-item">
+                                    <span className="font-serif font-medium text-base text-foreground">
+                                      {p.nom}
+                                    </span>
+                                    <span className="whitespace-nowrap text-sm font-semibold text-primary animate-float price-highlight">
+                                      {varie && "dès "}
+                                      {formatPrix(prix)}
+                                    </span>
+                                  </div>
+                                  <span className="text-xs text-muted-foreground">
+                                    Durée: {formatDuree(p.dureeMinutes)}
                                   </span>
                                 </div>
-                                <span className="text-xs text-muted-foreground">
-                                  Durée: {formatDuree(p.dureeMinutes)}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
+                              );
+                            })}
+                          </div>
                         </Repliable>
                       </div>
                     </Reveal>

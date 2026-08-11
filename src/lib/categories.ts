@@ -31,10 +31,10 @@ export const IMAGE_CATEGORIE: Record<
   // occurrence de « Coupe » dans la page étant celle des hommes, y placer une
   // photo de cliente mettait une femme sous le titre « Hommes ».
   SOIN: {
-    src: "/images/i14.png",
-    alt: "Coiffeuse travaillant les longueurs d'une cliente installée au poste de coiffage",
-    largeur: 443,
-    hauteur: 732,
+    src: "/images/soins-belma.jpg",
+    alt: "Dépliant des soins capillaires Belmakosmetik posé sur le plan de travail en bois",
+    largeur: 1200,
+    hauteur: 1600,
   },
   HEAD_SPA: {
     src: "/images/i11.png",

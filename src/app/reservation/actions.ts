@@ -21,10 +21,45 @@ function normaliserTelephone(telephone: string): string {
  * En cas d'homonymes, aucune fiche n'est renvoyée : ouvrir le compte d'une
  * autre cliente serait pire que de demander d'appeler le salon.
  */
-export async function findClientByName(prenom: string, nom: string) {
+export async function findClientByName(
+  prenom: string,
+  nom: string,
+  telephone?: string,
+) {
   const p = prenom.trim();
   const n = nom.trim();
+  const t = telephone?.trim();
   if (!p || !n) return { statut: "introuvable" as const };
+
+  const telephoneNormalisee = t ? normaliserTelephone(t) : null;
+
+  if (telephoneNormalisee) {
+    const clientsAvecTel = await prisma.client.findMany({
+      where: {
+        prenom: { equals: p, mode: "insensitive" },
+        nom: { equals: n, mode: "insensitive" },
+        telephone: telephoneNormalisee,
+      },
+      take: 2,
+    });
+
+    if (clientsAvecTel.length === 1) {
+      const client = clientsAvecTel[0];
+      return {
+        statut: "trouve" as const,
+        client: {
+          id: client.id,
+          nom: client.nom,
+          prenom: client.prenom,
+          telephone: client.telephone,
+        },
+      };
+    }
+
+    if (clientsAvecTel.length > 1) {
+      return { statut: "homonymes" as const };
+    }
+  }
 
   const clients = await prisma.client.findMany({
     where: {

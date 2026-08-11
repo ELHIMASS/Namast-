@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import type {
   Densite,
@@ -32,6 +33,24 @@ import {
   ORDRE_LONGUEURS,
 } from "@/lib/categories";
 import { ProfilIcon } from "@/components/ProfilIcon";
+
+const IMAGE_PROFIL: Record<
+  string,
+  { src: string; alt: string; largeur: number; hauteur: number }
+> = {
+  HOMME: {
+    src: "/images/i15.png",
+    alt: "Client homme dans le salon de coiffure",
+    largeur: 800,
+    hauteur: 1322,
+  },
+  ENFANT: {
+    src: "/images/i16.png",
+    alt: "Enfant dans le salon de coiffure",
+    largeur: 800,
+    hauteur: 1322,
+  },
+};
 
 type LigneEtat = {
   prestation: PrestationAvecVariantes;

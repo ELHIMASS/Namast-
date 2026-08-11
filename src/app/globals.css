@@ -260,8 +260,66 @@ textarea {
   filter: saturate(1.12) contrast(1.18) brightness(1.05) sepia(0) hue-rotate(0deg);
 }
 
+.photo-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 28px 80px rgba(15, 10, 20, 0.12);
+  transition: transform 320ms ease, box-shadow 320ms ease;
+}
+
+.photo-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, rgba(255, 255, 255, 0.18), transparent 30%),
+    linear-gradient(to left, rgba(255, 255, 255, 0.18), transparent 30%),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.12), transparent 25%),
+    linear-gradient(to top, rgba(255, 255, 255, 0.12), transparent 25%);
+  mix-blend-mode: screen;
+}
+
+.photo-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.35), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.28), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.22), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.22), transparent 28%);
+  mask-image: radial-gradient(circle at top left, transparent 24%, black 32%),
+    radial-gradient(circle at top right, transparent 24%, black 32%),
+    radial-gradient(circle at bottom left, transparent 24%, black 32%),
+    radial-gradient(circle at bottom right, transparent 24%, black 32%);
+  mask-composite: intersect;
+  -webkit-mask-composite: destination-in;
+}
+
+.photo-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 36px 100px rgba(15, 10, 20, 0.18);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.photo-card img {
+  transition: transform 700ms ease;
+}
+
+.photo-card:hover img {
+  transform: scale(1.02);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .photo-libre {
+    transition: none;
+  }
+  .photo-card,
+  .photo-card img {
     transition: none;
   }
 }
