@@ -17,6 +17,7 @@ import {
   DESCRIPTION_CATEGORIE,
   DESCRIPTION_FORMULE,
   IMAGE_CATEGORIE,
+  IMAGE_FORMULE,
   INCLUS_FORMULE,
   LABEL_CATEGORIE,
   LABEL_FORMULE,
@@ -115,6 +116,18 @@ export default async function Home() {
             {formules.map(({ formule, items }) => (
               <Reveal key={formule}>
                 <div className="glass rounded-3xl border border-white/50 p-6 sm:p-8 md:p-10 card-hover">
+                  {IMAGE_FORMULE[formule] && (
+                    <div className="mb-6 flex justify-center">
+                      <Image
+                        src={IMAGE_FORMULE[formule].src}
+                        alt={IMAGE_FORMULE[formule].alt}
+                        width={IMAGE_FORMULE[formule].largeur}
+                        height={IMAGE_FORMULE[formule].hauteur}
+                        sizes="(min-width: 768px) 45vw, 100vw"
+                        className="photo-libre max-h-80 w-auto max-w-full"
+                      />
+                    </div>
+                  )}
                   <h3 className="font-serif text-2xl text-foreground sm:text-3xl">
                     {LABEL_FORMULE[formule]}
                   </h3>
@@ -194,13 +207,18 @@ export default async function Home() {
                     >
                       <div className="glass h-full rounded-3xl border border-white/50 p-6 sm:p-8 md:p-10 card-hover">
                         {illustree && IMAGE_CATEGORIE[categorie] && (
-                          <div className="photo-frame photo-fondue group relative mb-6 h-44 sm:h-52">
+                          // Photo entière, jamais rognée : la hauteur est
+                          // plafonnée et la largeur suit les proportions, donc
+                          // les portraits s'affichent plus étroits que les
+                          // paysages au lieu d'être coupés.
+                          <div className="mb-6 flex justify-center">
                             <Image
                               src={IMAGE_CATEGORIE[categorie].src}
                               alt={IMAGE_CATEGORIE[categorie].alt}
-                              fill
+                              width={IMAGE_CATEGORIE[categorie].largeur}
+                              height={IMAGE_CATEGORIE[categorie].hauteur}
                               sizes="(min-width: 768px) 45vw, 100vw"
-                              className="object-cover transition-transform duration-700 group-hover:scale-105"
+                              className="photo-libre max-h-72 w-auto max-w-full sm:max-h-80"
                             />
                           </div>
                         )}

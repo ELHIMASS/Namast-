@@ -17,30 +17,63 @@ export const DESCRIPTION_CATEGORIE: Record<string, string> = {
 };
 
 // Photos du salon associées à chaque famille de prestations (dans /public/images).
-export const IMAGE_CATEGORIE: Record<string, { src: string; alt: string }> = {
-  COUPE: {
-    src: "/images/i4.png",
-    alt: "Poste de coiffage du salon : miroir rond, fauteuil et produits de coiffage",
-  },
-  COULEUR: {
-    src: "/images/bac-lavage.jpg",
-    alt: "Bac de lavage du salon, fauteuil en cuir et gamme de soins colorants",
-  },
+//
+// Les dimensions réelles sont déclarées : elles permettent d'afficher chaque
+// photo à ses proportions, sans recadrage, et laissent Next réserver la place
+// exacte pour éviter les sauts de mise en page au chargement. Le parc est
+// hétérogène — du 16/9 paysage, du 9/16 portrait et du carré.
+export const IMAGE_CATEGORIE: Record<
+  string,
+  { src: string; alt: string; largeur: number; hauteur: number }
+> = {
+  // Coupe et Couleur n'ont pas d'illustration ici : chez les femmes elles
+  // relèvent des formules, illustrées plus bas par IMAGE_FORMULE. La première
+  // occurrence de « Coupe » dans la page étant celle des hommes, y placer une
+  // photo de cliente mettait une femme sous le titre « Hommes ».
   SOIN: {
-    src: "/images/soins-belma.jpg",
-    alt: "Carte des soins capillaires Belmakosmetik posée sur le plan de travail",
+    src: "/images/i14.png",
+    alt: "Coiffeuse travaillant les longueurs d'une cliente installée au poste de coiffage",
+    largeur: 443,
+    hauteur: 732,
   },
   HEAD_SPA: {
-    src: "/images/headspa-chromotherapie.jpg",
-    alt: "Bac Head Spa en chromothérapie violette, dans la salle de soin tamisée",
+    src: "/images/i11.png",
+    alt: "Head Spa en cours : cascade d'eau en chromothérapie au-dessus du visage de la cliente",
+    largeur: 612,
+    hauteur: 735,
   },
   MASSAGE: {
-    src: "/images/massage.jpeg",
-    alt: "Salle de massage : table préparée, huiles essentielles, toile de Bouddha et arbre de vie",
+    src: "/images/i13.png",
+    alt: "Massage du cuir chevelu sur table, sous la toile du Bouddha doré",
+    largeur: 708,
+    hauteur: 730,
   },
   EVENEMENTIEL: {
     src: "/images/i8.png",
     alt: "Plateau en bois gravé d'un arbre de vie posé sur une console",
+    largeur: 2048,
+    hauteur: 2048,
+  },
+};
+
+// Photos des deux formules. C'est ici que vivent les images de coiffage :
+// les prestations Coupe et Couleur des femmes relèvent des formules, pas des
+// cartes de catégories.
+export const IMAGE_FORMULE: Record<
+  string,
+  { src: string; alt: string; largeur: number; hauteur: number }
+> = {
+  PRIVILEGE: {
+    src: "/images/i12.png",
+    alt: "Coiffeuse lissant les cheveux d'une cliente au poste de coiffage, devant le miroir rond",
+    largeur: 1107,
+    hauteur: 736,
+  },
+  BIEN_ETRE: {
+    src: "/images/i10.png",
+    alt: "Shampooing au bac massant, la coiffeuse modelant le cuir chevelu d'une cliente",
+    largeur: 535,
+    hauteur: 698,
   },
 };
 

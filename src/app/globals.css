@@ -169,20 +169,8 @@ textarea {
   transform: rotate(-1deg);
 }
 
-/* Décalage vertical de l'accrochage. En CSS et non en utilitaires Tailwind :
-   ces classes font partie du dessin du mur de photos, au même titre que les
-   inclinaisons juste au-dessus. */
-@media (min-width: 640px) {
-  .cadre-decale-a {
-    margin-top: 0;
-  }
-  .cadre-decale-b {
-    margin-top: 2.75rem;
-  }
-  .cadre-decale-c {
-    margin-top: 1rem;
-  }
-}
+/* Le décalage vertical de l'accrochage n'est plus nécessaire : la mise en
+   page en colonnes imbrique d'elle-même des photos de hauteurs différentes. */
 
 /* ================== PHOTOS FONDUES ==================
    Hors galerie, les photos n'ont pas de cadre : leurs bords s'effacent
@@ -218,6 +206,64 @@ textarea {
     #000 84%,
     transparent 100%
   );
+}
+
+/* ================== MUR DE PHOTOS ==================
+   Mise en page en colonnes (maçonnerie) : chaque photo garde ses proportions
+   et les hauteurs inégales s'imbriquent au lieu de laisser des trous. C'est la
+   seule disposition qui accepte un mélange de 16/9, 9/16 et carré sans rogner
+   quoi que ce soit. En CSS et non en utilitaires Tailwind, comme les
+   inclinaisons de cadres auxquelles elle se marie. */
+.mur-photos {
+  columns: 1;
+  column-gap: 1.75rem;
+}
+
+@media (min-width: 640px) {
+  .mur-photos {
+    columns: 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mur-photos {
+    columns: 3;
+  }
+}
+
+/* Un cadre ne doit jamais être coupé entre deux colonnes. */
+.mur-photos > * {
+  break-inside: avoid;
+  margin-bottom: 1.75rem;
+}
+
+/* ================== PHOTO AFFICHÉE EN ENTIER ==================
+   Le parc de photos mélange 16/9, 9/16 et carré. Plutôt que de les recadrer
+   pour remplir un cadre de hauteur fixe, celles-ci sont montrées intégralement,
+   mises à l'échelle sans jamais être rognées ni agrandies.
+
+   La boîte a des dimensions définies et c'est `object-contain` qui inscrit la
+   photo entière dedans. Une boîte aux dimensions automatiques ne réservait
+   aucune place : l'image restait à 0x0, n'entrait jamais dans le champ de
+   vision, et son chargement différé ne se déclenchait pas.
+
+   Pas de masque de fondu ici : la boîte étant plus large que les portraits,
+   le fondu tomberait dans le vide au lieu de suivre les bords de la photo. */
+.photo-libre {
+  object-fit: contain;
+  filter: saturate(0.95) contrast(1.28) brightness(0.99) sepia(0.12)
+    hue-rotate(-8deg);
+  transition: filter 700ms ease;
+}
+
+.photo-libre:hover {
+  filter: saturate(1.12) contrast(1.18) brightness(1.05) sepia(0) hue-rotate(0deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-libre {
+    transition: none;
+  }
 }
 
 /* Sur une photo fondue, le vignetage sombre ferait un bord marqué là où

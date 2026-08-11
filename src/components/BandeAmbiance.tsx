@@ -3,7 +3,9 @@ import Image from "next/image";
 // Bande photo pleine largeur, seule image du lot au format paysage.
 export function BandeAmbiance() {
   return (
-    <section className="relative h-72 w-full sm:h-96">
+    // La hauteur suit les proportions de la photo (1600x900, soit 16/9) au lieu
+    // d'être fixée : la salle est montrée en entier, sans recadrage.
+    <section className="relative aspect-video w-full">
       {/* La photo et son voile sombre sont masqués ensemble : la bande entière
           se fond dans la page en haut et en bas, sans bord marqué. */}
       <div className="photo-frame photo-fondue-verticale absolute inset-0">
