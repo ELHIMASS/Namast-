@@ -52,7 +52,6 @@ export function AncienneClienteWizard({
 
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
-  const [telephone, setTelephone] = useState("");
   const [client, setClient] = useState<ClientTrouve | null>(null);
   const [erreurIdentification, setErreurIdentification] = useState<string | null>(null);
 
@@ -97,7 +96,7 @@ export function AncienneClienteWizard({
     e.preventDefault();
     setErreurIdentification(null);
     startTransition(async () => {
-      const resultat = await findClientByName(prenom, nom, telephone);
+      const resultat = await findClientByName(prenom, nom);
 
       if (resultat.statut === "homonymes") {
         setErreurIdentification(
@@ -172,20 +171,6 @@ export function AncienneClienteWizard({
             />
           </label>
         </div>
-        <label className="block text-sm text-foreground">
-          Téléphone
-          <input
-            type="tel"
-            autoComplete="tel"
-            value={telephone}
-            onChange={(e) => setTelephone(e.target.value)}
-            placeholder="06 12 34 56 78"
-            className="field mt-2"
-          />
-          <p className="mt-2 text-xs text-muted-foreground">
-            Le téléphone aide à retrouver votre fiche lorsque plusieurs clientes portent le même nom.
-          </p>
-        </label>
         {erreurIdentification && (
           <p className="text-sm text-rose-700">{erreurIdentification}</p>
         )}

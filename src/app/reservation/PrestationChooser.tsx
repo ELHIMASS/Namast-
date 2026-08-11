@@ -167,21 +167,24 @@ export function PrestationChooser({
    * qu'une formule est retenue, seules ses prestations sont proposées.
    */
   const groupes = useMemo(() => {
-    if (formuleChoisie) {
-      return [
-        {
-          cle: formuleChoisie,
-          titre: LABEL_FORMULE[formuleChoisie] ?? formuleChoisie,
-          items: prestationsDuProfil.filter((p) => p.formule === formuleChoisie),
-        },
-      ];
-    }
-
-    return ORDRE_CATEGORIES.map((categorie) => ({
+    const horsFormule = ORDRE_CATEGORIES.map((categorie) => ({
       cle: categorie,
       titre: LABEL_CATEGORIE[categorie] ?? categorie,
       items: prestationsDuProfil.filter((p) => p.categorie === categorie && !p.formule),
     })).filter((g) => g.items.length > 0);
+
+    if (!formuleChoisie) return horsFormule;
+
+    // Les soins capillaires restent proposés avec une formule : ils s'ajoutent
+    // à la prestation de coiffure au lieu de s'y substituer.
+    return [
+      {
+        cle: formuleChoisie,
+        titre: LABEL_FORMULE[formuleChoisie] ?? formuleChoisie,
+        items: prestationsDuProfil.filter((p) => p.formule === formuleChoisie),
+      },
+      ...horsFormule.filter((g) => g.cle === "SOIN"),
+    ];
   }, [prestationsDuProfil, formuleChoisie]);
 
   /** Prestations hors formule déjà cochées : elles sauteront si on prend une formule. */
@@ -346,9 +349,6 @@ export function PrestationChooser({
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 text-xs text-muted-foreground">
-                Tout est inclus dans le tarif : il n&apos;y a aucune option à ajouter.
-              </p>
             </div>
           )}
 

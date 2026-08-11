@@ -143,16 +143,29 @@ export function getGroupesOptionsPourPrestation(prestation: {
   profil: string;
   estLissage: boolean;
   formule?: string | null;
+  nom?: string;
 }): string[] {
   if (prestation.estLissage) return [];
   if (prestation.profil === "HOMME") return ["HOMME"];
-  if (prestation.profil === "ENFANT") return ["ENFANT"];
-  if (prestation.profil === "FEMME") {
-    if (prestation.categorie === "COULEUR") {
-      return ["BIEN_ETRE", "COULEUR"];
-    }
-    return ["RITUEL_FEMME", "BIEN_ETRE", "COIFFAGE"];
+
+  // Chez les enfants, les options de coiffage ne concernent que les filles.
+  if (prestation.profil === "ENFANT") {
+    return /fille/i.test(prestation.nom ?? "") ? ["ENFANT"] : [];
   }
+
+  if (prestation.profil === "FEMME") {
+    const groupes =
+      prestation.categorie === "COULEUR"
+        ? ["BIEN_ETRE", "COIFFAGE", "COULEUR"]
+        : ["BIEN_ETRE", "COIFFAGE"];
+
+    // La formule Bien-être comprend déjà soin profond, bac massant et
+    // modelage : les rituels de soin n'ont pas à être reproposés en supplément.
+    return prestation.formule === "BIEN_ETRE"
+      ? groupes
+      : ["RITUEL_FEMME", ...groupes];
+  }
+
   return [];
 }
 
