@@ -38,6 +38,32 @@ export function formatDuree(minutes: number): string {
 
 export type Longueur = "COURT" | "CARRE" | "MI_LONG" | "LONG" | "TRES_LONG";
 export type Densite = "FIN" | "NORMAL" | "EPAIS";
+export type Finition = "BRUSHING" | "SECHAGE";
+
+/**
+ * La finition est demandée sur les prestations de coiffure femme, où le
+ * séchage et le brushing sont l'un comme l'autre compris. Elle ne l'est pas
+ * sur « Shampoing + Brushing », dont le brushing est l'objet même.
+ */
+export function demandeFinition(prestation: {
+  profil: string;
+  formule?: string | null;
+  nom: string;
+}): boolean {
+  if (prestation.profil !== "FEMME" || !prestation.formule) return false;
+  return !/^shampoing \+ brushing$/i.test(prestation.nom.trim());
+}
+
+/** Le brushing est compris ; le séchage, plus rapide, vaut 5 € de moins. */
+export const REMISE_SECHAGE_CENTIMES = 500;
+
+export function remiseFinition(ligne: {
+  prestation: { profil: string; formule?: string | null; nom: string };
+  finition?: Finition;
+}): number {
+  if (!demandeFinition(ligne.prestation)) return 0;
+  return ligne.finition === "SECHAGE" ? REMISE_SECHAGE_CENTIMES : 0;
+}
 
 export type PrestationAvecVariantes = {
   id: string;
@@ -103,6 +129,7 @@ export type LigneReservation = {
   prestation: PrestationAvecVariantes;
   longueur?: Longueur;
   densite?: Densite;
+  finition?: Finition;
   options: OptionAvecVariantes[];
 };
 
@@ -116,7 +143,7 @@ export function calculerTotalAvecOptions(
 
   for (const ligne of lignes) {
     const base = resoudrePrestation(ligne.prestation, ligne.longueur, ligne.densite, matriceLissage);
-    prixTotalCentimes += base.prixCentimes;
+    prixTotalCentimes += base.prixCentimes - remiseFinition(ligne);
     dureePrestations += base.dureeMinutes;
     tempsNettoyage = Math.max(tempsNettoyage, ligne.prestation.tempsNettoyageMinutes);
 
@@ -171,7 +198,13 @@ export function getGroupesOptionsPourPrestation(prestation: {
 
 // Une ligne est complète quand toutes les informations requises (longueur,
 // densité pour le lissage) ont été renseignées.
-export function ligneEstComplete(ligne: { prestation: PrestationAvecVariantes; longueur?: Longueur; densite?: Densite }): boolean {
+export function ligneEstComplete(ligne: {
+  prestation: PrestationAvecVariantes;
+  longueur?: Longueur;
+  densite?: Densite;
+  finition?: Finition;
+}): boolean {
+  if (demandeFinition(ligne.prestation) && !ligne.finition) return false;
   if (ligne.prestation.estLissage) return !!ligne.longueur && !!ligne.densite;
   if (ligne.prestation.variantesLongueur.length > 0) return !!ligne.longueur;
   return true;

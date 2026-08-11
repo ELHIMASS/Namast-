@@ -183,6 +183,13 @@ model RendezVous {
   @@index([serieId])
 }
 
+// Finition demandée à la cliente sur les prestations de coiffure : le
+// séchage et le brushing sont tous deux compris, seul le rendu diffère.
+enum Finition {
+  BRUSHING
+  SECHAGE
+}
+
 model RendezVousPrestation {
   id           String           @id @default(cuid())
   rendezVousId String
@@ -192,6 +199,7 @@ model RendezVousPrestation {
   ordre        Int              @default(0)
   longueur     LongueurCheveux?
   densite      Densite?
+  finition     Finition?
 
   options      RendezVousOption[]
 }

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import type {
   Densite,
+  Finition,
   LigneReservation,
   LissageTarifSimple,
   Longueur,
@@ -13,6 +14,9 @@ import type {
 import {
   formatDuree,
   formatPrix,
+  demandeFinition,
+  REMISE_SECHAGE_CENTIMES,
+  remiseFinition,
   getGroupesOptionsPourPrestation,
   prixAPartirDe,
   resoudreOption,
@@ -56,6 +60,7 @@ type LigneEtat = {
   prestation: PrestationAvecVariantes;
   longueur?: Longueur;
   densite?: Densite;
+  finition?: Finition;
   optionIds: string[];
 };
 
@@ -85,6 +90,7 @@ export function PrestationChooser({
     prestation: l.prestation,
     longueur: l.longueur,
     densite: l.densite,
+    finition: l.finition,
     optionIds: l.options.map((o) => o.id),
   }));
 
@@ -94,6 +100,7 @@ export function PrestationChooser({
         prestation: l.prestation,
         longueur: l.longueur,
         densite: l.densite,
+        finition: l.finition,
         options: l.optionIds
           .map((id) => options.find((o) => o.id === id))
           .filter((o): o is OptionAvecVariantes => !!o),
@@ -121,6 +128,12 @@ export function PrestationChooser({
   function setLongueur(prestationId: string, longueur: Longueur) {
     commit(
       lignesEtat.map((l) => (l.prestation.id === prestationId ? { ...l, longueur } : l)),
+    );
+  }
+
+  function setFinition(prestationId: string, finition: Finition) {
+    commit(
+      lignesEtat.map((l) => (l.prestation.id === prestationId ? { ...l, finition } : l)),
     );
   }
 
@@ -394,9 +407,15 @@ export function PrestationChooser({
                   groupesOptions.includes(o.groupe),
                 );
 
-                const { prixCentimes, dureeMinutes } = ligne
+                const base = ligne
                   ? resoudrePrestation(prestation, ligne.longueur, ligne.densite, lissageMatrice)
                   : { prixCentimes: prestation.prixCentimes, dureeMinutes: prestation.dureeMinutes };
+                // Le séchage vaut 5 € de moins que le brushing : le tarif
+                // affiché sur la carte suit le choix, pour rester cohérent
+                // avec le total.
+                const prixCentimes =
+                  base.prixCentimes - (ligne ? remiseFinition(ligne) : 0);
+                const dureeMinutes = base.dureeMinutes;
 
                 return (
                   <div
@@ -457,6 +476,34 @@ export function PrestationChooser({
                             {LABEL_LONGUEUR[longueur]}
                           </button>
                         ))}
+                      </div>
+                    )}
+
+                    {/* Finition : séchage et brushing sont tous deux compris,
+                        seul le rendu diffère. Le choix est obligatoire. */}
+                    {selectionnee && demandeFinition(prestation) && (
+                      <div className="mt-3 pl-7">
+                        <p className="mb-2 text-xs text-muted-foreground">
+                          Finition souhaitée
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {(["BRUSHING", "SECHAGE"] as const).map((finition) => (
+                            <button
+                              key={finition}
+                              type="button"
+                              onClick={() => setFinition(prestation.id, finition)}
+                              className={`rounded-full border px-4 py-2 text-xs transition-colors ${
+                                ligne?.finition === finition
+                                  ? "border-primary bg-primary text-primary-foreground"
+                                  : "border-border bg-surface text-foreground hover:border-primary/40"
+                              }`}
+                            >
+                              {finition === "BRUSHING"
+                                ? "Brushing"
+                                : `Séchage − ${REMISE_SECHAGE_CENTIMES / 100} €`}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     )}
 

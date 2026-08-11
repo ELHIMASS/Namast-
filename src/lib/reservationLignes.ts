@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/prisma";
-import type { Densite, LigneReservation, Longueur } from "@/lib/prestations";
+import type { Densite, Finition, LigneReservation, Longueur } from "@/lib/prestations";
 
 export type LigneChoisie = {
   prestationId: string;
   longueur?: Longueur;
   densite?: Densite;
+  finition?: Finition;
   optionIds: string[];
 };
 
@@ -32,6 +33,7 @@ export async function resoudreLignes(lignes: LigneChoisie[]) {
       prestation,
       longueur: ligne.longueur,
       densite: ligne.densite,
+      finition: ligne.finition,
       options: ligne.optionIds
         .map((id) => options.find((o) => o.id === id))
         .filter((o): o is NonNullable<typeof o> => !!o),
@@ -47,6 +49,7 @@ export function construireDonneesPrestations(lignes: LigneChoisie[]) {
     ordre: i,
     longueur: ligne.longueur,
     densite: ligne.densite,
+    finition: ligne.finition,
     options: {
       create: ligne.optionIds.map((optionId) => ({ optionId })),
     },
