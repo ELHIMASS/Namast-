@@ -68,6 +68,8 @@ export function remiseFinition(ligne: {
 export type PrestationAvecVariantes = {
   id: string;
   nom: string;
+  /** Déroulé de la prestation, affiché derrière « Voir le détail ». */
+  description?: string | null;
   categorie: string;
   profil: string;
   prixCentimes: number;

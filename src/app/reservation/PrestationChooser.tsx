@@ -85,6 +85,8 @@ export function PrestationChooser({
     () => lignes[0]?.prestation.formule ?? null,
   );
   const [detailOuvert, setDetailOuvert] = useState<string | null>(null);
+  // Prestation dont le deroule est deplie.
+  const [detailPrestation, setDetailPrestation] = useState<string | null>(null);
 
   const lignesEtat: LigneEtat[] = lignes.map((l) => ({
     prestation: l.prestation,
@@ -459,6 +461,33 @@ export function PrestationChooser({
                         )}
                       </span>
                     </label>
+
+                    {/* Déroulé de la prestation, replié par défaut : il est
+                        long sur le lissage et les rituels Head Spa. */}
+                    {prestation.description && (
+                      <div className="mt-2 pl-7">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setDetailPrestation((actuel) =>
+                              actuel === prestation.id ? null : prestation.id,
+                            )
+                          }
+                          aria-expanded={detailPrestation === prestation.id}
+                          className="text-xs text-primary underline-offset-2 hover:underline"
+                        >
+                          {detailPrestation === prestation.id
+                            ? "Masquer le détail"
+                            : "Voir le détail"}
+                        </button>
+
+                        {detailPrestation === prestation.id && (
+                          <p className="mt-2 whitespace-pre-line rounded-xl bg-muted/50 p-4 text-sm leading-relaxed text-muted-foreground">
+                            {prestation.description}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     {selectionnee && besoinLongueur && (
                       <div className="mt-3 flex flex-wrap gap-2 pl-7">
