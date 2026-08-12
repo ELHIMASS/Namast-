@@ -54,8 +54,21 @@ Ses bienfaits :
 • Améliore la qualité du travail intellectuel
 • Recommandé en cas de chute de cheveux : les huiles les rendent plus brillants et plus vigoureux`;
 
+const HASTA_PRANA = `Mains, poignets et avant-bras. Origine : Inde, au beurre de karité ou de coco.
+
+Massage des mains doux, réconfortant et enveloppant, apaisant et relaxant.
+
+Ses bienfaits :
+• Réconforte, rassure, détend et apaise
+• Harmonise le corps et la notion de justesse
+• Renforce la dimension intérieure et favorise l'énergie du don — celle qui consiste non pas à donner, mais à recevoir`;
+
 async function renommer(ancien: string, nom: string, prix: number, duree: number, description: string) {
-  const p = await prisma.prestation.findFirst({ where: { nom: ancien } });
+  // Recherche sur l'ancien nom comme sur le nouveau : le script reste
+  // relançable une fois le renommage effectué.
+  const p = await prisma.prestation.findFirst({
+    where: { OR: [{ nom: ancien }, { nom }] },
+  });
   if (!p) {
     console.log(`  introuvable : ${ancien}`);
     return;
@@ -72,11 +85,18 @@ async function main() {
   await renommer("Head Spa Découverte", "Rituel Détente", 80, 75, RITUEL_DETENTE);
   await renommer("Head Spa Signature", "Rituel Évasion", 120, 120, RITUEL_EVASION);
 
-  console.log("\nMassage :");
-  const s = await prisma.prestation.findFirst({ where: { nom: "Shiroschampi" } });
-  if (s) {
-    await prisma.prestation.update({ where: { id: s.id }, data: { description: SHIROSCHAMPI } });
-    console.log("  descriptif ajoute : Shiroschampi");
+  console.log("\nMassages :");
+  for (const [nom, description] of [
+    ["Shiroschampi", SHIROSCHAMPI],
+    ["Hasta Prâna", HASTA_PRANA],
+  ] as const) {
+    const p = await prisma.prestation.findFirst({ where: { nom } });
+    if (!p) {
+      console.log(`  introuvable : ${nom}`);
+      continue;
+    }
+    await prisma.prestation.update({ where: { id: p.id }, data: { description } });
+    console.log(`  descriptif ajoute : ${nom}`);
   }
 
   console.log("\nPrestations avec un deroule affichable :");
