@@ -15,7 +15,6 @@ import {
   formatDuree,
   formatPrix,
   demandeFinition,
-  REMISE_SECHAGE_CENTIMES,
   remiseFinition,
   getGroupesOptionsPourPrestation,
   prixAPartirDe,
@@ -527,9 +526,7 @@ export function PrestationChooser({
                                   : "border-border bg-surface text-foreground hover:border-primary/40"
                               }`}
                             >
-                              {finition === "BRUSHING"
-                                ? "Brushing"
-                                : `Séchage − ${REMISE_SECHAGE_CENTIMES / 100} €`}
+                              {finition === "BRUSHING" ? "Brushing" : "Séchage"}
                             </button>
                           ))}
                         </div>
