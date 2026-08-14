@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
   // Vercel) attendent la sortie par défaut et échouent avec « standalone ».
   // La variable est posée dans le Dockerfile.
   output: process.env.BUILD_STANDALONE ? "standalone" : undefined,
+
+  // Turbopack n'est pas compatible avec Netlify : désactiver en production.
+  // Turbopack fonctionne seulement en dev avec: next dev --turbopack
+  experimental: {
+    turbo: process.env.NODE_ENV !== "production" ? {} : undefined,
+  },
 };
 
 export default nextConfig;
