@@ -2,10 +2,10 @@ import Link from "next/link";
 import { Ciseau } from "@/components/Ciseau";
 
 const HORAIRES = [
-  { jour: "Lundi", heures: "13h30 – 18h00" },
+  { jour: "Lundi", heures: "13h30 – 17h30" },
   { jour: "Mardi", heures: "Fermé" },
-  { jour: "Mercredi", heures: "9h00 – 13h00 / 14h00 – 18h00" },
-  { jour: "Jeudi", heures: "9h00 – 13h00 / 14h00 – 18h30" },
+  { jour: "Mercredi", heures: "9h00 – 12h30 / 14h00 – 18h30" },
+  { jour: "Jeudi", heures: "9h00 – 13h00 / 14h00 – 18h00" },
   { jour: "Vendredi", heures: "9h00 – 13h00 / 14h00 – 18h30" },
   { jour: "Samedi", heures: "9h00 – 14h00" },
 ];

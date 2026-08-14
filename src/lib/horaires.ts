@@ -1,21 +1,17 @@
 export type Plage = { debut: string; fin: string };
 
 // Index = Date.getDay() : 0 dimanche ... 6 samedi
-//
-// La borne de fin est l'heure de fermeture : une séance doit être terminée à
-// cette heure-là, nettoyage compris. Le mercredi, réservé aux hommes et aux
-// enfants, va de 9h à 18h ; jeudi et vendredi ferment à 18h30.
 export const HORAIRES_SALON: Record<number, Plage[]> = {
   0: [],
-  1: [{ debut: "13:30", fin: "18:00" }],
+  1: [{ debut: "13:30", fin: "17:30" }],
   2: [],
   3: [
-    { debut: "09:00", fin: "13:00" },
-    { debut: "14:00", fin: "18:00" },
+    { debut: "09:00", fin: "12:30" },
+    { debut: "14:00", fin: "18:30" },
   ],
   4: [
     { debut: "09:00", fin: "13:00" },
-    { debut: "14:00", fin: "18:30" },
+    { debut: "14:00", fin: "18:00" },
   ],
   5: [
     { debut: "09:00", fin: "13:00" },
