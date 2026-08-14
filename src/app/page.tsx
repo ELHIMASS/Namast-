@@ -26,6 +26,7 @@ import {
   ORDRE_CATEGORIES,
   ORDRE_FORMULES,
 } from "@/lib/categories";
+import { demandeFinition } from "@/lib/prestations";
 
 // La carte des prestations est lue en base à chaque affichage. Sans cela, Next
 // prégénérerait cette page pendant la compilation, ce qui exigerait une base
@@ -194,9 +195,12 @@ export default async function Home() {
                               {formatPrix(prix)}
                             </span>
                           </div>
-                          <span className="text-xs text-muted-foreground">
-                            Durée: {formatDuree(p.dureeMinutes)}
-                          </span>
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <div>Durée: {formatDuree(p.dureeMinutes)}</div>
+                            {demandeFinition(p) && (
+                              <div>Finition: Brushing ou Sechage</div>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
