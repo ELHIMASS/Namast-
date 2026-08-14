@@ -41,6 +41,12 @@ const IMAGE_PROFIL: Record<
   string,
   { src: string; alt: string; largeur: number; hauteur: number }
 > = {
+  FEMME: {
+    src: "/images/cheveux.jpeg",
+    alt: "Types de cheveux féminins - coupe et soin",
+    largeur: 800,
+    hauteur: 800,
+  },
   HOMME: {
     src: "/images/i15.png",
     alt: "Client homme dans le salon de coiffure",
