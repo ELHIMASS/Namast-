@@ -34,7 +34,23 @@ export function estJourOuvert(date: Date): boolean {
   return (HORAIRES_SALON[date.getDay()] ?? []).length > 0;
 }
 
-// Les prestations enfants ne se réservent que le mercredi.
+// Mercredi : enfants et hommes
+// Jeudi, vendredi : bien-être
+// Lundi, samedi : privilège et bien-être
 export function estMercredi(date: Date): boolean {
   return date.getDay() === 3;
+}
+
+export function estJourEnfantEtHomme(date: Date): boolean {
+  return date.getDay() === 3; // Mercredi
+}
+
+export function estJourBienEtre(date: Date): boolean {
+  const jour = date.getDay();
+  return jour === 4 || jour === 5; // Jeudi, vendredi
+}
+
+export function estJourPrivilegeEtBienEtre(date: Date): boolean {
+  const jour = date.getDay();
+  return jour === 1 || jour === 6; // Lundi, samedi
 }

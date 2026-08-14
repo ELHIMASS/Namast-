@@ -2,12 +2,12 @@ import Link from "next/link";
 import { Ciseau } from "@/components/Ciseau";
 
 const HORAIRES = [
-  { jour: "Lundi", heures: "13h30 – 17h30" },
+  { jour: "Lundi", heures: "13h30 – 17h30", prestations: "Coiffure Privilège & Bien-être" },
   { jour: "Mardi", heures: "Fermé" },
-  { jour: "Mercredi", heures: "9h00 – 12h30 / 14h00 – 18h30" },
-  { jour: "Jeudi", heures: "9h00 – 13h00 / 14h00 – 18h00" },
-  { jour: "Vendredi", heures: "9h00 – 13h00 / 14h00 – 18h30" },
-  { jour: "Samedi", heures: "9h00 – 14h00" },
+  { jour: "Mercredi", heures: "9h00 – 12h30 / 14h00 – 18h30", prestations: "Coiffure Enfants & Homme" },
+  { jour: "Jeudi", heures: "9h00 – 13h00 / 14h00 – 18h00", prestations: "Coiffure Bien-être" },
+  { jour: "Vendredi", heures: "9h00 – 13h00 / 14h00 – 18h30", prestations: "Coiffure Bien-être" },
+  { jour: "Samedi", heures: "9h00 – 14h00", prestations: "Coiffure Privilège & Bien-être" },
 ];
 
 export function Footer() {
@@ -49,13 +49,18 @@ export function Footer() {
             <p className="text-xs uppercase tracking-[0.2em] font-medium text-foreground mb-4">
               Horaires d'ouverture
             </p>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-3 text-sm">
               {HORAIRES.map((h) => (
-                <li key={h.jour} className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">{h.jour}</span>
-                  <span className={`text-right ${h.heures === "Fermé" ? "italic text-muted-foreground/60" : "text-foreground font-medium"}`}>
-                    {h.heures}
-                  </span>
+                <li key={h.jour}>
+                  <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground font-medium">{h.jour}</span>
+                    <span className={`text-right ${h.heures === "Fermé" ? "italic text-muted-foreground/60" : "text-foreground font-medium"}`}>
+                      {h.heures}
+                    </span>
+                  </div>
+                  {h.prestations && h.heures !== "Fermé" && (
+                    <p className="mt-1 text-xs text-muted-foreground/70">{h.prestations}</p>
+                  )}
                 </li>
               ))}
             </ul>
