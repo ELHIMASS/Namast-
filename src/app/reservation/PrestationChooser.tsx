@@ -246,14 +246,15 @@ export function PrestationChooser({
       </button>
 
       {imageProfil && (
-        <div className="flex justify-center rounded-2xl border border-border bg-surface p-4 overflow-hidden">
+        <div className="flex justify-center rounded-2xl border border-border bg-surface p-0 overflow-hidden">
           <Image
             src={imageProfil.src}
             alt={imageProfil.alt}
             width={imageProfil.largeur}
             height={imageProfil.hauteur}
-            sizes="(min-width: 640px) 100vw, 100vw"
-            className="max-w-sm w-full h-auto"
+            sizes="(min-width: 768px) 600px, 100vw"
+            priority
+            className="w-full h-auto"
           />
         </div>
       )}
