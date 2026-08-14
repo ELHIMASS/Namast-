@@ -99,7 +99,7 @@ export default async function Home() {
               Salon privé
             </span>
             <h1 className="font-serif text-4xl leading-tight sm:text-5xl gradient-text animate-gradient">
-              Coiffure, couleur &amp; bien-être, sur mesure
+              Coiffure &amp; bien-être, sur mesure
             </h1>
             <p className="max-w-xl text-lg text-muted-foreground">
               Un salon confidentiel, un nombre limité de clientes, une approche
