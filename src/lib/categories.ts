@@ -38,6 +38,12 @@ export const IMAGE_CATEGORIE: Record<
     largeur: 1200,
     hauteur: 1600,
   },
+  LISSAGE: {
+    src: "/images/cheveux.jpeg",
+    alt: "Cheveux lissés et brillants, démonstration du résultat du lissage à l'enzymothérapie",
+    largeur: 800,
+    hauteur: 1000,
+  },
   HEAD_SPA: {
     src: "/images/i11.png",
     alt: "Head Spa en cours : cascade d'eau en chromothérapie au-dessus du visage de la cliente",
