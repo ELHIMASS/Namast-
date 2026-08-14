@@ -228,6 +228,8 @@ export function PrestationChooser({
     );
   }
 
+  const imageProfil = IMAGE_PROFIL[profil];
+
   return (
     <div className="space-y-6">
       <button
@@ -242,6 +244,19 @@ export function PrestationChooser({
       >
         ‹ Changer de profil ({LABEL_PROFIL[profil]})
       </button>
+
+      {imageProfil && (
+        <div className="flex justify-center rounded-2xl border border-border bg-surface p-4 overflow-hidden">
+          <Image
+            src={imageProfil.src}
+            alt={imageProfil.alt}
+            width={imageProfil.largeur}
+            height={imageProfil.hauteur}
+            sizes="(min-width: 640px) 100vw, 100vw"
+            className="max-w-sm w-full h-auto"
+          />
+        </div>
+      )}
 
       {profil === "ENFANT" && (
         <p className="rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
