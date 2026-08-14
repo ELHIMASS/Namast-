@@ -374,7 +374,7 @@ export default async function Home() {
                     </Reveal>
                   ))}
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </section>
