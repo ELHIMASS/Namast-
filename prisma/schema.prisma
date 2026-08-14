@@ -30,6 +30,7 @@ enum CategoriePrestation {
   COUPE
   COULEUR
   SOIN
+  LISSAGE
   HEAD_SPA
   MASSAGE
   EVENEMENTIEL
