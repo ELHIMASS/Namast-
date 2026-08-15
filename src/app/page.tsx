@@ -282,7 +282,7 @@ export default async function Home() {
                   </div>
 
                   {IMAGE_PROFIL[profil] ? (
-                    <div className="mb-12 flex justify-center photo-card">
+                    <div className="mb-8 flex justify-center photo-card">
                       <div className="relative h-56 sm:h-64 w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl">
                         <img
                           src={IMAGE_PROFIL[profil].src}
