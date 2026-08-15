@@ -19,6 +19,10 @@ import {
   notifierRdvDeplace,
   notifierRdvModifie,
   notifierRdvSupprime,
+  notifierSalonRdvAjoute,
+  notifierSalonRdvDeplace,
+  notifierSalonRdvModifie,
+  notifierSalonRdvSupprime,
 } from "@/lib/notifications";
 
 const COOKIE_NAME = "namaste_admin";
@@ -159,6 +163,7 @@ export async function accepterDemandeAction(rendezVousId: string) {
     include: INCLUDE_COMPLET,
   });
   await notifierDemandeAcceptee(rdv);
+  await notifierSalonRdvAjoute(rdv);
 }
 
 export async function refuserDemandeAction(rendezVousId: string, motif?: string) {
@@ -246,6 +251,7 @@ export async function creerRendezVousAdminAction({
   });
 
   await notifierRdvCreeParAdmin(rdv);
+  await notifierSalonRdvAjoute(rdv);
 
   if (!recurrence || recurrence.occurrences <= 1) {
     return { ok: true as const, id: rdv.id, creees: 1, ignorees: [] as string[] };
@@ -394,8 +400,10 @@ export async function modifierRendezVousAction({
 
   if (dateChangee) {
     await notifierRdvDeplace(rdv, ancienneDateDebut);
+    await notifierSalonRdvDeplace(rdv, ancienneDateDebut);
   } else {
     await notifierRdvModifie(rdv);
+    await notifierSalonRdvModifie(rdv);
   }
 
   return { ok: true as const };
@@ -407,4 +415,5 @@ export async function supprimerRendezVousAction(rendezVousId: string) {
     include: INCLUDE_COMPLET,
   });
   await notifierRdvSupprime(rdv);
+  await notifierSalonRdvSupprime(rdv);
 }

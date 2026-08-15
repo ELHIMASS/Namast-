@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { envoyerEmail } from "@/lib/email";
+import { envoyerEmail, envoyerEmailAuSalon } from "@/lib/email";
 import {
   calculerTotalAvecOptions,
   formatPrix,
@@ -13,7 +13,7 @@ import { LABEL_LONGUEUR } from "@/lib/categories";
 
 type RendezVousEmail = {
   dateDebut: Date;
-  client: { prenom: string; nom: string; email: string };
+  client: { prenom: string; nom: string; email: string; telephone: string | null };
   prestations: {
     prestation: PrestationAvecVariantes;
     longueur?: Longueur | null;
@@ -150,5 +150,54 @@ export async function notifierDemandeRefusee(rdv: RendezVousEmail, motif?: strin
       `Bonjour ${rdv.client.prenom}, votre demande de rendez-vous chez Namasté n'a malheureusement pas pu être acceptée pour le créneau souhaité.`,
       motif ? `<p>${motif}</p>` : "",
     ),
+  });
+}
+
+// === NOTIFICATIONS POUR LE SALON ===
+
+export async function notifierSalonRdvAjoute(rdv: RendezVousEmail) {
+  await envoyerEmailAuSalon({
+    subject: `NOUVEAU RDV - ${rdv.client.prenom} ${rdv.client.nom}`,
+    action: "AJOUT",
+    titre: "Nouveau rendez-vous confirmé",
+    intro: `Un nouveau rendez-vous a été confirmé pour ${rdv.client.prenom} ${rdv.client.nom}.`,
+    details: await detailsRdvHtml(rdv),
+    contact: `Tél: ${rdv.client.telephone || rdv.client.email}`,
+  });
+}
+
+export async function notifierSalonRdvModifie(rdv: RendezVousEmail) {
+  await envoyerEmailAuSalon({
+    subject: `RDV MODIFIÉ - ${rdv.client.prenom} ${rdv.client.nom}`,
+    action: "MODIFICATION",
+    titre: "Rendez-vous modifié",
+    intro: `Le rendez-vous de ${rdv.client.prenom} ${rdv.client.nom} a été mis à jour.`,
+    details: await detailsRdvHtml(rdv),
+    contact: `Tél: ${rdv.client.telephone || rdv.client.email}`,
+  });
+}
+
+export async function notifierSalonRdvDeplace(rdv: RendezVousEmail, ancienneDateDebut: Date) {
+  await envoyerEmailAuSalon({
+    subject: `RDV DÉPLACÉ - ${rdv.client.prenom} ${rdv.client.nom}`,
+    action: "DÉPLACEMENT",
+    titre: "Rendez-vous déplacé",
+    intro: `Le rendez-vous de ${rdv.client.prenom} ${rdv.client.nom} a été déplacé.`,
+    details: `
+      <p><strong>Ancien créneau :</strong> ${formatDateHeure(ancienneDateDebut)}</p>
+      ${await detailsRdvHtml(rdv)}
+    `,
+    contact: `Tél: ${rdv.client.telephone || rdv.client.email}`,
+  });
+}
+
+export async function notifierSalonRdvSupprime(rdv: RendezVousEmail) {
+  await envoyerEmailAuSalon({
+    subject: `RDV SUPPRIMÉ - ${rdv.client.prenom} ${rdv.client.nom}`,
+    action: "SUPPRESSION",
+    titre: "Rendez-vous annulé",
+    intro: `Le rendez-vous de ${rdv.client.prenom} ${rdv.client.nom} a été annulé.`,
+    details: await detailsRdvHtml(rdv),
+    contact: `Tél: ${rdv.client.telephone || rdv.client.email}`,
   });
 }
