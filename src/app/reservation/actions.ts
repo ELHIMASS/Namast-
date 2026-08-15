@@ -207,10 +207,19 @@ export async function creerDemandeNouvelleClienteAction({
     include: {
       prestations: {
         include: {
-          prestation: true,
+          prestation: {
+            include: {
+              variantesLongueur: true,
+              variantesDensite: true,
+            },
+          },
           options: {
             include: {
-              option: true,
+              option: {
+                include: {
+                  variantes: true,
+                },
+              },
             },
           },
         },
