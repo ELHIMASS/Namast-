@@ -269,7 +269,7 @@ export default async function Home() {
             {profils.map(({ profil, categories }, profIdx) => (
               <Reveal key={profil} delay={profIdx * 100}>
                 <div className="space-y-8">
-                  <div className="text-center pb-8 border-b border-border/30">
+                  <div className="text-center pb-4 border-b border-border/30">
                     <div className="flex items-center justify-center gap-3 mb-4">
                       <ProfilIcon profil={profil} className="h-8 w-8 text-primary" />
                       <h3 className="font-serif text-4xl sm:text-5xl text-foreground">
@@ -282,7 +282,7 @@ export default async function Home() {
                   </div>
 
                   {IMAGE_PROFIL[profil] ? (
-                    <div className="mb-8 flex justify-center photo-card">
+                    <div className="mb-0 flex justify-center photo-card">
                       <div className="relative h-56 sm:h-64 w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl">
                         <img
                           src={IMAGE_PROFIL[profil].src}
