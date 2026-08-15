@@ -32,7 +32,7 @@ export async function envoyerEmail(data: {
   const emailData: EmailData = {
     to: [{ email: data.to }],
     sender: {
-      email: "noreply@namaste-salon.fr",
+      email: "Namasté-coiffure-bien-etre@outlook.fr",
       name: "Namasté Salon",
     },
     subject: data.subject,
@@ -77,7 +77,7 @@ export async function envoyerEmailAuSalon(data: EmailAuSalonData): Promise<boole
   const emailData: EmailData = {
     to: [{ email: SALON_EMAIL, name: "Namasté Salon" }],
     sender: {
-      email: "noreply@namaste-salon.fr",
+      email: "Namasté-coiffure-bien-etre@outlook.fr",
       name: "Namasté Salon",
     },
     subject: data.subject,
@@ -137,7 +137,7 @@ export async function envoyerEmailSalon(
   const emailData: EmailData = {
     to: [{ email: SALON_EMAIL, name: "Namasté Salon" }],
     sender: {
-      email: "noreply@namaste-salon.fr",
+      email: "Namasté-coiffure-bien-etre@outlook.fr",
       name: "Namasté Salon",
     },
     subject: `Nouvelle demande RDV - ${prenom} ${nom}`,
