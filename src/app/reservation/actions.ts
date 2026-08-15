@@ -232,12 +232,5 @@ export async function creerDemandeNouvelleClienteAction({
     message
   );
 
-  // Envoyer un email de confirmation au client
-  await notifierClientDemandeRdv({
-    dateDebut,
-    client: { prenom, nom, email, telephone: telephoneNormalise },
-    prestations: rendezVous.prestations as any,
-  });
-
   return { ok: true as const, rendezVousId: rendezVous.id, code: rendezVous.code };
 }
