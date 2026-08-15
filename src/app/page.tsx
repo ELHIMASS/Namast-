@@ -283,13 +283,13 @@ export default async function Home() {
 
                   {IMAGE_PROFIL[profil] ? (
                     <div className="mb-12 flex justify-center photo-card">
-                      <div className="relative w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl">
+                      <div className="relative h-56 sm:h-64 w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl">
                         <img
                           src={IMAGE_PROFIL[profil].src}
                           alt={IMAGE_PROFIL[profil].alt}
                           width={IMAGE_PROFIL[profil].largeur}
                           height={IMAGE_PROFIL[profil].hauteur}
-                          className="photo-libre h-auto w-full object-cover"
+                          className="photo-libre h-full w-full object-contain"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                       </div>
