@@ -125,6 +125,12 @@ export function AdminDashboard({
           Clients
         </a>
         <a
+          href="/admin/tarifs"
+          className="px-4 py-2 text-sm font-medium text-foreground hover:text-primary"
+        >
+          Tarifs
+        </a>
+        <a
           href="/admin/prestations"
           className="px-4 py-2 text-sm font-medium text-foreground hover:text-primary"
         >
