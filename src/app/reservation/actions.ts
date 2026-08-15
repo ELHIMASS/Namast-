@@ -7,6 +7,7 @@ import { estJourAutorisePourPrestations } from "@/lib/reglesCreneaux";
 import { genererCodeUnique } from "@/lib/codeReservation";
 import { calculerTotalAvecOptions } from "@/lib/prestations";
 import { envoyerEmailSalon } from "@/lib/email";
+import { notifierClientDemandeRdv } from "@/lib/notifications";
 import {
   construireDonneesPrestations,
   resoudreLignes,
@@ -225,6 +226,13 @@ export async function creerDemandeNouvelleClienteAction({
     nomsPresta,
     message
   );
+
+  // Envoyer un email de confirmation au client
+  await notifierClientDemandeRdv({
+    dateDebut,
+    client: { prenom, nom, email, telephone: telephoneNormalise },
+    prestations: rendezVous.prestations,
+  });
 
   return { ok: true as const, rendezVousId: rendezVous.id, code: rendezVous.code };
 }
