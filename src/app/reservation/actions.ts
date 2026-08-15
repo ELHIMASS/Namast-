@@ -6,6 +6,7 @@ import { getFermetures } from "@/lib/fermetures";
 import { estJourAutorisePourPrestations } from "@/lib/reglesCreneaux";
 import { genererCodeUnique } from "@/lib/codeReservation";
 import { calculerTotalAvecOptions } from "@/lib/prestations";
+import { envoyerEmailSalon } from "@/lib/email";
 import {
   construireDonneesPrestations,
   resoudreLignes,
@@ -202,7 +203,28 @@ export async function creerDemandeNouvelleClienteAction({
         create: construireDonneesPrestations(lignes),
       },
     },
+    include: {
+      prestations: {
+        include: {
+          prestation: true,
+        },
+      },
+    },
   });
+
+  // Envoyer un email au salon pour la nouvelle demande
+  const nomsPresta = rendezVous.prestations
+    .map((p) => p.prestation.nom)
+    .join(", ");
+  await envoyerEmailSalon(
+    prenom,
+    nom,
+    telephone,
+    email,
+    dateDebut.toISOString(),
+    nomsPresta,
+    message
+  );
 
   return { ok: true as const, rendezVousId: rendezVous.id, code: rendezVous.code };
 }
