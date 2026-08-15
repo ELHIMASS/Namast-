@@ -40,6 +40,7 @@ export function Footer() {
                 <p className="font-medium text-foreground text-xs uppercase tracking-[0.15em] mb-1">Adresse</p>
                 <p>6 impasse des Prunelliers</p>
                 <p>69720 Saint-Laurent-de-Mure</p>
+                <p className="text-xs text-muted-foreground/70 mt-2">06 51 41 28 33</p>
               </div>
             </div>
           </div>

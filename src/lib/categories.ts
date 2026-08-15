@@ -62,6 +62,8 @@ export const IMAGE_CATEGORIE: Record<
     largeur: 2048,
     hauteur: 2048,
   },
+  // Photos pour les sections Hommes/Enfants (affichées dans page.tsx via IMAGE_PROFIL)
+  // Intégrées ici pour cohérence avec les autres catégories
 };
 
 // Photos des deux formules. C'est ici que vivent les images de coiffage :
