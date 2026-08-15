@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
-const SALON_EMAIL = "Namasté-coiffure-bien-etre@outlook.fr";
+const SALON_EMAIL = "Namaste-coiffure-bien-etre@outlook.fr";
 
 interface EmailData {
   to: { email: string; name?: string }[];
@@ -32,7 +32,7 @@ export async function envoyerEmail(data: {
   const emailData: EmailData = {
     to: [{ email: data.to }],
     sender: {
-      email: "Namasté-coiffure-bien-etre@outlook.fr",
+      email: "Namaste-coiffure-bien-etre@outlook.fr",
       name: "Namasté Salon",
     },
     subject: data.subject,
@@ -77,7 +77,7 @@ export async function envoyerEmailAuSalon(data: EmailAuSalonData): Promise<boole
   const emailData: EmailData = {
     to: [{ email: SALON_EMAIL, name: "Namasté Salon" }],
     sender: {
-      email: "Namasté-coiffure-bien-etre@outlook.fr",
+      email: "Namaste-coiffure-bien-etre@outlook.fr",
       name: "Namasté Salon",
     },
     subject: data.subject,
@@ -137,7 +137,7 @@ export async function envoyerEmailSalon(
   const emailData: EmailData = {
     to: [{ email: SALON_EMAIL, name: "Namasté Salon" }],
     sender: {
-      email: "Namasté-coiffure-bien-etre@outlook.fr",
+      email: "Namaste-coiffure-bien-etre@outlook.fr",
       name: "Namasté Salon",
     },
     subject: `Nouvelle demande RDV - ${prenom} ${nom}`,
