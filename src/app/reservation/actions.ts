@@ -208,6 +208,11 @@ export async function creerDemandeNouvelleClienteAction({
       prestations: {
         include: {
           prestation: true,
+          options: {
+            include: {
+              option: true,
+            },
+          },
         },
       },
     },
