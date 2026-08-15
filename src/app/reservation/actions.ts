@@ -236,7 +236,7 @@ export async function creerDemandeNouvelleClienteAction({
   await notifierClientDemandeRdv({
     dateDebut,
     client: { prenom, nom, email, telephone: telephoneNormalise },
-    prestations: rendezVous.prestations,
+    prestations: rendezVous.prestations as any,
   });
 
   return { ok: true as const, rendezVousId: rendezVous.id, code: rendezVous.code };
