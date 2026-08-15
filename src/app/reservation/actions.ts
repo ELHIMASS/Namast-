@@ -210,7 +210,6 @@ export async function creerDemandeNouvelleClienteAction({
           prestation: {
             include: {
               variantesLongueur: true,
-              variantesDensite: true,
             },
           },
           options: {
