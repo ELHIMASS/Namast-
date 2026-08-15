@@ -129,14 +129,14 @@ export async function notifierRdvSupprime(rdv: RendezVousEmail) {
   });
 }
 
-export async function notifierClientDemandeRdv(rdv: RendezVousEmail) {
+export async function notifierClientDemandeRdv(email: string, prenom: string) {
   await envoyerEmail({
-    to: rdv.client.email,
+    to: email,
     subject: "Votre demande de rendez-vous chez Namasté",
     html: gabarit(
       "Demande reçue",
-      `Bonjour ${rdv.client.prenom}, nous avons bien reçu votre demande de rendez-vous. Notre équipe l'examinera rapidement et vous contactera pour confirmer votre créneau.`,
-      await detailsRdvHtml(rdv),
+      `Bonjour ${prenom}, nous avons bien reçu votre demande de rendez-vous. Notre équipe l'examinera rapidement et vous contactera pour confirmer votre créneau.`,
+      "",
     ),
   });
 }
