@@ -268,22 +268,10 @@ export default async function Home() {
           <div className="space-y-24">
             {profils.map(({ profil, categories }, profIdx) => (
               <Reveal key={profil} delay={profIdx * 100}>
-                <div className="space-y-8">
-                  <div className="text-center pb-4 border-b border-border/30">
-                    <div className="flex items-center justify-center gap-3 mb-4">
-                      <ProfilIcon profil={profil} className="h-8 w-8 text-primary" />
-                      <h3 className="font-serif text-4xl sm:text-5xl text-foreground">
-                        {LABEL_PROFIL[profil]}
-                      </h3>
-                    </div>
-                    <div className="flex justify-center">
-                      <span className="inline-block w-16 h-1 bg-gradient-to-r from-primary/40 via-primary to-primary/40 rounded-full" />
-                    </div>
-                  </div>
-
-                  {IMAGE_PROFIL[profil] ? (
-                    <div className="mb-4 flex justify-center photo-card">
-                      <div className="relative h-56 sm:h-64 w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl">
+                {IMAGE_PROFIL[profil] ? (
+                  <div className="mb-12 flex justify-center">
+                    <div className="w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl glass border border-white/40">
+                      <div className="relative h-56 sm:h-64 w-full overflow-hidden">
                         <img
                           src={IMAGE_PROFIL[profil].src}
                           alt={IMAGE_PROFIL[profil].alt}
@@ -293,10 +281,89 @@ export default async function Home() {
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                       </div>
-                    </div>
-                  ) : null}
-                </div>
+                      <div className="bg-background/50 backdrop-blur-sm text-center px-6 py-6 border-b border-white/40">
+                        <div className="flex items-center justify-center gap-3 mb-3">
+                          <ProfilIcon profil={profil} className="h-8 w-8 text-primary" />
+                          <h3 className="font-serif text-4xl sm:text-5xl text-foreground">
+                            {LABEL_PROFIL[profil]}
+                          </h3>
+                        </div>
+                        <div className="flex justify-center">
+                          <span className="inline-block w-16 h-1 bg-gradient-to-r from-primary/40 via-primary to-primary/40 rounded-full" />
+                        </div>
+                      </div>
+                      <div className="p-8 sm:p-10 space-y-6">
+                        {categories.map(({ categorie, items, illustree }, catIndex) => (
+                          <div key={categorie} className="glass rounded-2xl border border-white/40 p-6 sm:p-8">
+                            <div className="flex items-start gap-4 mb-6">
+                              <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
+                                <CategoryIcon categorie={categorie} className="h-8 w-8" />
+                              </span>
+                              <div className="flex-1">
+                                <h4 className="font-serif text-2xl sm:text-3xl text-foreground mb-2">
+                                  {LABEL_CATEGORIE[categorie] ?? categorie}
+                                </h4>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                  {DESCRIPTION_CATEGORIE[categorie]}
+                                </p>
+                              </div>
+                            </div>
 
+                            <Repliable
+                              apercu={`${items.length} prestation${items.length > 1 ? 's' : ''} · À partir de ${formatPrix(
+                                Math.min(...items.map((p) => prixAPartirDe(p, lissageMatrice))),
+                              )}`}
+                            >
+                              <div className="space-y-3 pt-4 border-t border-border/30">
+                                {items.map((p) => {
+                                  const varie = p.estLissage || p.variantesLongueur.length > 0;
+                                  const prix = prixAPartirDe(p, lissageMatrice);
+                                  return (
+                                    <div
+                                      key={p.id}
+                                      className="flex flex-col gap-1 pb-3 border-b border-border/20 last:border-0 last:pb-0"
+                                    >
+                                      <div className="flex items-start justify-between gap-3">
+                                        <span className="font-serif font-semibold text-base text-foreground">
+                                          {p.nom}
+                                        </span>
+                                        <span className="whitespace-nowrap text-base font-bold text-primary">
+                                          {varie && "dès "}
+                                          {formatPrix(prix)}
+                                        </span>
+                                      </div>
+                                      <div className="text-xs text-muted-foreground space-y-1">
+                                        <div>⏱ {formatDuree(p.dureeMinutes)}</div>
+                                        {demandeFinition(p) && (
+                                          <div>✨ Finition: Brushing ou Sechage</div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </Repliable>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-8">
+                    <div className="text-center pb-4 border-b border-border/30">
+                      <div className="flex items-center justify-center gap-3 mb-4">
+                        <ProfilIcon profil={profil} className="h-8 w-8 text-primary" />
+                        <h3 className="font-serif text-4xl sm:text-5xl text-foreground">
+                          {LABEL_PROFIL[profil]}
+                        </h3>
+                      </div>
+                      <div className="flex justify-center">
+                        <span className="inline-block w-16 h-1 bg-gradient-to-r from-primary/40 via-primary to-primary/40 rounded-full" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {!IMAGE_PROFIL[profil] && (
                 <div className="grid gap-8 lg:grid-cols-2">
                   {categories.map(({ categorie, items, illustree }, catIndex) => (
                     <Reveal
@@ -374,6 +441,7 @@ export default async function Home() {
                     </Reveal>
                   ))}
                 </div>
+                )}
               </Reveal>
             ))}
           </div>
