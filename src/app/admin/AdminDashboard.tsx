@@ -111,6 +111,33 @@ export function AdminDashboard({
 
   return (
     <div className="space-y-16">
+      <nav className="mb-6 flex gap-3 border-b border-border pb-4">
+        <a
+          href="/admin"
+          className="px-4 py-2 text-sm font-medium text-primary hover:text-primary/80"
+        >
+          Accueil
+        </a>
+        <a
+          href="/admin/clients"
+          className="px-4 py-2 text-sm font-medium text-foreground hover:text-primary"
+        >
+          Clients
+        </a>
+        <a
+          href="/admin/prestations"
+          className="px-4 py-2 text-sm font-medium text-foreground hover:text-primary"
+        >
+          Prestations
+        </a>
+        <a
+          href="/admin/fermetures"
+          className="px-4 py-2 text-sm font-medium text-foreground hover:text-primary"
+        >
+          Fermetures
+        </a>
+      </nav>
+
       <section>
         <div className="mb-6 flex items-center justify-between">
           <h2 className="font-serif text-2xl text-foreground">

@@ -6,6 +6,7 @@ import {
   getTempsMiseEnPlaceMinutes,
   type PrestationFiltre,
 } from "./reglesCreneaux";
+import { peutFinirAuHoraireLimite } from "./horairesLimites";
 
 function parseHeureSurDate(date: Date, heure: string): Date {
   const [h, m] = heure.split(":").map(Number);
@@ -74,6 +75,9 @@ export function getCreneauxDisponibles({
       const horaireValide =
         estAdmin || prestations.length === 0 || estHoraireAutorisePourPrestations(curseur, finPrestation, prestations);
 
+      // Vérification que le RDV finit avant l'horaire limite du jour (18h30 lun, 18h mer/jeu/ven, 14h sam, mardi fermé)
+      const respecteHoraireLimite = estAdmin || peutFinirAuHoraireLimite(finPrestation);
+
       const chevauche = rendezVousExistants.some(
         (rdv) => debutReel < rdv.dateFin && finPrestation > rdv.dateDebut,
       );
@@ -81,7 +85,7 @@ export function getCreneauxDisponibles({
       // dans la journée en cours (saisie après coup).
       const estPasse = !estAdmin && curseur < maintenant;
 
-      if (!chevauche && !estPasse && !horsPlageOuverture && horaireValide) {
+      if (!chevauche && !estPasse && !horsPlageOuverture && horaireValide && respecteHoraireLimite) {
         creneaux.push(new Date(curseur));
       }
 
