@@ -164,7 +164,7 @@ model RendezVous {
   // Nullable : les rendez-vous créés avant cette fonctionnalité n'en ont pas.
   code           String?          @unique
   clientId       String
-  client         Client           @relation(fields: [clientId], references: [id])
+  client         Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
   statut         StatutRendezVous @default(EN_ATTENTE)
   estNouvelleCliente Boolean      @default(false)
   // Rendez-vous récurrents : toutes les occurrences d'une même série
