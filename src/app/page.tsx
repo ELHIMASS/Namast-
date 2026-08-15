@@ -185,7 +185,7 @@ export default async function Home() {
                         alt={IMAGE_FORMULE[formule].alt}
                         width={IMAGE_FORMULE[formule].largeur}
                         height={IMAGE_FORMULE[formule].hauteur}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                     </div>
@@ -312,7 +312,7 @@ export default async function Home() {
                               alt={IMAGE_CATEGORIE[categorie].alt}
                               width={IMAGE_CATEGORIE[categorie].largeur}
                               height={IMAGE_CATEGORIE[categorie].hauteur}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                           </div>
