@@ -110,39 +110,77 @@ export function AdminDashboard({
   }
 
   return (
-    <div className="space-y-16">
-      <nav className="mb-6 flex gap-3 border-b border-border pb-4">
-        <a
-          href="/admin"
-          className="px-4 py-2 text-sm font-medium text-primary hover:text-primary/80"
-        >
-          Accueil
-        </a>
+    <div className="space-y-0">
+      <nav className="mb-0 grid grid-cols-1 gap-0 border-b border-border">
+        <div className="flex flex-wrap gap-0 border-b border-border pb-0">
+          <a
+            href="/admin"
+            className="flex-1 px-6 py-4 text-sm font-medium text-primary hover:text-primary/80 border-b-2 border-primary"
+          >
+            Accueil
+          </a>
+          <a
+            href="/admin/clients"
+            className="flex-1 px-6 py-4 text-sm font-medium text-foreground hover:text-primary border-b border-border"
+          >
+            Clients
+          </a>
+          <a
+            href="/admin/tarifs"
+            className="flex-1 px-6 py-4 text-sm font-medium text-foreground hover:text-primary border-b border-border"
+          >
+            Tarifs
+          </a>
+          <a
+            href="/admin/prestations"
+            className="flex-1 px-6 py-4 text-sm font-medium text-foreground hover:text-primary border-b border-border"
+          >
+            Prestations
+          </a>
+          <a
+            href="/admin/fermetures"
+            className="flex-1 px-6 py-4 text-sm font-medium text-foreground hover:text-primary border-b border-border"
+          >
+            Fermetures
+          </a>
+        </div>
+      </nav>
+
+      <div className="space-y-16 pt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <a
           href="/admin/clients"
-          className="px-4 py-2 text-sm font-medium text-foreground hover:text-primary"
+          className="glass rounded-2xl border border-white/50 p-6 text-center transition-all duration-300 hover:border-primary/50 hover:scale-105"
         >
-          Clients
+          <p className="text-3xl font-bold text-primary mb-2">👥</p>
+          <p className="font-serif text-lg text-foreground">Gérer les clients</p>
+          <p className="text-sm text-muted-foreground mt-2">Ajouter, modifier, supprimer</p>
         </a>
         <a
           href="/admin/tarifs"
-          className="px-4 py-2 text-sm font-medium text-foreground hover:text-primary"
+          className="glass rounded-2xl border border-white/50 p-6 text-center transition-all duration-300 hover:border-primary/50 hover:scale-105"
         >
-          Tarifs
+          <p className="text-3xl font-bold text-primary mb-2">💰</p>
+          <p className="font-serif text-lg text-foreground">Gérer les tarifs</p>
+          <p className="text-sm text-muted-foreground mt-2">Prestations, options, lissage</p>
         </a>
         <a
           href="/admin/prestations"
-          className="px-4 py-2 text-sm font-medium text-foreground hover:text-primary"
+          className="glass rounded-2xl border border-white/50 p-6 text-center transition-all duration-300 hover:border-primary/50 hover:scale-105"
         >
-          Prestations
+          <p className="text-3xl font-bold text-primary mb-2">✂️</p>
+          <p className="font-serif text-lg text-foreground">Prestations</p>
+          <p className="text-sm text-muted-foreground mt-2">Ajouter nouvelles prestations</p>
         </a>
         <a
           href="/admin/fermetures"
-          className="px-4 py-2 text-sm font-medium text-foreground hover:text-primary"
+          className="glass rounded-2xl border border-white/50 p-6 text-center transition-all duration-300 hover:border-primary/50 hover:scale-105"
         >
-          Fermetures
+          <p className="text-3xl font-bold text-primary mb-2">📅</p>
+          <p className="font-serif text-lg text-foreground">Congés &amp; fermetures</p>
+          <p className="text-sm text-muted-foreground mt-2">Gérer les jours fermés</p>
         </a>
-      </nav>
+      </div>
 
       <section>
         <div className="mb-6 flex items-center justify-between">
@@ -248,6 +286,7 @@ export function AdminDashboard({
           onSaved={fermerEtRafraichir}
         />
       )}
+      </div>
     </div>
   );
 }

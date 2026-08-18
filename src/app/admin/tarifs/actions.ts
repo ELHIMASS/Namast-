@@ -101,3 +101,57 @@ export async function modifierLissageTarifAction(
     return { ok: false, error: "Erreur lors de la modification." };
   }
 }
+
+export async function synchroniserVariantesPrestationAction(
+  prestationId: string,
+  ancienPrix: number,
+  nouveauPrix: number
+) {
+  try {
+    const difference = nouveauPrix - ancienPrix;
+
+    // Récupère toutes les variantes
+    const variantes = await prisma.prestationLongueur.findMany({
+      where: { prestationId },
+    });
+
+    // Met à jour chaque variante avec la même différence
+    for (const variante of variantes) {
+      await prisma.prestationLongueur.update({
+        where: { id: variante.id },
+        data: { prixCentimes: variante.prixCentimes + difference },
+      });
+    }
+
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: "Erreur lors de la synchronisation." };
+  }
+}
+
+export async function synchroniserVariantesOptionAction(
+  optionId: string,
+  ancienPrix: number,
+  nouveauPrix: number
+) {
+  try {
+    const difference = nouveauPrix - ancienPrix;
+
+    // Récupère toutes les variantes
+    const variantes = await prisma.optionLongueur.findMany({
+      where: { optionId },
+    });
+
+    // Met à jour chaque variante avec la même différence
+    for (const variante of variantes) {
+      await prisma.optionLongueur.update({
+        where: { id: variante.id },
+        data: { prixCentimes: variante.prixCentimes + difference },
+      });
+    }
+
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: "Erreur lors de la synchronisation." };
+  }
+}

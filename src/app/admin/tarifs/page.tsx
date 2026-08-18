@@ -10,6 +10,8 @@ import {
   modifierPrixOptionAction,
   modifierPrixVarianteOptionAction,
   modifierLissageTarifAction,
+  synchroniserVariantesPrestationAction,
+  synchroniserVariantesOptionAction,
 } from "./actions";
 
 type Prestation = Awaited<ReturnType<typeof getPrestationsAvecVariantes>>[0];
@@ -60,16 +62,51 @@ export default function PageTarifs() {
     }
   }
 
-  async function sauvegarderPrix(id: string, type: string, value: number | null) {
+  async function sauvegarderPrix(id: string, type: string, value: number | null, ancienPrix?: number) {
     setSaving(id);
     try {
       let result;
+
       if (type === "prestation") {
+        // Sauvegarde le prix de base
         result = await modifierPrixPrestationAction(id, value as number);
+
+        // Si succès et on a l'ancien prix, synchronise les variantes
+        if (result?.ok && ancienPrix !== undefined) {
+          const syncResult = await synchroniserVariantesPrestationAction(
+            id,
+            ancienPrix,
+            value as number
+          );
+          if (!syncResult.ok) {
+            setMessage({ type: "error", text: syncResult.error || "Erreur sync variantes." });
+            setSaving(null);
+            return;
+          }
+          // Recharge les données pour afficher les nouveaux prix
+          await chargerDonnees();
+        }
       } else if (type === "prestation-variante") {
         result = await modifierPrixVariantePrestationAction(id, value as number);
       } else if (type === "option") {
+        // Sauvegarde le prix de base
         result = await modifierPrixOptionAction(id, value);
+
+        // Si succès et on a l'ancien prix, synchronise les variantes
+        if (result?.ok && ancienPrix !== undefined && value !== null) {
+          const syncResult = await synchroniserVariantesOptionAction(
+            id,
+            ancienPrix,
+            value
+          );
+          if (!syncResult.ok) {
+            setMessage({ type: "error", text: syncResult.error || "Erreur sync variantes." });
+            setSaving(null);
+            return;
+          }
+          // Recharge les données pour afficher les nouveaux prix
+          await chargerDonnees();
+        }
       } else if (type === "option-variante") {
         result = await modifierPrixVarianteOptionAction(id, value as number);
       } else if (type === "lissage") {
@@ -77,7 +114,7 @@ export default function PageTarifs() {
       }
 
       if (result?.ok) {
-        setMessage({ type: "success", text: "Prix mis à jour!" });
+        setMessage({ type: "success", text: "Prix mis à jour et variantes synchronisées!" });
         setTimeout(() => setMessage(null), 2000);
       } else {
         setMessage({ type: "error", text: result?.error || "Erreur." });
@@ -96,7 +133,10 @@ export default function PageTarifs() {
 
   return (
     <div style={{ padding: "20px", maxWidth: "1400px", margin: "0 auto" }}>
-      <h1>Gestion des Tarifs</h1>
+      <div style={{ marginBottom: "30px" }}>
+        <h1 style={{ marginBottom: "8px", fontSize: "28px", fontWeight: "600" }}>Gestion des Tarifs</h1>
+        <p style={{ color: "#999", fontSize: "14px" }}>Modifiez les prix des prestations, options et lissage. Les variantes se synchronisent automatiquement.</p>
+      </div>
 
       {message && (
         <div
@@ -107,32 +147,50 @@ export default function PageTarifs() {
             backgroundColor: message.type === "success" ? "#e8f5e9" : "#ffebee",
             color: message.type === "success" ? "#2e7d32" : "#c62828",
             border: `1px solid ${message.type === "success" ? "#c8e6c9" : "#ffcdd2"}`,
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
           }}
         >
+          <span style={{ fontSize: "18px" }}>
+            {message.type === "success" ? "✓" : "⚠"}
+          </span>
           {message.text}
         </div>
       )}
 
-      <div style={{ marginBottom: "20px", borderBottom: "2px solid #e0d5d0" }}>
+      <div style={{ marginBottom: "20px", display: "flex", gap: "0", borderBottom: "2px solid #e0d5d0" }}>
         {(["prestations", "options", "lissage"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             style={{
-              padding: "12px 20px",
+              padding: "16px 24px",
               border: "none",
-              backgroundColor: tab === t ? "#d4a574" : "transparent",
-              color: tab === t ? "white" : "#666",
+              backgroundColor: "transparent",
+              borderBottom: tab === t ? "3px solid #d4a574" : "none",
+              color: tab === t ? "#d4a574" : "#999",
               cursor: "pointer",
               fontSize: "14px",
-              fontWeight: "600",
-              marginRight: "4px",
-              borderRadius: "4px 4px 0 0",
+              fontWeight: tab === t ? "700" : "500",
+              transition: "all 0.2s ease",
+              flex: 1,
+              textAlign: "center",
+            }}
+            onMouseOver={(e) => {
+              if (tab !== t) {
+                (e.target as HTMLElement).style.color = "#666";
+              }
+            }}
+            onMouseOut={(e) => {
+              if (tab !== t) {
+                (e.target as HTMLElement).style.color = "#999";
+              }
             }}
           >
-            {t === "prestations" && "Prestations"}
-            {t === "options" && "Options"}
-            {t === "lissage" && "Lissage"}
+            {t === "prestations" && "💇 Prestations"}
+            {t === "options" && "✨ Options"}
+            {t === "lissage" && "💆 Lissage"}
           </button>
         ))}
       </div>
@@ -181,7 +239,7 @@ export default function PageTarifs() {
                           defaultValue={(p.prixCentimes / 100).toFixed(2)}
                           onChange={(e) => {
                             const euros = parseFloat(e.target.value);
-                            sauvegarderPrix(p.id, "prestation", Math.round(euros * 100));
+                            sauvegarderPrix(p.id, "prestation", Math.round(euros * 100), p.prixCentimes);
                           }}
                           disabled={saving === p.id}
                           style={{
@@ -281,7 +339,8 @@ export default function PageTarifs() {
                             sauvegarderPrix(
                               o.id,
                               "option",
-                              euros === null ? null : Math.round(euros * 100)
+                              euros === null ? null : Math.round(euros * 100),
+                              o.prixCentimes ?? undefined
                             );
                           }}
                           disabled={saving === o.id}
