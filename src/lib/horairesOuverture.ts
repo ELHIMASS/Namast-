@@ -99,10 +99,13 @@ export function respecteHorairesOuverture(dateFin: Date): boolean {
   const heureFinRDV = dateFin.getHours() * 60 + dateFin.getMinutes();
 
   // Vérifie que la fin du RDV est dans un des créneaux d'ouverture
-  return horaires.creneaux.some(creneau => {
+  const resultat = horaires.creneaux.some(creneau => {
     const fin = heureEnMinutes(creneau.fin);
     return heureFinRDV <= fin;
   });
+
+  console.log(`[DEBUG] respecteHorairesOuverture: dateFin=${dateFin.toISOString()}, heureFinRDV=${heureFinRDV}min, horaires=${JSON.stringify(horaires)}, resultat=${resultat}`);
+  return resultat;
 }
 
 /**
