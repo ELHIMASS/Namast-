@@ -46,9 +46,10 @@ export function getCreneauxDisponibles({
   const tempsMiseEnPlace = getTempsMiseEnPlaceMinutes(prestations);
   // Espace pro : la journée entière, de 00:00 à minuit, sans égard pour les
   // horaires d'ouverture — dimanche et mardi compris.
+  const creneauxDuJour = getCreneauxOuverture(date.getDay());
   const plages = estAdmin
     ? [{ debut: "00:00", fin: "24:00" }]
-    : (HORAIRES_SALON[date.getDay()] ?? []);
+    : (creneauxDuJour ?? []);
   const creneaux: Date[] = [];
   const maintenant = new Date();
 
