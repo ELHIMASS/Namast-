@@ -111,8 +111,8 @@ export const INCLUS_FORMULE: Record<string, string[]> = {
     "→ Soins, mousse coiffante et autres prestations disponibles en options",
   ],
   BIEN_ETRE: [
-    "Shampooing adapté",
-    "Soin profond",
+    "Shampooing adapté Belmakosmetik",
+    "Soin profond Belmakosmetik",
     "Bac massant",
     "Modelage du cuir chevelu",
   ],
