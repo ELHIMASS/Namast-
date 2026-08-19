@@ -140,7 +140,7 @@ export default async function Home() {
               </div>
               <div className="glass rounded-2xl border border-white/30 p-8 text-center hover:border-primary/50 transition-all">
                 <div className="text-4xl mb-4">🌿</div>
-                <h3 className="font-serif text-xl text-foreground mb-3">Naturel & Biologique</h3>
+                <h3 className="font-serif text-xl text-foreground mb-3">Naturel et bien-être</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Produits professionnels, formules douces et soins capillaires nourrissants.
                 </p>
