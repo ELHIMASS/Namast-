@@ -107,6 +107,7 @@ export const DESCRIPTION_FORMULE: Record<string, string> = {
 export const INCLUS_FORMULE: Record<string, string[]> = {
   PRIVILEGE: [
     "Shampooing adapté",
+    "Option : soin mousse coiffante et autre prestation en supplément",
     "→ Soins, mousse coiffante et autres prestations disponibles en options",
   ],
   BIEN_ETRE: [
