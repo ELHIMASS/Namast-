@@ -35,8 +35,8 @@ export function estJourOuvert(date: Date): boolean {
 }
 
 // Mercredi : enfants et hommes
-// Jeudi, vendredi : bien-être
-// Lundi, samedi : privilège et bien-être
+// Vendredi : bien-être seulement
+// Lundi, jeudi, samedi : privilège et bien-être
 export function estMercredi(date: Date): boolean {
   return date.getDay() === 3;
 }
@@ -47,10 +47,10 @@ export function estJourEnfantEtHomme(date: Date): boolean {
 
 export function estJourBienEtre(date: Date): boolean {
   const jour = date.getDay();
-  return jour === 4 || jour === 5; // Jeudi, vendredi
+  return jour === 5; // Vendredi seulement
 }
 
 export function estJourPrivilegeEtBienEtre(date: Date): boolean {
   const jour = date.getDay();
-  return jour === 1 || jour === 6; // Lundi, samedi
+  return jour === 1 || jour === 4 || jour === 6; // Lundi, jeudi, samedi
 }

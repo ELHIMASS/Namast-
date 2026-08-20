@@ -291,6 +291,9 @@ export default async function Home() {
                         <div className="flex justify-center">
                           <span className="inline-block w-16 h-1 bg-gradient-to-r from-primary/40 via-primary to-primary/40 rounded-full" />
                         </div>
+                        {(profil === "HOMME" || profil === "ENFANT") && (
+                          <p className="mt-3 text-sm text-muted-foreground">Uniquement le mercredi jusqu'à 18h</p>
+                        )}
                       </div>
                       <div className="p-8 sm:p-10 space-y-6">
                         {categories.map(({ categorie, items, illustree }, catIndex) => (
@@ -486,7 +489,7 @@ export default async function Home() {
               </Link>
             </div>
             <p className="mt-8 text-sm text-muted-foreground">
-              ⏰ Disponibilités : Lundi, Mercredi à Samedi · Sur rendez-vous uniquement
+              ⏰ Disponibilités : Lundi, Mercredi, Jeudi, Vendredi, Samedi · Sur rendez-vous uniquement
             </p>
           </div>
         </Reveal>
