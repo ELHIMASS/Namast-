@@ -32,7 +32,7 @@ export const HORAIRES_OUVERTURE: Record<number, JourHoraires> = {
     ouvert: true,
     creneaux: [
       { debut: "09:00", fin: "12:30" },
-      { debut: "14:00", fin: "18:30" }
+      { debut: "14:00", fin: "18:00" }
     ]
   },
   4: { // Jeudi

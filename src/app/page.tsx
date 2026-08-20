@@ -97,17 +97,17 @@ export default async function Home() {
         {/* HERO SECTION PREMIUM */}
         <Reveal className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-transparent pointer-events-none" />
-          <div className="mx-auto max-w-4xl flex flex-col items-center gap-8 px-6 py-32 text-center relative z-10">
+          <div className="mx-auto max-w-4xl flex flex-col items-start gap-8 px-6 py-32 text-left relative z-10">
             <div className="space-y-2">
               <span className="inline-block text-xs uppercase tracking-[0.4em] text-primary font-semibold px-4 py-2 rounded-full bg-primary/10">
                 ✨ Salon privé & confidentiel
               </span>
-              <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl leading-tight gradient-text animate-gradient font-bold">
+              <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl leading-tight gradient-text animate-gradient font-bold">
                 Coiffure &amp; Bien-être<br />Sur Mesure
               </h1>
             </div>
-            <p className="max-w-2xl text-lg sm:text-xl text-muted-foreground leading-relaxed">
-              Bienvenue à Namasté, votre refuge personnel pour la beauté et la détente.
+            <p className="max-w-2xl text-xl sm:text-2xl text-muted-foreground leading-relaxed">
+              Bienvenue à <span className="font-bold text-foreground">Namasté</span>, votre refuge personnel pour la beauté et la détente.
               Une expérience exclusive conçue pour vous, dans une atmosphère sereine et bienveillante.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mt-4">
@@ -394,7 +394,7 @@ export default async function Home() {
                               <CategoryIcon categorie={categorie} className="h-8 w-8" />
                             </span>
                             <div className="flex-1">
-                              <h4 className="font-serif text-2xl sm:text-3xl text-foreground mb-2">
+                              <h4 className="font-serif text-3xl sm:text-4xl font-bold text-foreground mb-2">
                                 {LABEL_CATEGORIE[categorie] ?? categorie}
                               </h4>
                               <p className="text-sm text-muted-foreground leading-relaxed">
