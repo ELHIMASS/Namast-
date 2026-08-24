@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { estJourOuvert } from "@/lib/horaires";
 import { estJourAutorisePourPrestations } from "@/lib/reglesCreneaux";
 import {
@@ -17,14 +17,56 @@ import {
 import { PrestationChooser } from "../PrestationChooser";
 import type { LigneChoisie } from "@/lib/reservationLignes";
 import {
-  creerRendezVousDirectAction,
+  calculerDureeLignesAction,
+  creerReservationGroupeeAction,
   findClientByName,
   getCreneauxAction,
 } from "../actions";
 
 type ClientTrouve = { id: string; nom: string; prenom: string; telephone: string | null };
 
-type Step = "identification" | "prestations" | "creneau" | "confirme";
+type Step = "identification" | "prestations" | "creneau" | "panier" | "confirme";
+
+const ORDRE_ETAPES: Step[] = [
+  "identification",
+  "prestations",
+  "creneau",
+  "panier",
+  "confirme",
+];
+
+/**
+ * Une personne du panier, avec ses prestations et son créneau.
+ *
+ * Chaque personne choisit son propre horaire : le papa à 14h, un enfant à
+ * 15h30. Chacune donnera donc un rendez-vous distinct, tous liés entre eux à
+ * la validation.
+ */
+type ElementPanier = {
+  id: string;
+  personne: string;
+  lignes: LigneReservation[];
+  creneauISO: string;
+  dureeMinutes: number;
+  prixCentimes: number;
+};
+
+// Clé du tunnel dans sessionStorage : effacé à la fermeture de l'onglet, jamais
+// écrit sur le disque. L'identification et les prestations déjà choisies y
+// survivent à un retour en arrière ou à un rechargement.
+const CLE_ETAT = "namaste-reservation-ancienne-cliente";
+
+type EtatSauvegarde = {
+  step: Step;
+  prenom: string;
+  nom: string;
+  client: ClientTrouve | null;
+  lignes: LigneReservation[];
+  dateSelectionneeISO: string | null;
+  creneauSelectionne: string | null;
+  panier: ElementPanier[];
+  personneBrouillon: string;
+};
 
 function prochainsJours(nombre: number): Date[] {
   const jours: Date[] = [];
@@ -57,11 +99,103 @@ export function AncienneClienteWizard({
 
   const [lignes, setLignes] = useState<LigneReservation[]>([]);
 
+  // Panier : les personnes déjà ajoutées. `personneBrouillon` et `lignes`
+  // décrivent celle en cours de composition, pas encore ajoutée.
+  const [panier, setPanier] = useState<ElementPanier[]>([]);
+  const [personneBrouillon, setPersonneBrouillon] = useState("");
+  const [erreurPanier, setErreurPanier] = useState<string | null>(null);
+
   const [dateSelectionnee, setDateSelectionnee] = useState<Date | null>(null);
   const [creneaux, setCreneaux] = useState<string[]>([]);
   const [creneauSelectionne, setCreneauSelectionne] = useState<string | null>(null);
-  const [erreurConfirmation, setErreurConfirmation] = useState<string | null>(null);
-  const [codeRendezVous, setCodeRendezVous] = useState<string | null>(null);
+  const [rendezVousConfirmes, setRendezVousConfirmes] = useState<
+    { code: string | null; personne: string | null; debutISO: string; finISO: string }[]
+  >([]);
+
+  // ── Persistance du tunnel ────────────────────────────────────────────────
+  // Tout l'état vivait en mémoire React : le bouton « retour » du navigateur
+  // sortait du tunnel et la cliente devait se ré-identifier en repartant de
+  // zéro. On restaure donc l'état au montage, on le sauvegarde à chaque
+  // changement, et on pousse une entrée d'historique par étape pour que
+  // « retour » revienne à l'étape précédente au lieu de quitter la page.
+  const restaure = useRef(false);
+
+  useEffect(() => {
+    try {
+      const brut = sessionStorage.getItem(CLE_ETAT);
+      if (brut) {
+        const e = JSON.parse(brut) as Partial<EtatSauvegarde>;
+        // Un rendez-vous déjà confirmé ne doit pas être rejoué : on repart à zéro.
+        if (e.step && e.step !== "confirme") {
+          setStep(e.step);
+          setPrenom(e.prenom ?? "");
+          setNom(e.nom ?? "");
+          setClient(e.client ?? null);
+          setLignes(e.lignes ?? []);
+          setPanier(e.panier ?? []);
+          setPersonneBrouillon(e.personneBrouillon ?? "");
+          setCreneauSelectionne(e.creneauSelectionne ?? null);
+          if (e.dateSelectionneeISO) {
+            setDateSelectionnee(new Date(e.dateSelectionneeISO));
+          }
+          window.history.replaceState({ etape: e.step }, "");
+          restaure.current = true;
+          return;
+        }
+        sessionStorage.removeItem(CLE_ETAT);
+      }
+    } catch {
+      // sessionStorage indisponible (navigation privée stricte) : le tunnel
+      // fonctionne toujours, simplement sans reprise après un retour.
+    }
+    window.history.replaceState({ etape: "identification" }, "");
+    restaure.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!restaure.current) return;
+    try {
+      const etat: EtatSauvegarde = {
+        step,
+        prenom,
+        nom,
+        client,
+        lignes,
+        dateSelectionneeISO: dateSelectionnee?.toISOString() ?? null,
+        creneauSelectionne,
+        panier,
+        personneBrouillon,
+      };
+      sessionStorage.setItem(CLE_ETAT, JSON.stringify(etat));
+    } catch {
+      // Stockage plein ou refusé : sans effet sur le déroulé de la réservation.
+    }
+  }, [
+    step,
+    prenom,
+    nom,
+    client,
+    lignes,
+    dateSelectionnee,
+    creneauSelectionne,
+    panier,
+    personneBrouillon,
+  ]);
+
+  useEffect(() => {
+    function surRetourNavigateur(e: PopStateEvent) {
+      const etape = (e.state as { etape?: Step } | null)?.etape;
+      if (etape && ORDRE_ETAPES.includes(etape)) setStep(etape);
+    }
+    window.addEventListener("popstate", surRetourNavigateur);
+    return () => window.removeEventListener("popstate", surRetourNavigateur);
+  }, []);
+
+  /** Change d'étape en laissant une trace dans l'historique du navigateur. */
+  function allerA(prochaine: Step) {
+    setStep(prochaine);
+    window.history.pushState({ etape: prochaine }, "");
+  }
 
   const total = useMemo(
     () => calculerTotalAvecOptions(lignes, lissageMatrice),
@@ -84,6 +218,7 @@ export function AncienneClienteWizard({
     longueur: l.longueur,
     densite: l.densite,
     optionIds: l.options.map((o) => o.id),
+    personne: l.personne?.trim() || undefined,
   }));
 
   const jours = useMemo(() => {
@@ -113,34 +248,97 @@ export function AncienneClienteWizard({
       }
 
       setClient(resultat.client);
-      setStep("prestations");
+      allerA("prestations");
     });
   }
+
+  // Créneaux déjà retenus dans le panier. Ils sont transmis au serveur pour
+  // être retirés des disponibilités : sans cela, la deuxième personne se
+  // verrait proposer l'horaire que la première vient de prendre.
+  const creneauxDuPanier = panier.map((e) => ({
+    debutISO: e.creneauISO,
+    finISO: new Date(
+      new Date(e.creneauISO).getTime() + e.dureeMinutes * 60000,
+    ).toISOString(),
+  }));
 
   function choisirDate(date: Date) {
     setDateSelectionnee(date);
     setCreneauSelectionne(null);
     startTransition(async () => {
-      const iso = await getCreneauxAction(date.toISOString(), lignesChoisies);
+      const iso = await getCreneauxAction(
+        date.toISOString(),
+        lignesChoisies,
+        creneauxDuPanier,
+      );
       setCreneaux(iso);
     });
   }
 
-  function confirmerRendezVous() {
-    if (!client || !creneauSelectionne) return;
-    setErreurConfirmation(null);
+  /** Fige la personne en cours de composition et repart d'un brouillon vide. */
+  function ajouterAuPanier() {
+    if (!creneauSelectionne || lignes.length === 0) return;
+    const creneau = creneauSelectionne;
+    const lignesFigees = lignes;
+    const nom = personneBrouillon.trim();
+    setErreurPanier(null);
     startTransition(async () => {
-      const resultat = await creerRendezVousDirectAction({
+      const { dureeMinutes, prixCentimes } =
+        await calculerDureeLignesAction(lignesChoisies);
+      setPanier((p) => [
+        ...p,
+        {
+          id: crypto.randomUUID(),
+          personne: nom,
+          lignes: lignesFigees,
+          creneauISO: creneau,
+          dureeMinutes,
+          prixCentimes,
+        },
+      ]);
+      setLignes([]);
+      setPersonneBrouillon("");
+      setDateSelectionnee(null);
+      setCreneaux([]);
+      setCreneauSelectionne(null);
+      allerA("panier");
+    });
+  }
+
+  function retirerDuPanier(id: string) {
+    setPanier((p) => p.filter((e) => e.id !== id));
+  }
+
+  function validerPanier() {
+    if (!client || panier.length === 0) return;
+    setErreurPanier(null);
+    startTransition(async () => {
+      const resultat = await creerReservationGroupeeAction({
         clientId: client.id,
-        lignes: lignesChoisies,
-        dateDebutISO: creneauSelectionne,
+        elements: panier.map((e) => ({
+          personne: e.personne || undefined,
+          lignes: e.lignes.map((l) => ({
+            prestationId: l.prestation.id,
+            longueur: l.longueur,
+            densite: l.densite,
+            optionIds: l.options.map((o) => o.id),
+          })),
+          dateDebutISO: e.creneauISO,
+        })),
       });
       if (!resultat.ok) {
-        setErreurConfirmation(resultat.error);
+        setErreurPanier(resultat.error);
         return;
       }
-      setCodeRendezVous(resultat.code ?? null);
-      setStep("confirme");
+      setRendezVousConfirmes(resultat.rendezVous);
+      // Les rendez-vous sont pris : on vide le tunnel pour qu'un retour en
+      // arrière ne repropose pas de les valider une seconde fois.
+      try {
+        sessionStorage.removeItem(CLE_ETAT);
+      } catch {
+        // Sans effet : l'étape « confirme » n'est de toute façon pas restaurée.
+      }
+      allerA("confirme");
     });
   }
 
@@ -189,8 +387,23 @@ export function AncienneClienteWizard({
     return (
       <div className="space-y-6">
         <p className="text-foreground">
-          Bonjour {client.prenom}, composez votre rendez-vous.
+          {panier.length === 0
+            ? `Bonjour ${client.prenom}, composez votre rendez-vous.`
+            : "Pour qui est cette prestation ?"}
         </p>
+
+        <label className="block text-sm text-foreground">
+          Personne concernée{" "}
+          <span className="text-muted-foreground">
+            (laissez vide s&apos;il s&apos;agit de vous)
+          </span>
+          <input
+            value={personneBrouillon}
+            onChange={(e) => setPersonneBrouillon(e.target.value)}
+            placeholder={`${client.prenom}, Théo, Lucas…`}
+            className="field"
+          />
+        </label>
 
         <PrestationChooser
           prestations={prestations}
@@ -207,14 +420,23 @@ export function AncienneClienteWizard({
           </div>
         )}
 
-        <button
-          type="button"
-          disabled={!pretPourCreneau}
-          onClick={() => setStep("creneau")}
-          className="w-full rounded-full bg-primary px-6 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 disabled:opacity-40"
-        >
-          Choisir un créneau
-        </button>
+        <div className="flex flex-col gap-3 sm:flex-row-reverse">
+          <button
+            type="button"
+            disabled={!pretPourCreneau}
+            onClick={() => allerA("creneau")}
+            className="w-full rounded-full bg-primary px-6 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 disabled:opacity-40 sm:flex-1"
+          >
+            Choisir un créneau
+          </button>
+          <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="w-full rounded-full border border-primary/40 px-6 py-3 text-foreground transition-colors hover:border-primary sm:w-auto"
+          >
+            Retour
+          </button>
+        </div>
       </div>
     );
   }
@@ -286,16 +508,119 @@ export function AncienneClienteWizard({
           </div>
         )}
 
-        {erreurConfirmation && <p className="text-sm text-rose-700">{erreurConfirmation}</p>}
+        {erreurPanier && <p className="text-sm text-rose-700">{erreurPanier}</p>}
 
-        <button
-          type="button"
-          disabled={!creneauSelectionne || isPending}
-          onClick={confirmerRendezVous}
-          className="w-full rounded-full bg-primary px-6 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 disabled:opacity-40"
-        >
-          {isPending ? "Confirmation…" : "Confirmer le rendez-vous"}
-        </button>
+        <div className="flex flex-col gap-3 sm:flex-row-reverse">
+          <button
+            type="button"
+            disabled={!creneauSelectionne || isPending}
+            onClick={ajouterAuPanier}
+            className="w-full rounded-full bg-primary px-6 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 disabled:opacity-40 sm:flex-1"
+          >
+            {isPending ? "Ajout…" : "Ajouter au panier"}
+          </button>
+          <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="w-full rounded-full border border-primary/40 px-6 py-3 text-foreground transition-colors hover:border-primary sm:w-auto"
+          >
+            Modifier mes prestations
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "panier") {
+    const totalPanier = panier.reduce((s, e) => s + e.prixCentimes, 0);
+    const dureeCumulee = panier.reduce((s, e) => s + e.dureeMinutes, 0);
+
+    return (
+      <div className="space-y-6">
+        <h2 className="font-serif text-2xl text-foreground">Votre réservation</h2>
+
+        {panier.length === 0 && (
+          <p className="text-muted-foreground">
+            Votre panier est vide. Ajoutez une première prestation pour continuer.
+          </p>
+        )}
+
+        <ul className="space-y-3">
+          {panier.map((e) => (
+            <li key={e.id} className="glass rounded-2xl border border-white/50 p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-serif text-lg text-foreground">
+                    {e.personne || client?.prenom || "Vous"}
+                  </p>
+                  <ul className="mt-1 space-y-0.5 text-sm text-muted-foreground">
+                    {e.lignes.map((l, i) => (
+                      <li key={`${e.id}-${i}`}>
+                        {l.prestation.nom}
+                        {l.options.length > 0 &&
+                          ` + ${l.options.map((o) => o.nom).join(", ")}`}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 text-sm text-foreground">
+                    {new Date(e.creneauISO).toLocaleString("fr-FR", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                    {" · "}
+                    {formatDuree(e.dureeMinutes)}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="font-bold text-primary">{formatPrix(e.prixCentimes)}</p>
+                  <button
+                    type="button"
+                    onClick={() => retirerDuPanier(e.id)}
+                    className="mt-2 text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-rose-700 hover:underline"
+                  >
+                    Retirer
+                  </button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {panier.length > 0 && (
+          <div className="rounded-xl bg-muted px-4 py-3 text-sm text-foreground">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Durée cumulée</span>
+              <span>{formatDuree(dureeCumulee)}</span>
+            </div>
+            <div className="mt-1 flex justify-between font-bold">
+              <span>Total</span>
+              <span>{formatPrix(totalPanier)}</span>
+            </div>
+          </div>
+        )}
+
+        {erreurPanier && <p className="text-sm text-rose-700">{erreurPanier}</p>}
+
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => allerA("prestations")}
+            className="w-full rounded-full border border-primary/40 px-6 py-3 text-foreground transition-colors hover:border-primary"
+          >
+            Ajouter une prestation
+          </button>
+          <button
+            type="button"
+            disabled={panier.length === 0 || isPending}
+            onClick={validerPanier}
+            className="w-full rounded-full bg-primary px-6 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 disabled:opacity-40"
+          >
+            {isPending ? "Validation…" : "Valider mes rendez-vous"}
+          </button>
+        </div>
       </div>
     );
   }
@@ -303,35 +628,53 @@ export function AncienneClienteWizard({
   if (step === "confirme") {
     return (
       <div className="glass rounded-2xl border border-white/50 p-8 text-center">
-        <h2 className="font-serif text-2xl text-foreground">Rendez-vous confirmé</h2>
-        <p className="mt-3 text-muted-foreground">
-          {creneauSelectionne &&
-            new Date(creneauSelectionne).toLocaleString("fr-FR", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
+        <h2 className="font-serif text-2xl text-foreground">
+          {rendezVousConfirmes.length > 1
+            ? "Rendez-vous confirmés"
+            : "Rendez-vous confirmé"}
+        </h2>
+
+        <ul className="mt-6 space-y-4 text-left">
+          {rendezVousConfirmes.map((r) => (
+            <li
+              key={r.code ?? r.debutISO}
+              className="rounded-xl border border-primary/40 bg-primary/5 p-5"
+            >
+              <p className="font-serif text-lg text-foreground">
+                {r.personne || client?.prenom || "Vous"}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {new Date(r.debutISO).toLocaleString("fr-FR", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+              {r.code && (
+                <>
+                  <p className="mt-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                    Code de rendez-vous
+                  </p>
+                  <p className="mt-1 font-serif text-2xl tracking-widest text-foreground">
+                    {r.code}
+                  </p>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+
+        <p className="mt-6 text-sm text-muted-foreground">
+          {rendezVousConfirmes.length > 1
+            ? "Notez ces codes : avec votre numéro de téléphone, chacun permet de consulter, déplacer ou annuler le rendez-vous correspondant depuis "
+            : "Notez-le : avec votre numéro de téléphone, il permet de consulter, déplacer ou annuler ce rendez-vous depuis "}
+          <Link href="/mon-rendez-vous" className="text-primary underline">
+            votre espace
+          </Link>
+          , jusqu&apos;à 24 h avant.
         </p>
-        {codeRendezVous && (
-          <div className="mt-6 rounded-xl border border-primary/40 bg-primary/5 p-5">
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-              Votre code de rendez-vous
-            </p>
-            <p className="mt-2 font-serif text-3xl tracking-widest text-foreground">
-              {codeRendezVous}
-            </p>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Notez-le : avec votre numéro de téléphone, il vous permet de
-              consulter, déplacer ou annuler ce rendez-vous depuis{" "}
-              <Link href="/mon-rendez-vous" className="text-primary underline">
-                votre espace
-              </Link>
-              , jusqu&apos;à 24 h avant.
-            </p>
-          </div>
-        )}
 
         <p className="mt-4 text-sm text-muted-foreground">
           Un e-mail de confirmation vous sera envoyé.

@@ -171,6 +171,11 @@ model RendezVous {
   // partagent cet identifiant (celui de la première). Les occurrences sont
   // de vrais rendez-vous, chacun modifiable et annulable séparément.
   serieId        String?
+  // Réservation groupée : un parent venant avec ses enfants prend plusieurs
+  // rendez-vous en une fois, chacun avec son propre créneau. Ils partagent cet
+  // identifiant pour être présentés ensemble dans le planning et dans l'espace
+  // cliente. Nullable : une réservation ordinaire n'en a pas.
+  groupeId       String?
   dateDebut      DateTime
   dateFin        DateTime
   message        String?
@@ -182,6 +187,7 @@ model RendezVous {
   prestations    RendezVousPrestation[]
 
   @@index([serieId])
+  @@index([groupeId])
 }
 
 // Finition demandée à la cliente sur les prestations de coiffure : le
@@ -198,6 +204,11 @@ model RendezVousPrestation {
   prestationId String
   prestation   Prestation       @relation(fields: [prestationId], references: [id])
   ordre        Int              @default(0)
+  // Bénéficiaire de cette ligne, quand un même rendez-vous en concerne
+  // plusieurs — un parent venant avec ses enfants, par exemple. Nullable :
+  // les rendez-vous ne concernant que la cliente n'en ont pas besoin, pas
+  // plus que ceux pris avant cette fonctionnalité.
+  personne     String?
   longueur     LongueurCheveux?
   densite      Densite?
   finition     Finition?

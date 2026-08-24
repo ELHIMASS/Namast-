@@ -7,6 +7,8 @@ export type LigneChoisie = {
   densite?: Densite;
   finition?: Finition;
   optionIds: string[];
+  /** Bénéficiaire de la ligne (voir LigneReservation.personne). */
+  personne?: string;
 };
 
 // Résout des lignes de réservation (ids) en objets complets (prestation +
@@ -47,6 +49,7 @@ export function construireDonneesPrestations(lignes: LigneChoisie[]) {
   return lignes.map((ligne, i) => ({
     prestationId: ligne.prestationId,
     ordre: i,
+    personne: ligne.personne?.trim() || null,
     longueur: ligne.longueur,
     densite: ligne.densite,
     finition: ligne.finition,

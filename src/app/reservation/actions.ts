@@ -51,7 +51,19 @@ export async function findClientByName(prenom: string, nom: string) {
   };
 }
 
-async function creneauxPourLignes(dateISO: string, lignes: LigneChoisie[], excludeRendezVousId?: string) {
+/**
+ * Créneaux déjà retenus dans le panier en cours, mais pas encore enregistrés.
+ * Sans eux, la deuxième personne d'une réservation familiale se verrait
+ * proposer l'horaire que la première vient de choisir.
+ */
+export type CreneauReserve = { debutISO: string; finISO: string };
+
+async function creneauxPourLignes(
+  dateISO: string,
+  lignes: LigneChoisie[],
+  excludeRendezVousId?: string,
+  creneauxPanier: CreneauReserve[] = [],
+) {
   if (lignes.length === 0) return [];
 
   const { prestations, lignesResolues, lissageMatrice } = await resoudreLignes(lignes);
@@ -81,18 +93,47 @@ async function creneauxPourLignes(dateISO: string, lignes: LigneChoisie[], exclu
     getFermetures(date, date),
   ]);
 
+  // Les créneaux du panier sont traités comme des rendez-vous déjà pris : la
+  // personne suivante ne peut pas réserver par-dessus la précédente.
+  const occupes = [
+    ...rendezVousExistants,
+    ...creneauxPanier.map((c) => ({
+      dateDebut: new Date(c.debutISO),
+      dateFin: new Date(c.finISO),
+    })),
+  ];
+
   return getCreneauxDisponibles({
     date,
     dureeTotaleMinutes: dureeTotaleAvecNettoyage,
     prestations,
-    rendezVousExistants,
+    rendezVousExistants: occupes,
     fermetures,
   });
 }
 
-export async function getCreneauxAction(dateISO: string, lignes: LigneChoisie[]) {
-  const creneaux = await creneauxPourLignes(dateISO, lignes);
+export async function getCreneauxAction(
+  dateISO: string,
+  lignes: LigneChoisie[],
+  creneauxPanier: CreneauReserve[] = [],
+) {
+  const creneaux = await creneauxPourLignes(dateISO, lignes, undefined, creneauxPanier);
   return creneaux.map((d) => d.toISOString());
+}
+
+/**
+ * Durée totale d'un ensemble de lignes, nettoyage compris.
+ * Le panier en a besoin côté navigateur pour calculer la fin d'un créneau
+ * avant enregistrement, et pour afficher la durée dans le récapitulatif.
+ */
+export async function calculerDureeLignesAction(lignes: LigneChoisie[]) {
+  if (lignes.length === 0) return { dureeMinutes: 0, prixCentimes: 0 };
+  const { lignesResolues, lissageMatrice } = await resoudreLignes(lignes);
+  const total = calculerTotalAvecOptions(lignesResolues, lissageMatrice);
+  return {
+    dureeMinutes: total.dureeTotaleAvecNettoyage,
+    prixCentimes: total.prixTotalCentimes,
+  };
 }
 
 export async function creerRendezVousDirectAction({
@@ -138,6 +179,112 @@ export async function creerRendezVousDirectAction({
   });
 
   return { ok: true as const, rendezVousId: rendezVous.id, code: rendezVous.code };
+}
+
+/**
+ * Réservation groupée : plusieurs personnes, chacune avec son propre créneau.
+ *
+ * Le schéma n'ayant qu'une plage horaire par rendez-vous, un parent venant
+ * avec ses enfants produit autant de rendez-vous que de personnes. Ils
+ * partagent un `groupeId` afin d'être présentés ensemble côté salon comme
+ * côté cliente.
+ */
+export async function creerReservationGroupeeAction({
+  clientId,
+  elements,
+}: {
+  clientId: string;
+  elements: { personne?: string; lignes: LigneChoisie[]; dateDebutISO: string }[];
+}) {
+  if (elements.length === 0) {
+    return { ok: false as const, error: "Votre panier est vide." };
+  }
+  if (elements.some((e) => e.lignes.length === 0)) {
+    return { ok: false as const, error: "Une des personnes n'a aucune prestation." };
+  }
+
+  const calcules = [];
+  for (const e of elements) {
+    const { lignesResolues, lissageMatrice } = await resoudreLignes(e.lignes);
+    const { dureeTotaleAvecNettoyage } = calculerTotalAvecOptions(lignesResolues, lissageMatrice);
+    const debut = new Date(e.dateDebutISO);
+    calcules.push({
+      ...e,
+      debut,
+      fin: new Date(debut.getTime() + dureeTotaleAvecNettoyage * 60000),
+    });
+  }
+
+  // Deux personnes du même panier ne peuvent pas occuper le même moment.
+  const parDebut = [...calcules].sort((a, b) => a.debut.getTime() - b.debut.getTime());
+  for (let i = 1; i < parDebut.length; i++) {
+    if (parDebut[i].debut < parDebut[i - 1].fin) {
+      return {
+        ok: false as const,
+        error:
+          "Deux créneaux de votre réservation se chevauchent. Modifiez l'un des horaires avant de valider.",
+      };
+    }
+  }
+
+  // Revérification au moment de valider : entre le choix et la confirmation,
+  // un créneau a pu être pris par quelqu'un d'autre.
+  for (const c of calcules) {
+    const autresDuPanier = calcules
+      .filter((x) => x !== c)
+      .map((x) => ({ debutISO: x.debut.toISOString(), finISO: x.fin.toISOString() }));
+    const dispo = await creneauxPourLignes(
+      c.debut.toISOString(),
+      c.lignes,
+      undefined,
+      autresDuPanier,
+    );
+    if (!dispo.some((d) => d.getTime() === c.debut.getTime())) {
+      const quand = c.debut.toLocaleString("fr-FR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      return {
+        ok: false as const,
+        error: `Le créneau du ${quand} vient d'être pris. Merci d'en choisir un autre.`,
+      };
+    }
+  }
+
+  // Une réservation pour une seule personne reste un rendez-vous ordinaire :
+  // inutile de la marquer comme groupée.
+  const groupeId = calcules.length > 1 ? crypto.randomUUID() : null;
+
+  const crees = [];
+  for (const c of calcules) {
+    const rdv = await prisma.rendezVous.create({
+      data: {
+        code: await genererCodeUnique(),
+        clientId,
+        statut: "CONFIRME",
+        estNouvelleCliente: false,
+        groupeId,
+        dateDebut: c.debut,
+        dateFin: c.fin,
+        prestations: {
+          create: construireDonneesPrestations(
+            c.lignes.map((l) => ({ ...l, personne: c.personne })),
+          ),
+        },
+      },
+    });
+    crees.push({
+      code: rdv.code,
+      personne: c.personne ?? null,
+      debutISO: c.debut.toISOString(),
+      finISO: c.fin.toISOString(),
+    });
+  }
+
+  return { ok: true as const, groupeId, rendezVous: crees };
 }
 
 export async function creerDemandeNouvelleClienteAction({

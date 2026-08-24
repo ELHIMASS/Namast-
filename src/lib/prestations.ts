@@ -133,6 +133,12 @@ export type LigneReservation = {
   densite?: Densite;
   finition?: Finition;
   options: OptionAvecVariantes[];
+  /**
+   * Bénéficiaire de la ligne, quand le rendez-vous en concerne plusieurs :
+   * un parent venant avec ses enfants nomme chacun d'eux. Absent quand la
+   * réservation ne concerne que la cliente elle-même.
+   */
+  personne?: string;
 };
 
 export function calculerTotalAvecOptions(
