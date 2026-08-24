@@ -20,10 +20,21 @@ function normaliserTelephone(telephone: string): string {
 
 /**
  * Identification de la cliente par son prénom et son nom.
- * En cas d'homonymes, aucune fiche n'est renvoyée : ouvrir le compte d'une
- * autre cliente serait pire que de demander d'appeler le salon.
+ *
+ * Plusieurs fiches peuvent porter le même nom : de vraies homonymes, des
+ * doublons de saisie, ou des fiches dont le prénom n'a jamais été renseigné.
+ * Refuser purement et simplement bloquait alors une cliente légitime ; on lui
+ * demande donc son numéro de téléphone, qui suffit à trancher dès que les
+ * fiches en portent de différents.
+ *
+ * Le numéro n'est jamais divulgué : c'est à la cliente de le fournir, et une
+ * saisie erronée ne dit rien de plus qu'un échec.
  */
-export async function findClientByName(prenom: string, nom: string) {
+export async function findClientByName(
+  prenom: string,
+  nom: string,
+  telephone?: string,
+) {
   const p = prenom.trim();
   const n = nom.trim();
   if (!p || !n) return { statut: "introuvable" as const };
@@ -33,13 +44,29 @@ export async function findClientByName(prenom: string, nom: string) {
       prenom: { equals: p, mode: "insensitive" },
       nom: { equals: n, mode: "insensitive" },
     },
-    take: 2,
   });
 
   if (clients.length === 0) return { statut: "introuvable" as const };
-  if (clients.length > 1) return { statut: "homonymes" as const };
 
-  const client = clients[0];
+  let retenus = clients;
+
+  if (clients.length > 1) {
+    const tel = normaliserTelephone(telephone?.trim() ?? "");
+    // Sans numéro, on ne devine pas : on le réclame plutôt que d'ouvrir la
+    // mauvaise fiche.
+    if (!tel) return { statut: "telephone_requis" as const };
+
+    retenus = clients.filter(
+      (c) => c.telephone && normaliserTelephone(c.telephone) === tel,
+    );
+
+    if (retenus.length === 0) return { statut: "telephone_inconnu" as const };
+    // Deux fiches partageant nom *et* numéro sont indiscernables : seul le
+    // salon peut savoir laquelle est la bonne.
+    if (retenus.length > 1) return { statut: "homonymes" as const };
+  }
+
+  const client = retenus[0];
   return {
     statut: "trouve" as const,
     client: {

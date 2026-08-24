@@ -96,6 +96,10 @@ export function AncienneClienteWizard({
   const [nom, setNom] = useState("");
   const [client, setClient] = useState<ClientTrouve | null>(null);
   const [erreurIdentification, setErreurIdentification] = useState<string | null>(null);
+  // Réclamé seulement quand plusieurs fiches portent le même nom : le numéro
+  // les départage sans jamais rien divulguer de l'une ou de l'autre.
+  const [telephone, setTelephone] = useState("");
+  const [telephoneRequis, setTelephoneRequis] = useState(false);
 
   const [lignes, setLignes] = useState<LigneReservation[]>([]);
 
@@ -231,11 +235,27 @@ export function AncienneClienteWizard({
     e.preventDefault();
     setErreurIdentification(null);
     startTransition(async () => {
-      const resultat = await findClientByName(prenom, nom);
+      const resultat = await findClientByName(prenom, nom, telephone);
+
+      if (resultat.statut === "telephone_requis") {
+        setTelephoneRequis(true);
+        setErreurIdentification(
+          "Plusieurs clientes portent ce nom. Indiquez votre numéro de téléphone pour que nous retrouvions votre fiche.",
+        );
+        return;
+      }
+
+      if (resultat.statut === "telephone_inconnu") {
+        setTelephoneRequis(true);
+        setErreurIdentification(
+          "Ce numéro ne correspond à aucune fiche à ce nom. Vérifiez votre saisie, ou appelez le salon.",
+        );
+        return;
+      }
 
       if (resultat.statut === "homonymes") {
         setErreurIdentification(
-          "Plusieurs clientes portent ce nom. Merci d'appeler le salon pour réserver, afin de ne pas nous tromper de fiche.",
+          "Plusieurs clientes portent ce nom et ce numéro. Merci d'appeler le salon pour réserver, afin de ne pas nous tromper de fiche.",
         );
         return;
       }
@@ -369,6 +389,22 @@ export function AncienneClienteWizard({
             />
           </label>
         </div>
+        {telephoneRequis && (
+          <label className="block text-sm text-foreground">
+            Téléphone
+            <input
+              required
+              type="tel"
+              autoComplete="tel"
+              autoFocus
+              value={telephone}
+              onChange={(e) => setTelephone(e.target.value)}
+              placeholder="06 12 34 56 78"
+              className="field"
+            />
+          </label>
+        )}
+
         {erreurIdentification && (
           <p className="text-sm text-rose-700">{erreurIdentification}</p>
         )}
