@@ -15,7 +15,7 @@ const SLIDES = [
   {
     video: "/videos/salon-2.mp4",
     label: "Head Spa & soins",
-    sousLabel: "Bac massant, chromothérapie, soins Belmakosmetik",
+    sousLabel: "Bac massant, soins Belmakosmetik",
   },
   {
     video: "/videos/salon-3.mp4",

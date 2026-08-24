@@ -470,8 +470,8 @@ export default async function Home() {
             <SeparateurCiseau className="mt-4 mb-6" />
             <p className="max-w-2xl mx-auto text-lg text-muted-foreground leading-relaxed mb-10">
               Notre salon fonctionne uniquement sur rendez-vous pour garantir une
-              expérience exclusive et une qualité de service incomparable.
-              Que vous soyez nouvelle cliente ou fidèle, nous vous accueillons
+              expérience exclusive et une qualité de service incomparable.<br />
+              <span className="text-foreground font-semibold">Nouvelle cliente ou fidèle</span>, nous vous accueillons
               dans une atmosphère sereine et bienveillante.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

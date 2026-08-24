@@ -11,7 +11,7 @@ export function BandeAmbiance() {
       <div className="photo-frame photo-fondue-verticale absolute inset-0">
         <Image
           src="/images/salle-soin-ensemble.jpg"
-          alt="Salle de soin du salon : table de massage, bac Head Spa en chromothérapie, toile de Bouddha et arbre de vie"
+          alt="Salle de soin du salon : table de massage, bac Head Spa, toile de Bouddha et arbre de vie"
           fill
           sizes="100vw"
           className="object-cover"

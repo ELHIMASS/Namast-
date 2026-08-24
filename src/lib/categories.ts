@@ -46,7 +46,7 @@ export const IMAGE_CATEGORIE: Record<
   },
   HEAD_SPA: {
     src: "/images/i11.png",
-    alt: "Head Spa en cours : cascade d'eau en chromothérapie au-dessus du visage de la cliente",
+    alt: "Head Spa en cours : cascade d'eau au-dessus du visage de la cliente",
     largeur: 612,
     hauteur: 735,
   },
@@ -98,7 +98,7 @@ export const LABEL_FORMULE: Record<string, string> = {
 
 export const DESCRIPTION_FORMULE: Record<string, string> = {
   PRIVILEGE:
-    "L'essentiel : shampooing, coupe et brushing. Pour un soin, une mousse coiffante ou toute autre prestation supplémentaire, cochez les options proposées.",
+    "L'Essentiel : shampoing + une prestation au choix. Pour un soin, une mousse coiffante ou toute autre prestation supplémentaire, cochez les options proposées.",
   BIEN_ETRE:
     "Les mêmes prestations, enrichies d'un soin profond, du bac massant et d'un modelage du cuir chevelu.",
 };

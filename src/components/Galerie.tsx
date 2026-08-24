@@ -38,7 +38,7 @@ const PHOTOS = [
   {
     src: "/images/headspa-chromotherapie.jpg",
     legende: "Head Spa",
-    alt: "Bac Head Spa en chromothérapie violette, dans la salle de soin tamisée",
+    alt: "Bac Head Spa dans la salle de soin tamisée",
     largeur: 900,
     hauteur: 1600,
   },
