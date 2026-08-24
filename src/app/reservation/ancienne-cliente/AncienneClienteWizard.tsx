@@ -25,15 +25,27 @@ import {
 
 type ClientTrouve = { id: string; nom: string; prenom: string; telephone: string | null };
 
-type Step = "identification" | "prestations" | "creneau" | "panier" | "confirme";
+type Step =
+  | "identification"
+  | "nombre"
+  | "prenoms"
+  | "prestations"
+  | "creneau"
+  | "panier"
+  | "confirme";
 
 const ORDRE_ETAPES: Step[] = [
   "identification",
+  "nombre",
+  "prenoms",
   "prestations",
   "creneau",
   "panier",
   "confirme",
 ];
+
+/** Au-delà, il ne s'agit plus d'une famille mais d'un groupe à organiser au téléphone. */
+const MAX_PERSONNES = 6;
 
 /**
  * Une personne du panier, avec ses prestations et son créneau.
@@ -42,14 +54,26 @@ const ORDRE_ETAPES: Step[] = [
  * 15h30. Chacune donnera donc un rendez-vous distinct, tous liés entre eux à
  * la validation.
  */
-type ElementPanier = {
+type Personne = {
   id: string;
-  personne: string;
+  prenom: string;
   lignes: LigneReservation[];
-  creneauISO: string;
+  /** Null tant que cette personne n'a pas encore choisi son horaire. */
+  creneauISO: string | null;
   dureeMinutes: number;
   prixCentimes: number;
 };
+
+function personneVide(prenom = ""): Personne {
+  return {
+    id: crypto.randomUUID(),
+    prenom,
+    lignes: [],
+    creneauISO: null,
+    dureeMinutes: 0,
+    prixCentimes: 0,
+  };
+}
 
 // Clé du tunnel dans sessionStorage : effacé à la fermeture de l'onglet, jamais
 // écrit sur le disque. L'identification et les prestations déjà choisies y
@@ -64,8 +88,8 @@ type EtatSauvegarde = {
   lignes: LigneReservation[];
   dateSelectionneeISO: string | null;
   creneauSelectionne: string | null;
-  panier: ElementPanier[];
-  personneBrouillon: string;
+  personnes: Personne[];
+  indexCourant: number;
 };
 
 function prochainsJours(nombre: number): Date[] {
@@ -103,11 +127,14 @@ export function AncienneClienteWizard({
 
   const [lignes, setLignes] = useState<LigneReservation[]>([]);
 
-  // Panier : les personnes déjà ajoutées. `personneBrouillon` et `lignes`
-  // décrivent celle en cours de composition, pas encore ajoutée.
-  const [panier, setPanier] = useState<ElementPanier[]>([]);
-  const [personneBrouillon, setPersonneBrouillon] = useState("");
+  // Les personnes de la réservation, déclarées d'emblée puis complétées
+  // l'une après l'autre. `indexCourant` désigne celle en cours de
+  // composition ; `lignes` ci-dessus en est la copie de travail.
+  const [personnes, setPersonnes] = useState<Personne[]>([]);
+  const [indexCourant, setIndexCourant] = useState(0);
   const [erreurPanier, setErreurPanier] = useState<string | null>(null);
+
+  const personneCourante = personnes[indexCourant];
 
   const [dateSelectionnee, setDateSelectionnee] = useState<Date | null>(null);
   const [creneaux, setCreneaux] = useState<string[]>([]);
@@ -129,15 +156,28 @@ export function AncienneClienteWizard({
       const brut = sessionStorage.getItem(CLE_ETAT);
       if (brut) {
         const e = JSON.parse(brut) as Partial<EtatSauvegarde>;
+
+        // Un état incohérent avec l'étape reprise afficherait une page vide :
+        // c'est le cas d'un tunnel entamé avant une mise à jour du site, dont
+        // le format sauvegardé ne correspond plus. On repart de zéro plutôt
+        // que de laisser la cliente devant un écran blanc.
+        const etapesExigeantDesPersonnes: Step[] = ["prenoms", "prestations", "creneau", "panier"];
+        const coherent =
+          !!e.step &&
+          ORDRE_ETAPES.includes(e.step) &&
+          (!etapesExigeantDesPersonnes.includes(e.step) ||
+            (Array.isArray(e.personnes) && e.personnes.length > 0)) &&
+          (e.step === "identification" || !!e.client);
+
         // Un rendez-vous déjà confirmé ne doit pas être rejoué : on repart à zéro.
-        if (e.step && e.step !== "confirme") {
+        if (e.step && e.step !== "confirme" && coherent) {
           setStep(e.step);
           setPrenom(e.prenom ?? "");
           setNom(e.nom ?? "");
           setClient(e.client ?? null);
           setLignes(e.lignes ?? []);
-          setPanier(e.panier ?? []);
-          setPersonneBrouillon(e.personneBrouillon ?? "");
+          setPersonnes(e.personnes ?? []);
+          setIndexCourant(e.indexCourant ?? 0);
           setCreneauSelectionne(e.creneauSelectionne ?? null);
           if (e.dateSelectionneeISO) {
             setDateSelectionnee(new Date(e.dateSelectionneeISO));
@@ -167,8 +207,8 @@ export function AncienneClienteWizard({
         lignes,
         dateSelectionneeISO: dateSelectionnee?.toISOString() ?? null,
         creneauSelectionne,
-        panier,
-        personneBrouillon,
+        personnes,
+        indexCourant,
       };
       sessionStorage.setItem(CLE_ETAT, JSON.stringify(etat));
     } catch {
@@ -182,8 +222,8 @@ export function AncienneClienteWizard({
     lignes,
     dateSelectionnee,
     creneauSelectionne,
-    panier,
-    personneBrouillon,
+    personnes,
+    indexCourant,
   ]);
 
   useEffect(() => {
@@ -268,19 +308,46 @@ export function AncienneClienteWizard({
       }
 
       setClient(resultat.client);
-      allerA("prestations");
+      allerA("nombre");
     });
   }
 
-  // Créneaux déjà retenus dans le panier. Ils sont transmis au serveur pour
-  // être retirés des disponibilités : sans cela, la deuxième personne se
-  // verrait proposer l'horaire que la première vient de prendre.
-  const creneauxDuPanier = panier.map((e) => ({
-    debutISO: e.creneauISO,
-    finISO: new Date(
-      new Date(e.creneauISO).getTime() + e.dureeMinutes * 60000,
-    ).toISOString(),
-  }));
+  /** Déclare le nombre de personnes et pré-remplit la première avec la cliente. */
+  function choisirNombre(n: number) {
+    setPersonnes((actuelles) =>
+      Array.from({ length: n }, (_, i) =>
+        actuelles[i] ?? personneVide(i === 0 ? (client?.prenom ?? "") : ""),
+      ),
+    );
+    setIndexCourant(0);
+    allerA("prenoms");
+  }
+
+  function modifierPrenom(i: number, valeur: string) {
+    setPersonnes((p) => p.map((x, n) => (n === i ? { ...x, prenom: valeur } : x)));
+  }
+
+  /** Ouvre la composition d'une personne, en restaurant ses choix précédents. */
+  function composerPersonne(i: number) {
+    setIndexCourant(i);
+    setLignes(personnes[i]?.lignes ?? []);
+    setDateSelectionnee(null);
+    setCreneaux([]);
+    setCreneauSelectionne(personnes[i]?.creneauISO ?? null);
+    allerA("prestations");
+  }
+
+  // Créneaux déjà retenus par les *autres* personnes. Ils sont transmis au
+  // serveur pour être retirés des disponibilités : sans cela, la deuxième
+  // personne se verrait proposer l'horaire que la première vient de prendre.
+  const creneauxDesAutres = personnes
+    .filter((p, i) => i !== indexCourant && p.creneauISO)
+    .map((p) => ({
+      debutISO: p.creneauISO as string,
+      finISO: new Date(
+        new Date(p.creneauISO as string).getTime() + p.dureeMinutes * 60000,
+      ).toISOString(),
+    }));
 
   function choisirDate(date: Date) {
     setDateSelectionnee(date);
@@ -289,61 +356,69 @@ export function AncienneClienteWizard({
       const iso = await getCreneauxAction(
         date.toISOString(),
         lignesChoisies,
-        creneauxDuPanier,
+        creneauxDesAutres,
       );
       setCreneaux(iso);
     });
   }
 
-  /** Fige la personne en cours de composition et repart d'un brouillon vide. */
-  function ajouterAuPanier() {
+  /** Enregistre les prestations de la personne courante, puis passe au créneau. */
+  function versCreneau() {
+    setPersonnes((p) =>
+      p.map((x, n) => (n === indexCourant ? { ...x, lignes } : x)),
+    );
+    allerA("creneau");
+  }
+
+  /**
+   * Fige le créneau de la personne courante, puis enchaîne sur la suivante
+   * ou, s'il n'en reste aucune, sur le récapitulatif.
+   */
+  function validerCreneau() {
     if (!creneauSelectionne || lignes.length === 0) return;
     const creneau = creneauSelectionne;
-    const lignesFigees = lignes;
-    const nom = personneBrouillon.trim();
     setErreurPanier(null);
     startTransition(async () => {
       const { dureeMinutes, prixCentimes } =
         await calculerDureeLignesAction(lignesChoisies);
-      setPanier((p) => [
-        ...p,
-        {
-          id: crypto.randomUUID(),
-          personne: nom,
-          lignes: lignesFigees,
-          creneauISO: creneau,
-          dureeMinutes,
-          prixCentimes,
-        },
-      ]);
-      setLignes([]);
-      setPersonneBrouillon("");
-      setDateSelectionnee(null);
-      setCreneaux([]);
-      setCreneauSelectionne(null);
+      setPersonnes((p) =>
+        p.map((x, n) =>
+          n === indexCourant
+            ? { ...x, lignes, creneauISO: creneau, dureeMinutes, prixCentimes }
+            : x,
+        ),
+      );
+
+      const suivante = indexCourant + 1;
+      if (suivante < personnes.length) {
+        setIndexCourant(suivante);
+        setLignes(personnes[suivante].lignes);
+        setDateSelectionnee(null);
+        setCreneaux([]);
+        setCreneauSelectionne(personnes[suivante].creneauISO);
+        allerA("prestations");
+        return;
+      }
       allerA("panier");
     });
   }
 
-  function retirerDuPanier(id: string) {
-    setPanier((p) => p.filter((e) => e.id !== id));
-  }
-
   function validerPanier() {
-    if (!client || panier.length === 0) return;
+    const completes = personnes.filter((p) => p.creneauISO && p.lignes.length > 0);
+    if (!client || completes.length === 0) return;
     setErreurPanier(null);
     startTransition(async () => {
       const resultat = await creerReservationGroupeeAction({
         clientId: client.id,
-        elements: panier.map((e) => ({
-          personne: e.personne || undefined,
+        elements: completes.map((e) => ({
+          personne: e.prenom.trim() || undefined,
           lignes: e.lignes.map((l) => ({
             prestationId: l.prestation.id,
             longueur: l.longueur,
             densite: l.densite,
             optionIds: l.options.map((o) => o.id),
           })),
-          dateDebutISO: e.creneauISO,
+          dateDebutISO: e.creneauISO as string,
         })),
       });
       if (!resultat.ok) {
@@ -419,27 +494,108 @@ export function AncienneClienteWizard({
     );
   }
 
-  if (step === "prestations" && client) {
+  if (step === "nombre" && client) {
     return (
       <div className="space-y-6">
-        <p className="text-foreground">
-          {panier.length === 0
-            ? `Bonjour ${client.prenom}, composez votre rendez-vous.`
-            : "Pour qui est cette prestation ?"}
-        </p>
+        <div>
+          <h2 className="font-serif text-2xl text-foreground">
+            Bonjour {client.prenom}
+          </h2>
+          <p className="mt-2 text-muted-foreground">
+            Combien de personnes viennent à ce rendez-vous ? Vous pourrez
+            choisir une prestation et un horaire pour chacune.
+          </p>
+        </div>
 
-        <label className="block text-sm text-foreground">
-          Personne concernée{" "}
-          <span className="text-muted-foreground">
-            (laissez vide s&apos;il s&apos;agit de vous)
-          </span>
-          <input
-            value={personneBrouillon}
-            onChange={(e) => setPersonneBrouillon(e.target.value)}
-            placeholder={`${client.prenom}, Théo, Lucas…`}
-            className="field"
-          />
-        </label>
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+          {Array.from({ length: MAX_PERSONNES }, (_, i) => i + 1).map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => choisirNombre(n)}
+              className={`rounded-2xl border px-4 py-5 font-serif text-2xl transition-colors ${
+                personnes.length === n
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "glass border-white/50 text-foreground hover:border-primary/40"
+              }`}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+
+        <p className="text-sm text-muted-foreground">
+          Au-delà de {MAX_PERSONNES} personnes, appelez le salon : nous
+          organiserons le planning avec vous.
+        </p>
+      </div>
+    );
+  }
+
+  if (step === "prenoms" && client) {
+    const tousNommes = personnes.every((p) => p.prenom.trim().length > 0);
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="font-serif text-2xl text-foreground">
+            Qui vient&nbsp;?
+          </h2>
+          <p className="mt-2 text-muted-foreground">
+            Indiquez le prénom de chaque personne. Il apparaîtra sur le
+            rendez-vous, pour que nous sachions qui nous accueillons.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {personnes.map((p, i) => (
+            <label key={p.id} className="block text-sm text-foreground">
+              Personne {i + 1}
+              <input
+                required
+                autoFocus={i === 0}
+                value={p.prenom}
+                onChange={(e) => modifierPrenom(i, e.target.value)}
+                placeholder={i === 0 ? client.prenom : "Théo"}
+                className="field"
+              />
+            </label>
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row-reverse">
+          <button
+            type="button"
+            disabled={!tousNommes}
+            onClick={() => composerPersonne(0)}
+            className="w-full rounded-full bg-primary px-6 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 disabled:opacity-40 sm:flex-1"
+          >
+            Continuer
+          </button>
+          <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="w-full rounded-full border border-primary/40 px-6 py-3 text-foreground transition-colors hover:border-primary sm:w-auto"
+          >
+            Retour
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "prestations" && client && personneCourante) {
+    return (
+      <div className="space-y-6">
+        <div>
+          {personnes.length > 1 && (
+            <p className="text-xs uppercase tracking-[0.2em] text-primary">
+              Personne {indexCourant + 1} sur {personnes.length}
+            </p>
+          )}
+          <h2 className="mt-1 font-serif text-2xl text-foreground">
+            Prestations de {personneCourante.prenom}
+          </h2>
+        </div>
 
         <PrestationChooser
           prestations={prestations}
@@ -460,7 +616,7 @@ export function AncienneClienteWizard({
           <button
             type="button"
             disabled={!pretPourCreneau}
-            onClick={() => allerA("creneau")}
+            onClick={versCreneau}
             className="w-full rounded-full bg-primary px-6 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 disabled:opacity-40 sm:flex-1"
           >
             Choisir un créneau
@@ -477,9 +633,21 @@ export function AncienneClienteWizard({
     );
   }
 
-  if (step === "creneau") {
+  if (step === "creneau" && personneCourante) {
+    const derniere = indexCourant + 1 >= personnes.length;
     return (
       <div className="space-y-6">
+        <div>
+          {personnes.length > 1 && (
+            <p className="text-xs uppercase tracking-[0.2em] text-primary">
+              Personne {indexCourant + 1} sur {personnes.length}
+            </p>
+          )}
+          <h2 className="mt-1 font-serif text-2xl text-foreground">
+            Horaire de {personneCourante.prenom}
+          </h2>
+        </div>
+
         <div>
           <p className="mb-3 text-sm text-muted-foreground">
             Choisissez une date
@@ -550,10 +718,14 @@ export function AncienneClienteWizard({
           <button
             type="button"
             disabled={!creneauSelectionne || isPending}
-            onClick={ajouterAuPanier}
+            onClick={validerCreneau}
             className="w-full rounded-full bg-primary px-6 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 disabled:opacity-40 sm:flex-1"
           >
-            {isPending ? "Ajout…" : "Ajouter au panier"}
+            {isPending
+              ? "Enregistrement…"
+              : derniere
+                ? "Voir le récapitulatif"
+                : `Continuer avec ${personnes[indexCourant + 1]?.prenom || "la personne suivante"}`}
           </button>
           <button
             type="button"
@@ -568,64 +740,73 @@ export function AncienneClienteWizard({
   }
 
   if (step === "panier") {
-    const totalPanier = panier.reduce((s, e) => s + e.prixCentimes, 0);
-    const dureeCumulee = panier.reduce((s, e) => s + e.dureeMinutes, 0);
+    const completes = personnes.filter((p) => p.creneauISO && p.lignes.length > 0);
+    const totalReservation = completes.reduce((s, e) => s + e.prixCentimes, 0);
+    const dureeCumulee = completes.reduce((s, e) => s + e.dureeMinutes, 0);
 
     return (
       <div className="space-y-6">
         <h2 className="font-serif text-2xl text-foreground">Votre réservation</h2>
 
-        {panier.length === 0 && (
-          <p className="text-muted-foreground">
-            Votre panier est vide. Ajoutez une première prestation pour continuer.
-          </p>
-        )}
-
         <ul className="space-y-3">
-          {panier.map((e) => (
-            <li key={e.id} className="glass rounded-2xl border border-white/50 p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="font-serif text-lg text-foreground">
-                    {e.personne || client?.prenom || "Vous"}
-                  </p>
-                  <ul className="mt-1 space-y-0.5 text-sm text-muted-foreground">
-                    {e.lignes.map((l, i) => (
-                      <li key={`${e.id}-${i}`}>
-                        {l.prestation.nom}
-                        {l.options.length > 0 &&
-                          ` + ${l.options.map((o) => o.nom).join(", ")}`}
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="mt-2 text-sm text-foreground">
-                    {new Date(e.creneauISO).toLocaleString("fr-FR", {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "long",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                    {" · "}
-                    {formatDuree(e.dureeMinutes)}
-                  </p>
+          {personnes.map((p, i) => {
+            const complete = p.creneauISO && p.lignes.length > 0;
+            return (
+              <li key={p.id} className="glass rounded-2xl border border-white/50 p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-serif text-lg text-foreground">{p.prenom}</p>
+
+                    {complete ? (
+                      <>
+                        <ul className="mt-1 space-y-0.5 text-sm text-muted-foreground">
+                          {p.lignes.map((l, n) => (
+                            <li key={`${p.id}-${n}`}>
+                              {l.prestation.nom}
+                              {l.options.length > 0 &&
+                                ` + ${l.options.map((o) => o.nom).join(", ")}`}
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="mt-2 text-sm text-foreground">
+                          {new Date(p.creneauISO as string).toLocaleString("fr-FR", {
+                            weekday: "long",
+                            day: "numeric",
+                            month: "long",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                          {" · "}
+                          {formatDuree(p.dureeMinutes)}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="mt-1 text-sm text-rose-700">
+                        Prestation ou horaire à choisir
+                      </p>
+                    )}
+                  </div>
+                  <div className="shrink-0 text-right">
+                    {complete && (
+                      <p className="font-bold text-primary">
+                        {formatPrix(p.prixCentimes)}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => composerPersonne(i)}
+                      className="mt-2 text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-primary hover:underline"
+                    >
+                      Modifier
+                    </button>
+                  </div>
                 </div>
-                <div className="shrink-0 text-right">
-                  <p className="font-bold text-primary">{formatPrix(e.prixCentimes)}</p>
-                  <button
-                    type="button"
-                    onClick={() => retirerDuPanier(e.id)}
-                    className="mt-2 text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-rose-700 hover:underline"
-                  >
-                    Retirer
-                  </button>
-                </div>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
 
-        {panier.length > 0 && (
+        {completes.length > 0 && (
           <div className="rounded-xl bg-muted px-4 py-3 text-sm text-foreground">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Durée cumulée</span>
@@ -633,30 +814,21 @@ export function AncienneClienteWizard({
             </div>
             <div className="mt-1 flex justify-between font-bold">
               <span>Total</span>
-              <span>{formatPrix(totalPanier)}</span>
+              <span>{formatPrix(totalReservation)}</span>
             </div>
           </div>
         )}
 
         {erreurPanier && <p className="text-sm text-rose-700">{erreurPanier}</p>}
 
-        <div className="flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={() => allerA("prestations")}
-            className="w-full rounded-full border border-primary/40 px-6 py-3 text-foreground transition-colors hover:border-primary"
-          >
-            Ajouter une prestation
-          </button>
-          <button
-            type="button"
-            disabled={panier.length === 0 || isPending}
-            onClick={validerPanier}
-            className="w-full rounded-full bg-primary px-6 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 disabled:opacity-40"
-          >
-            {isPending ? "Validation…" : "Valider mes rendez-vous"}
-          </button>
-        </div>
+        <button
+          type="button"
+          disabled={completes.length !== personnes.length || isPending}
+          onClick={validerPanier}
+          className="w-full rounded-full bg-primary px-6 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95 disabled:opacity-40"
+        >
+          {isPending ? "Validation…" : "Valider mes rendez-vous"}
+        </button>
       </div>
     );
   }
@@ -719,5 +891,31 @@ export function AncienneClienteWizard({
     );
   }
 
-  return null;
+  // Filet de sécurité : aucune combinaison d'état ne doit produire un écran
+  // vide. Si l'étape courante ne correspond à aucun rendu — état corrompu,
+  // reprise après mise à jour — on ramène la cliente au début du tunnel.
+  return (
+    <div className="space-y-4">
+      <p className="text-foreground">
+        Votre réservation n&apos;a pas pu être reprise. Reprenons depuis le début.
+      </p>
+      <button
+        type="button"
+        onClick={() => {
+          try {
+            sessionStorage.removeItem(CLE_ETAT);
+          } catch {
+            // Sans effet : on réinitialise l'état en mémoire de toute façon.
+          }
+          setPersonnes([]);
+          setIndexCourant(0);
+          setLignes([]);
+          allerA("identification");
+        }}
+        className="w-full rounded-full bg-primary px-6 py-3 text-primary-foreground transition-all duration-300 hover:opacity-90 active:scale-95"
+      >
+        Recommencer
+      </button>
+    </div>
+  );
 }
