@@ -49,7 +49,13 @@ export async function loginAdminAction(motDePasse: string) {
   cookieStore.set(COOKIE_NAME, motDePasse, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // Cookie restreint à HTTPS en production. COOKIE_NON_SECURISE=1 lève
+    // cette restriction pour un accès en HTTP simple sur le réseau local :
+    // sans cela le navigateur refuse de conserver le cookie et la connexion
+    // échoue en silence. À ne jamais poser sur un site exposé à l'internet.
+    secure:
+      process.env.COOKIE_NON_SECURISE !== "1" &&
+      process.env.NODE_ENV === "production",
     maxAge: 60 * 60 * 24 * 30,
     path: "/",
   });
