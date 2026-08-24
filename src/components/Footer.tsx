@@ -1,14 +1,23 @@
 import Link from "next/link";
 import { Ciseau } from "@/components/Ciseau";
+import { horairesLisibles } from "@/lib/horaires";
 
-const HORAIRES = [
-  { jour: "Lundi", heures: "13h30 – 17h30", prestations: "Coiffure Privilège & Bien-être" },
-  { jour: "Mardi", heures: "Fermé" },
-  { jour: "Mercredi", heures: "9h00 – 12h30 / 14h00 – 18h30", prestations: "Coiffure Enfants & Homme" },
-  { jour: "Jeudi", heures: "9h00 – 13h00 / 14h00 – 18h00", prestations: "Coiffure Bien-être" },
-  { jour: "Vendredi", heures: "9h00 – 13h00 / 14h00 – 18h30", prestations: "Coiffure Bien-être" },
-  { jour: "Samedi", heures: "9h00 – 14h00", prestations: "Coiffure Privilège & Bien-être" },
+// Les heures ne sont plus recopiées ici : elles viennent de HORAIRES_SALON,
+// la source unique. Cette liste ne décrit plus que l'ordre d'affichage et le
+// type de prestations proposé chaque jour.
+const JOURS_AFFICHES = [
+  { index: 1, jour: "Lundi", prestations: "Coiffure Privilège & Bien-être" },
+  { index: 2, jour: "Mardi" },
+  { index: 3, jour: "Mercredi", prestations: "Coiffure Enfants & Homme" },
+  { index: 4, jour: "Jeudi", prestations: "Coiffure Bien-être" },
+  { index: 5, jour: "Vendredi", prestations: "Coiffure Bien-être" },
+  { index: 6, jour: "Samedi", prestations: "Coiffure Privilège & Bien-être" },
 ];
+
+const HORAIRES = JOURS_AFFICHES.map((j) => ({
+  ...j,
+  heures: horairesLisibles(j.index),
+}));
 
 export function Footer() {
   return (

@@ -1,6 +1,13 @@
 /**
- * Horaires d'ouverture et pauses du salon par jour de la semaine
+ * Contrôles d'ouverture du salon.
+ *
+ * Les horaires eux-mêmes ne sont plus définis ici : ce fichier les dérive de
+ * HORAIRES_SALON (src/lib/horaires.ts), désormais source unique. La table qui
+ * s'y trouvait auparavant avait divergé de celle qui génère les créneaux, si
+ * bien que le mercredi soir était proposé jusqu'à 18h30 puis refusé à 18h00.
  */
+
+import { HORAIRES_SALON } from "./horaires";
 
 export interface CreneauHoraire {
   debut: string; // Format "HH:mm"
@@ -13,49 +20,12 @@ export interface JourHoraires {
 }
 
 // Les jours de la semaine: 0=Dimanche, 1=Lundi, 2=Mardi, etc.
-export const HORAIRES_OUVERTURE: Record<number, JourHoraires> = {
-  0: { // Dimanche
-    ouvert: false,
-    creneaux: []
-  },
-  1: { // Lundi
-    ouvert: true,
-    creneaux: [
-      { debut: "13:30", fin: "17:30" }
-    ]
-  },
-  2: { // Mardi
-    ouvert: false,
-    creneaux: []
-  },
-  3: { // Mercredi
-    ouvert: true,
-    creneaux: [
-      { debut: "09:00", fin: "12:30" },
-      { debut: "14:00", fin: "18:00" }
-    ]
-  },
-  4: { // Jeudi
-    ouvert: true,
-    creneaux: [
-      { debut: "09:00", fin: "13:00" },
-      { debut: "14:00", fin: "18:00" }
-    ]
-  },
-  5: { // Vendredi
-    ouvert: true,
-    creneaux: [
-      { debut: "09:00", fin: "13:00" },
-      { debut: "14:00", fin: "18:30" }
-    ]
-  },
-  6: { // Samedi
-    ouvert: true,
-    creneaux: [
-      { debut: "09:00", fin: "14:00" }
-    ]
-  }
-};
+export const HORAIRES_OUVERTURE: Record<number, JourHoraires> = Object.fromEntries(
+  Object.entries(HORAIRES_SALON).map(([jour, plages]) => [
+    Number(jour),
+    { ouvert: plages.length > 0, creneaux: plages },
+  ]),
+);
 
 /**
  * Convertit une heure "HH:mm" en minutes depuis minuit
@@ -99,13 +69,10 @@ export function respecteHorairesOuverture(dateFin: Date): boolean {
   const heureFinRDV = dateFin.getHours() * 60 + dateFin.getMinutes();
 
   // Vérifie que la fin du RDV est dans un des créneaux d'ouverture
-  const resultat = horaires.creneaux.some(creneau => {
+  return horaires.creneaux.some((creneau) => {
     const fin = heureEnMinutes(creneau.fin);
     return heureFinRDV <= fin;
   });
-
-  console.log(`[DEBUG] respecteHorairesOuverture: dateFin=${dateFin.toISOString()}, heureFinRDV=${heureFinRDV}min, horaires=${JSON.stringify(horaires)}, resultat=${resultat}`);
-  return resultat;
 }
 
 /**

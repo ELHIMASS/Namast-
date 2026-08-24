@@ -50,7 +50,6 @@ export function getCreneauxDisponibles({
   const plages = estAdmin
     ? [{ debut: "00:00", fin: "24:00" }]
     : (creneauxDuJour ?? []);
-  console.log(`[DEBUG] Date: ${date.toISOString()}, Jour: ${date.getDay()}, DureeTotale: ${dureeTotaleMinutes}min, Plages: ${JSON.stringify(plages)}`);
   const creneaux: Date[] = [];
   const maintenant = new Date();
 
