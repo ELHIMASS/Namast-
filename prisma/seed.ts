@@ -238,6 +238,7 @@ async function main() {
       update: {
         categorie: p.categorie,
         profil: "FEMME",
+        formule: "PRIVILEGE",
         prixCentimes: p.prix[0],
         dureeMinutes: p.duree[0],
         tempsNettoyageMinutes: p.categorie === "COULEUR" ? 15 : 10,
@@ -248,6 +249,7 @@ async function main() {
         nom: p.nom,
         categorie: p.categorie,
         profil: "FEMME",
+        formule: "PRIVILEGE",
         prixCentimes: p.prix[0],
         dureeMinutes: p.duree[0],
         tempsNettoyageMinutes: p.categorie === "COULEUR" ? 15 : 10,
