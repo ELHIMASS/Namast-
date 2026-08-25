@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "RendezVous" ADD COLUMN IF NOT EXISTS "rappelEnvoye" BOOLEAN NOT NULL DEFAULT false;
