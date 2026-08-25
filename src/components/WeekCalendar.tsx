@@ -53,7 +53,7 @@ function heureLabel(h: number): string {
 }
 
 function heureCourte(date: Date): string {
-  return date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  return date.toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" });
 }
 
 export type StyleCouleurRDV = {

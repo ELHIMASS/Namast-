@@ -36,6 +36,7 @@ type RendezVous = {
 
 function formatDateHeure(date: Date) {
   return new Date(date).toLocaleString("fr-FR", {
+    timeZone: "Europe/Paris",
     weekday: "long",
     day: "numeric",
     month: "long",

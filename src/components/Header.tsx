@@ -2,22 +2,44 @@ import Link from "next/link";
 
 export function Header() {
   return (
-    <header className="glass sticky top-0 z-20 border-b border-white/50">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4 sm:px-6 sm:py-5">
-        <Link href="/" className="flex shrink-0 flex-col leading-tight interactive-hover">
-          <span className="handwriting text-2xl leading-none sm:text-3xl gradient-text animate-gradient">
+    <header className="sticky top-0 z-30 border-b border-[#D5B695]/30 bg-[#F0DFCE]/80 backdrop-blur-md transition-all">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8 sm:py-4">
+        {/* LOGO SALON */}
+        <Link href="/" className="flex shrink-0 flex-col leading-none transition-opacity hover:opacity-90">
+          <span className="font-handwriting font-serif italic text-2xl font-normal text-[#3A2411] sm:text-3xl">
             Namasté
           </span>
-          <span className="text-[0.6rem] uppercase tracking-[0.2em] text-primary sm:text-[0.65rem] sm:tracking-[0.25em] animate-pulse-soft">
-            Coiffure &amp; bien-être
+          <span className="mt-1 text-[9px] uppercase tracking-[0.25em] text-[#7D522A] font-medium sm:text-[10px]">
+            COIFFURE &amp; BIEN-ÊTRE
           </span>
         </Link>
-        <Link
-          href="/reservation"
-          className="shrink-0 whitespace-nowrap rounded-full border border-primary/60 px-3 py-2 text-xs text-foreground transition-all duration-300 hover:border-primary hover:bg-primary hover:text-primary-foreground active:scale-95 sm:px-5 sm:text-sm btn-hover interactive-hover"
-        >
-          Prendre rendez-vous
-        </Link>
+
+        {/* ACTIONS NAVIGATION */}
+        <div className="flex items-center gap-3 sm:gap-4">
+          <Link
+            href="/reservation"
+            className="shrink-0 rounded-full border border-[#7D522A]/40 bg-[#F0DFCE]/50 px-4 py-1.5 text-xs font-medium text-[#3A2411] transition-all hover:bg-[#E6CEB3] hover:border-[#7D522A]/60 sm:px-5 sm:py-2 sm:text-sm"
+          >
+            Prendre rendez-vous
+          </Link>
+          
+          {/* BOUTON MENU HAMBURGER */}
+          <button
+            type="button"
+            aria-label="Menu"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-[#3A2411] transition-colors hover:bg-[#E6CEB3]/50"
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+            </svg>
+          </button>
+        </div>
       </div>
     </header>
   );

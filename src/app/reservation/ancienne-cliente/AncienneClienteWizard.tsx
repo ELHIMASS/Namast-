@@ -770,6 +770,7 @@ export function AncienneClienteWizard({
                         </ul>
                         <p className="mt-2 text-sm text-foreground">
                           {new Date(p.creneauISO as string).toLocaleString("fr-FR", {
+                            timeZone: "Europe/Paris",
                             weekday: "long",
                             day: "numeric",
                             month: "long",
@@ -853,6 +854,7 @@ export function AncienneClienteWizard({
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {new Date(r.debutISO).toLocaleString("fr-FR", {
+                  timeZone: "Europe/Paris",
                   weekday: "long",
                   day: "numeric",
                   month: "long",

@@ -94,32 +94,71 @@ export default async function Home() {
       <main className="flex-1">
         <VideoCarousel />
 
-        {/* HERO SECTION PREMIUM */}
-        <Reveal className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-transparent pointer-events-none" />
-          <div className="mx-auto max-w-4xl flex flex-col items-start gap-8 px-6 py-32 text-left relative z-10">
-            <div className="space-y-2">
-              <span className="inline-block text-xs uppercase tracking-[0.4em] text-primary font-semibold px-4 py-2 rounded-full bg-primary/10">
-                ✨ Salon privé & confidentiel
-              </span>
-              <h1 className="font-serif text-6xl sm:text-7xl lg:text-8xl leading-tight gradient-text animate-gradient font-bold">
-                Coiffure &amp; Bien-être<br />Sur Mesure
-              </h1>
+        {/* HERO SECTION DESIGN REFÉRÉ (NAMASTÉ) */}
+        <Reveal className="relative overflow-hidden bg-[#F0DFCE]">
+          {/* PHOTO D'AMBIANCE À DROITE (MIROIR CHAUD, BOUGIES, PAMPAS) */}
+          <div className="absolute right-0 top-0 bottom-0 w-full md:w-1/2 lg:w-7/12 pointer-events-none overflow-hidden opacity-80 md:opacity-100">
+            <Image
+              src="/images/hero-ambiance.png"
+              alt="Atmosphère chaleureuse salon Namasté"
+              fill
+              priority
+              className="object-cover object-right"
+            />
+            {/* GRADIENT MASQUE POUR UNE FUSION PARFAITE DANS LE FOND CHAUD */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#F0DFCE] via-[#F0DFCE]/70 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#F0DFCE] via-transparent to-transparent md:hidden" />
+          </div>
+
+          <div className="mx-auto max-w-6xl flex flex-col items-start px-6 py-12 sm:py-16 md:py-24 text-left relative z-10">
+            {/* MOTIF FEUILLE DECORATIF (EN HAUT À GAUCHE) */}
+            <div className="mb-4 text-[#7D522A]/60">
+              <svg viewBox="0 0 60 70" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-12">
+                <path d="M10 65 C 18 42, 32 18, 52 8" />
+                <path d="M24 45 C 17 38, 14 32, 18 26 C 24 26, 28 32, 24 45 Z" fill="rgba(125,82,42,0.08)" />
+                <path d="M32 33 C 27 24, 27 18, 34 14 C 39 16, 39 23, 32 33 Z" fill="rgba(125,82,42,0.08)" />
+                <path d="M42 20 C 38 12, 40 8, 48 5 C 51 9, 50 15, 42 20 Z" fill="rgba(125,82,42,0.08)" />
+              </svg>
             </div>
-            <p className="max-w-2xl text-xl sm:text-2xl text-muted-foreground leading-relaxed">
-              Bienvenue à <span className="font-bold text-foreground">Namasté</span>, votre refuge personnel pour la beauté et la détente.
+
+            {/* TITRE PRINCIPAL SERIF */}
+            <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.1] text-[#3A2411] tracking-tight max-w-xl">
+              Bien-être<br />Sur Mesure
+            </h1>
+
+            {/* ORNEMENT SWIRL / FLOURISH */}
+            <div className="my-4 text-[#A97847]">
+              <svg viewBox="0 0 120 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-24 h-5">
+                <path d="M60 10 C 45 3, 35 17, 20 10 C 10 5, 5 13, 12 15 C 20 18, 28 8, 42 10" />
+                <path d="M60 10 C 75 3, 85 17, 100 10 C 110 5, 115 13, 108 15 C 100 18, 92 8, 78 10" />
+                <circle cx="60" cy="10" r="2" fill="currentColor" />
+              </svg>
+            </div>
+
+            {/* DESCRIPTION DU SALON */}
+            <p className="mt-2 max-w-md sm:max-w-lg text-base sm:text-lg text-[#5C422E] leading-relaxed">
+              Bienvenue à <strong className="font-semibold text-[#3A2411]">Namasté</strong>, votre refuge personnel pour la beauté et la détente.
               Une expérience exclusive conçue pour vous, dans une atmosphère sereine et bienveillante.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 mt-4">
+
+            {/* BOUTONS D'ACTION (VERT SAUGE + OUTLINE CHOCOLAT) */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-8 w-full sm:w-auto">
               <Link
                 href="/reservation"
-                className="rounded-full bg-gradient-to-r from-primary to-primary/80 px-8 sm:px-10 py-4 text-primary-foreground font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-primary/30 active:scale-95 btn-hover"
+                className="inline-flex items-center justify-center gap-3 rounded-full bg-[#989077] px-8 py-3.5 sm:px-9 sm:py-4 text-base font-medium text-white shadow-md shadow-[#989077]/20 transition-all duration-300 hover:bg-[#888068] hover:shadow-lg active:scale-95"
               >
+                {/* ICON FLEUR DE LOTUS */}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 opacity-90">
+                  <path d="M12 3C12 3 8 8.5 8 13C8 16.5 9.8 19 12 20C14.2 19 16 16.5 16 13C16 8.5 12 3 12 3Z" />
+                  <path d="M12 20C9.2 20 4.5 18 3.5 13.5C3 11 4.5 8 7 7C6.5 10 8.5 14 12 15" />
+                  <path d="M12 20C14.8 20 19.5 18 20.5 13.5C21 11 19.5 8 17 7C17.5 10 15.5 14 12 15" />
+                </svg>
                 Prendre rendez-vous
               </Link>
+              
               <Link
                 href="#prestations"
-                className="rounded-full border-2 border-primary px-8 sm:px-10 py-4 text-foreground font-semibold transition-all duration-300 hover:bg-primary hover:text-primary-foreground active:scale-95"
+                className="inline-flex items-center justify-center rounded-full border border-[#7D522A]/40 bg-[#F0DFCE]/40 px-8 py-3.5 sm:px-9 sm:py-4 text-base font-medium text-[#3A2411] transition-all duration-300 hover:bg-[#E6CEB3]/70 hover:border-[#7D522A]/60 active:scale-95"
               >
                 Découvrir nos services
               </Link>

@@ -268,6 +268,7 @@ export async function creerReservationGroupeeAction({
     );
     if (!dispo.some((d) => d.getTime() === c.debut.getTime())) {
       const quand = c.debut.toLocaleString("fr-FR", {
+        timeZone: "Europe/Paris",
         weekday: "long",
         day: "numeric",
         month: "long",

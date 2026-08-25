@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fbf2f1;
-  --foreground: #3a262b;
+  --background: #f0dfce;
+  --foreground: #3a2411;
   --surface: #ffffff;
-  --muted: #f6dfe3;
-  --muted-foreground: #7d5a60; /* 5,4:1 sur --background : conforme WCAG AA */
-  --border: #f0d4d8;
-  --primary: #c17a90;
-  --primary-foreground: #fff8f7;
-  --accent: #8a4a5e;
-  --accent-foreground: #fff8f7;
+  --muted: #e6ceb3;
+  --muted-foreground: #7d522a;
+  --border: #d5b695;
+  --primary: #989077;
+  --primary-foreground: #ffffff;
+  --accent: #a97847;
+  --accent-foreground: #ffffff;
 }
 
 @theme inline {
@@ -96,8 +96,8 @@ textarea {
   z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(110% 110% at 50% 45%, transparent 34%, rgba(28, 16, 21, 0.5) 100%),
-    linear-gradient(160deg, rgba(193, 122, 144, 0.2), rgba(138, 74, 94, 0.16));
+    radial-gradient(110% 110% at 50% 45%, transparent 34%, rgba(58, 36, 17, 0.45) 100%),
+    linear-gradient(160deg, rgba(152, 144, 119, 0.18), rgba(169, 120, 71, 0.12));
   opacity: 1;
   transition: opacity 700ms ease;
 }
@@ -109,7 +109,7 @@ textarea {
 /* ================== MOTIF CISEAU ==================
    Le motif est appliqué en masque : sa couche alpha découpe un aplat de
    couleur, ce qui permet de le teinter (currentColor) au lieu d'un noir qui
-   jurerait sur le rosé.
+   jurerait sur le fond chaud.
 
    ciseau-motif.png est la version détourée de ciseau.png : l'original est
    opaque à 100 % (le damier est peint dans l'image, ce n'est pas de la
@@ -122,18 +122,18 @@ textarea {
 }
 
 /* ================== CADRES PHOTO ==================
-   Cadre d'accrochage mural : passe-partout clair, filet rosé, ombre portée.
+   Cadre d'accrochage mural : passe-partout clair, filet chaud, ombre portée.
    Les photos sont posées légèrement de travers, comme sur un mur de galerie,
    et se redressent en se soulevant au survol. */
 .cadre-photo {
   position: relative;
   padding: 10px;
   border-radius: 26px;
-  background: linear-gradient(150deg, #fffdfc 0%, #f9ecee 55%, #f2dade 100%);
+  background: linear-gradient(150deg, #ffffff 0%, #f0dfce 55%, #e6ceb3 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 18px 40px -18px rgba(58, 38, 43, 0.45),
-    0 2px 6px rgba(58, 38, 43, 0.08);
+    0 18px 40px -18px rgba(58, 36, 17, 0.35),
+    0 2px 6px rgba(58, 36, 17, 0.08);
   transition:
     transform 600ms cubic-bezier(0.34, 1.35, 0.64, 1),
     box-shadow 600ms ease;
@@ -145,7 +145,7 @@ textarea {
   position: absolute;
   inset: 5px;
   z-index: 2;
-  border: 1px solid rgba(193, 122, 144, 0.45);
+  border: 1px solid rgba(152, 144, 119, 0.45);
   border-radius: 22px;
   pointer-events: none;
 }
@@ -325,10 +325,10 @@ textarea {
 }
 
 /* Sur une photo fondue, le vignetage sombre ferait un bord marqué là où
-   l'image doit justement s'effacer : on ne garde que le voile rosé. */
+   l'image doit justement s'effacer : on ne garde que le voile chaud. */
 .photo-fondue::after,
 .photo-fondue-verticale::after {
-  background: linear-gradient(160deg, rgba(193, 122, 144, 0.18), rgba(138, 74, 94, 0.13));
+  background: linear-gradient(160deg, rgba(152, 144, 119, 0.18), rgba(169, 120, 71, 0.13));
 }
 }
 /* fin @layer components */
@@ -346,9 +346,9 @@ textarea {
   -webkit-backdrop-filter: blur(18px) saturate(160%);
 }
 
-/* Placeholder de mouvement (tons rose poudré) en attendant les vraies vidéos — voir VideoCarousel */
+/* Placeholder de mouvement — voir VideoCarousel */
 .motion-slide {
-  background: radial-gradient(130% 130% at 30% 20%, #7a4256 0%, #3f2430 55%, #1c1015 100%);
+  background: radial-gradient(130% 130% at 30% 20%, #7d522a 0%, #3a2411 55%, #24160a 100%);
   background-size: 160% 160%;
   animation: drift 20s ease-in-out infinite alternate;
 }
@@ -406,7 +406,7 @@ textarea {
     text-shadow: 0 0 5px transparent, 0 0 10px transparent;
   }
   50% {
-    text-shadow: 0 0 10px rgba(193, 122, 144, 0.5), 0 0 20px rgba(193, 122, 144, 0.3);
+    text-shadow: 0 0 10px rgba(132, 140, 119, 0.5), 0 0 20px rgba(92, 58, 33, 0.3);
   }
 }
 
@@ -472,13 +472,13 @@ textarea {
 /* Rainbow text */
 @keyframes rainbow-text {
   0% {
-    color: #c17a90;
+    color: #848c77;
   }
   50% {
-    color: #8a4a5e;
+    color: #5c3a21;
   }
   100% {
-    color: #c17a90;
+    color: #848c77;
   }
 }
 
@@ -507,10 +507,10 @@ textarea {
 /* Glow animation pour prix */
 @keyframes glow {
   0%, 100% {
-    text-shadow: 0 0 0px rgba(193, 122, 144, 0);
+    text-shadow: 0 0 0px rgba(132, 140, 119, 0);
   }
   50% {
-    text-shadow: 0 0 12px rgba(193, 122, 144, 0.6);
+    text-shadow: 0 0 12px rgba(132, 140, 119, 0.6);
   }
 }
 
@@ -679,7 +679,7 @@ textarea {
 
 /* Gradient text effect */
 .gradient-text {
-  background: linear-gradient(135deg, #c17a90, #8a4a5e, #c17a90);
+  background: linear-gradient(135deg, #7d522a, #a97847, #989077);
   background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -689,7 +689,7 @@ textarea {
 
 /* Neon effect */
 .neon-glow {
-  text-shadow: 0 0 10px rgba(193, 122, 144, 0.5), 0 0 20px rgba(193, 122, 144, 0.3);
+  text-shadow: 0 0 10px rgba(152, 144, 119, 0.5), 0 0 20px rgba(169, 120, 71, 0.3);
   animation: text-glow 2s ease-in-out infinite;
 }
 

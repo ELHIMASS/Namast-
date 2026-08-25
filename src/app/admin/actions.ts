@@ -359,11 +359,15 @@ async function poserOccurrences({
 }
 
 function formatDateCourte(d: Date): string {
-  return d.toLocaleDateString("fr-FR", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  }) + ` à ${d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`;
+  return (
+    d.toLocaleDateString("fr-FR", {
+      timeZone: "Europe/Paris",
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    }) +
+    ` à ${d.toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" })}`
+  );
 }
 
 export async function modifierRendezVousAction({

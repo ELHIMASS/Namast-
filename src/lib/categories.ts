@@ -106,9 +106,11 @@ export const DESCRIPTION_FORMULE: Record<string, string> = {
 /** Ce que comprend chaque formule, quelle que soit la prestation choisie. */
 export const INCLUS_FORMULE: Record<string, string[]> = {
   PRIVILEGE: [
+    "Shampoing classique",
     "Option : soin mousse coiffante et autre prestation en supplément",
   ],
   BIEN_ETRE: [
+    "Shampoing classique",
     "Soin profond Belmakosmetik",
     "Bac massant",
     "Massage du cuir chevelu prolongé",

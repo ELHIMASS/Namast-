@@ -24,6 +24,7 @@ type RendezVousEmail = {
 
 function formatDateHeure(date: Date): string {
   return new Date(date).toLocaleString("fr-FR", {
+    timeZone: "Europe/Paris",
     weekday: "long",
     day: "numeric",
     month: "long",

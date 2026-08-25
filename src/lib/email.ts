@@ -113,7 +113,8 @@ export async function envoyerEmailSalon(
   }
 
   const dateObj = new Date(dateDebut);
-  const dateFormatee = dateObj.toLocaleDateString("fr-FR", {
+  const dateFormatee = dateObj.toLocaleString("fr-FR", {
+    timeZone: "Europe/Paris",
     weekday: "long",
     year: "numeric",
     month: "long",

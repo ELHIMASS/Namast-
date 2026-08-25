@@ -25,6 +25,7 @@ function prochainsJours(nombre: number): Date[] {
 
 function formaterDateHeure(iso: string): string {
   return new Date(iso).toLocaleString("fr-FR", {
+    timeZone: "Europe/Paris",
     weekday: "long",
     day: "numeric",
     month: "long",
