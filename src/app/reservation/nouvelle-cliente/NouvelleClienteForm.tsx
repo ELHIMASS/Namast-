@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { estJourOuvert } from "@/lib/horaires";
 import { estJourAutorisePourPrestations } from "@/lib/reglesCreneaux";
 import {
@@ -44,6 +44,11 @@ export function NouvelleClienteForm({
 }) {
   const [step, setStep] = useState<Step>("infos");
   const [isPending, startTransition] = useTransition();
+
+  // Défilement automatique vers le haut de la page à chaque changement d'étape
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
 
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");

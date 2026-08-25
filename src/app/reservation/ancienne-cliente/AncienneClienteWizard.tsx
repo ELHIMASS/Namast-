@@ -235,6 +235,11 @@ export function AncienneClienteWizard({
     return () => window.removeEventListener("popstate", surRetourNavigateur);
   }, []);
 
+  // Défilement automatique vers le haut de la page à chaque changement d'étape
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step, indexCourant]);
+
   /** Change d'étape en laissant une trace dans l'historique du navigateur. */
   function allerA(prochaine: Step) {
     setStep(prochaine);
