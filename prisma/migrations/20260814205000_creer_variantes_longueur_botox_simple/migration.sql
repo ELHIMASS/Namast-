@@ -7,18 +7,24 @@ WHERE "prestationId" IN (
 
 -- Insérer les variantes pour Soin botox
 INSERT INTO "PrestationLongueur" (id, "prestationId", longueur, "prixCentimes", "dureeMinutes")
-VALUES
-  (md5(random()::text)::uuid, (SELECT id FROM "Prestation" WHERE nom = 'Soin botox' LIMIT 1), 'COURT', 10000, 60),
-  (md5(random()::text)::uuid, (SELECT id FROM "Prestation" WHERE nom = 'Soin botox' LIMIT 1), 'CARRE', 10000, 60),
-  (md5(random()::text)::uuid, (SELECT id FROM "Prestation" WHERE nom = 'Soin botox' LIMIT 1), 'MI_LONG', 12500, 75),
-  (md5(random()::text)::uuid, (SELECT id FROM "Prestation" WHERE nom = 'Soin botox' LIMIT 1), 'LONG', 12500, 75),
-  (md5(random()::text)::uuid, (SELECT id FROM "Prestation" WHERE nom = 'Soin botox' LIMIT 1), 'TRES_LONG', 15000, 75);
+SELECT md5(random()::text)::uuid, id, 'COURT'::"LongueurCheveux", 10000, 60 FROM "Prestation" WHERE nom = 'Soin botox'
+UNION ALL
+SELECT md5(random()::text)::uuid, id, 'CARRE'::"LongueurCheveux", 10000, 60 FROM "Prestation" WHERE nom = 'Soin botox'
+UNION ALL
+SELECT md5(random()::text)::uuid, id, 'MI_LONG'::"LongueurCheveux", 12500, 75 FROM "Prestation" WHERE nom = 'Soin botox'
+UNION ALL
+SELECT md5(random()::text)::uuid, id, 'LONG'::"LongueurCheveux", 12500, 75 FROM "Prestation" WHERE nom = 'Soin botox'
+UNION ALL
+SELECT md5(random()::text)::uuid, id, 'TRES_LONG'::"LongueurCheveux", 15000, 75 FROM "Prestation" WHERE nom = 'Soin botox';
 
 -- Insérer les variantes pour Soin botox Parfait
 INSERT INTO "PrestationLongueur" (id, "prestationId", longueur, "prixCentimes", "dureeMinutes")
-VALUES
-  (md5(random()::text)::uuid, (SELECT id FROM "Prestation" WHERE nom = 'Soin botox Parfait' LIMIT 1), 'COURT', 15000, 150),
-  (md5(random()::text)::uuid, (SELECT id FROM "Prestation" WHERE nom = 'Soin botox Parfait' LIMIT 1), 'CARRE', 15000, 150),
-  (md5(random()::text)::uuid, (SELECT id FROM "Prestation" WHERE nom = 'Soin botox Parfait' LIMIT 1), 'MI_LONG', 17500, 150),
-  (md5(random()::text)::uuid, (SELECT id FROM "Prestation" WHERE nom = 'Soin botox Parfait' LIMIT 1), 'LONG', 17500, 150),
-  (md5(random()::text)::uuid, (SELECT id FROM "Prestation" WHERE nom = 'Soin botox Parfait' LIMIT 1), 'TRES_LONG', 20000, 150);
+SELECT md5(random()::text)::uuid, id, 'COURT'::"LongueurCheveux", 15000, 150 FROM "Prestation" WHERE nom = 'Soin botox Parfait'
+UNION ALL
+SELECT md5(random()::text)::uuid, id, 'CARRE'::"LongueurCheveux", 15000, 150 FROM "Prestation" WHERE nom = 'Soin botox Parfait'
+UNION ALL
+SELECT md5(random()::text)::uuid, id, 'MI_LONG'::"LongueurCheveux", 17500, 150 FROM "Prestation" WHERE nom = 'Soin botox Parfait'
+UNION ALL
+SELECT md5(random()::text)::uuid, id, 'LONG'::"LongueurCheveux", 17500, 150 FROM "Prestation" WHERE nom = 'Soin botox Parfait'
+UNION ALL
+SELECT md5(random()::text)::uuid, id, 'TRES_LONG'::"LongueurCheveux", 20000, 150 FROM "Prestation" WHERE nom = 'Soin botox Parfait';
