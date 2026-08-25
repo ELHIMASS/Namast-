@@ -16,8 +16,9 @@ export function middleware(request: NextRequest) {
 
   const expected = getExpectedPassword();
   const session = request.cookies.get(COOKIE_NAME)?.value;
-  if (!session || session !== expected) {
-    const loginUrl = new URL("/admin/login", request.url);
+  if (!session || !expected || session !== expected) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/admin/login";
     return NextResponse.redirect(loginUrl);
   }
 
