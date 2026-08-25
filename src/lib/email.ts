@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
-const SALON_EMAIL = "Namaste-coiffure-bien-etre@outlook.fr";
+const SALON_EMAIL = process.env.SALON_EMAIL || "Namaste-coiffure-bien-etre@outlook.fr";
+const SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || SALON_EMAIL;
 
 interface EmailData {
   to: { email: string; name?: string }[];
@@ -32,7 +33,7 @@ export async function envoyerEmail(data: {
   const emailData: EmailData = {
     to: [{ email: data.to }],
     sender: {
-      email: "Namaste-coiffure-bien-etre@outlook.fr",
+      email: SENDER_EMAIL,
       name: "Namasté Salon",
     },
     subject: data.subject,
@@ -47,8 +48,11 @@ export async function envoyerEmail(data: {
       },
     });
     return true;
-  } catch (error) {
-    console.error("Erreur envoi email:", error);
+  } catch (error: any) {
+    console.error(
+      "Erreur envoi email Brevo:",
+      error?.response?.data || error?.message || error
+    );
     return false;
   }
 }
@@ -77,7 +81,7 @@ export async function envoyerEmailAuSalon(data: EmailAuSalonData): Promise<boole
   const emailData: EmailData = {
     to: [{ email: SALON_EMAIL, name: "Namasté Salon" }],
     sender: {
-      email: "Namaste-coiffure-bien-etre@outlook.fr",
+      email: SENDER_EMAIL,
       name: "Namasté Salon",
     },
     subject: data.subject,
@@ -92,8 +96,11 @@ export async function envoyerEmailAuSalon(data: EmailAuSalonData): Promise<boole
       },
     });
     return true;
-  } catch (error) {
-    console.error("Erreur envoi email au salon:", error);
+  } catch (error: any) {
+    console.error(
+      "Erreur envoi email au salon Brevo:",
+      error?.response?.data || error?.message || error
+    );
     return false;
   }
 }
@@ -138,7 +145,7 @@ export async function envoyerEmailSalon(
   const emailData: EmailData = {
     to: [{ email: SALON_EMAIL, name: "Namasté Salon" }],
     sender: {
-      email: "Namaste-coiffure-bien-etre@outlook.fr",
+      email: SENDER_EMAIL,
       name: "Namasté Salon",
     },
     subject: `Nouvelle demande RDV - ${prenom} ${nom}`,
@@ -153,8 +160,11 @@ export async function envoyerEmailSalon(
       },
     });
     return true;
-  } catch (error) {
-    console.error("Erreur envoi email:", error);
+  } catch (error: any) {
+    console.error(
+      "Erreur envoi email salon Brevo:",
+      error?.response?.data || error?.message || error
+    );
     return false;
   }
 }
