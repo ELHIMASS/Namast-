@@ -8,6 +8,13 @@ import {
   MESSAGE_HORS_DELAI,
   peutEtreModifie,
 } from "@/lib/delaiModification";
+import {
+  chargerRendezVousEmail,
+  notifierRdvDeplace,
+  notifierRdvSupprime,
+  notifierSalonRdvDeplace,
+  notifierSalonRdvSupprime,
+} from "@/lib/notifications";
 
 function normaliserTelephone(telephone: string): string {
   return telephone.replace(/[\s.\-]/g, "");
@@ -95,6 +102,12 @@ export async function annulerRendezVousClienteAction(telephone: string, code: st
     data: { statut: "ANNULE" },
   });
 
+  const rdvFull = await chargerRendezVousEmail(rendezVous.id);
+  if (rdvFull) {
+    await notifierRdvSupprime(rdvFull);
+    await notifierSalonRdvSupprime(rdvFull);
+  }
+
   return { ok: true as const };
 }
 
@@ -153,6 +166,7 @@ export async function deplacerRendezVousClienteAction(
 
   const dureeMs = rendezVous.dateFin.getTime() - rendezVous.dateDebut.getTime();
   const nouveauDebut = new Date(nouveauDebutISO);
+  const ancienneDateDebut = rendezVous.dateDebut;
 
   // Le nouveau créneau doit lui aussi respecter le délai de 24 h.
   if (!peutEtreModifie(nouveauDebut)) {
@@ -178,6 +192,12 @@ export async function deplacerRendezVousClienteAction(
       dateFin: new Date(nouveauDebut.getTime() + dureeMs),
     },
   });
+
+  const rdvFull = await chargerRendezVousEmail(rendezVous.id);
+  if (rdvFull) {
+    await notifierRdvDeplace(rdvFull, ancienneDateDebut);
+    await notifierSalonRdvDeplace(rdvFull, ancienneDateDebut);
+  }
 
   const recharge = await chargerRendezVous(telephone, code);
   return { ok: true as const, rendezVous: recharge ? versVue(recharge) : null };

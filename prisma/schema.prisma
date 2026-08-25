@@ -181,6 +181,7 @@ model RendezVous {
   message        String?
   motifRefus     String?
   creeParAdmin    Boolean          @default(false)
+  rappelEnvoye   Boolean          @default(false)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 

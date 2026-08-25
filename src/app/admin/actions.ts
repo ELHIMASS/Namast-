@@ -15,6 +15,7 @@ import {
 import {
   notifierDemandeAcceptee,
   notifierDemandeRefusee,
+  notifierMotDePasseOublieAdmin,
   notifierRdvCreeParAdmin,
   notifierRdvDeplace,
   notifierRdvModifie,
@@ -67,6 +68,29 @@ export async function logoutAdminAction() {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
   redirect("/admin/login");
+}
+
+export async function motDePasseOublieAdminAction() {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) {
+    return {
+      ok: false as const,
+      error: "Mot de passe administrateur non configuré sur le serveur.",
+    };
+  }
+
+  const emailEnvoye = await notifierMotDePasseOublieAdmin(adminPassword);
+  if (!emailEnvoye) {
+    return {
+      ok: false as const,
+      error: "Échec de l'envoi de l'e-mail. Veuillez vérifier la clé Brevo.",
+    };
+  }
+
+  return {
+    ok: true as const,
+    message: "Le mot de passe d'accès a été envoyé par e-mail au salon.",
+  };
 }
 
 export async function getDemandesEnAttente() {
@@ -426,4 +450,9 @@ export async function supprimerRendezVousAction(rendezVousId: string) {
   });
   await notifierRdvSupprime(rdv);
   await notifierSalonRdvSupprime(rdv);
+}
+
+export async function envoyerRappelsDemainAction() {
+  const { envoyerRappelsDemain } = await import("@/lib/rappels");
+  return envoyerRappelsDemain();
 }

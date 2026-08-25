@@ -7,7 +7,12 @@ import { estJourAutorisePourPrestations } from "@/lib/reglesCreneaux";
 import { genererCodeUnique } from "@/lib/codeReservation";
 import { calculerTotalAvecOptions } from "@/lib/prestations";
 import { envoyerEmailSalon } from "@/lib/email";
-import { notifierClientDemandeRdv } from "@/lib/notifications";
+import {
+  chargerRendezVousEmail,
+  notifierClientDemandeRdv,
+  notifierRdvConfirmeDirect,
+  notifierSalonRdvAjoute,
+} from "@/lib/notifications";
 import {
   construireDonneesPrestations,
   resoudreLignes,
@@ -205,6 +210,12 @@ export async function creerRendezVousDirectAction({
     },
   });
 
+  const rdvFull = await chargerRendezVousEmail(rendezVous.id);
+  if (rdvFull) {
+    await notifierRdvConfirmeDirect(rdvFull);
+    await notifierSalonRdvAjoute(rdvFull);
+  }
+
   return { ok: true as const, rendezVousId: rendezVous.id, code: rendezVous.code };
 }
 
@@ -310,6 +321,12 @@ export async function creerReservationGroupeeAction({
       debutISO: c.debut.toISOString(),
       finISO: c.fin.toISOString(),
     });
+
+    const rdvFull = await chargerRendezVousEmail(rdv.id);
+    if (rdvFull) {
+      await notifierRdvConfirmeDirect(rdvFull);
+      await notifierSalonRdvAjoute(rdvFull);
+    }
   }
 
   return { ok: true as const, groupeId, rendezVous: crees };

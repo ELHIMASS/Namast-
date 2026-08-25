@@ -13,7 +13,11 @@ import {
 import { LABEL_LONGUEUR } from "@/lib/categories";
 import { WeekCalendar, type RendezVousCalendrier } from "@/components/WeekCalendar";
 import { RendezVousModal } from "./RendezVousModal";
-import { accepterDemandeAction, refuserDemandeAction } from "./actions";
+import {
+  accepterDemandeAction,
+  envoyerRappelsDemainAction,
+  refuserDemandeAction,
+} from "./actions";
 
 type RendezVous = {
   id: string;
@@ -82,6 +86,9 @@ export function AdminDashboard({
   const [traitementId, setTraitementId] = useState<string | null>(null);
   const [modal, setModal] = useState<"creer" | RendezVousCalendrier | null>(null);
 
+  const [isPendingRappels, startTransitionRappels] = useTransition();
+  const [rappelMsg, setRappelMsg] = useState<string | null>(null);
+
   const demandes = demandesInitiales.filter((r) => !traitees.has(r.id));
   const confirmes = confirmesInitiaux;
 
@@ -107,6 +114,14 @@ export function AdminDashboard({
       setTraitees((s) => new Set(s).add(id));
       setTraitementId(null);
       router.refresh();
+    });
+  }
+
+  function envoyerRappels() {
+    setRappelMsg(null);
+    startTransitionRappels(async () => {
+      const res = await envoyerRappelsDemainAction();
+      setRappelMsg(`${res.envoyes} rappel(s) envoyé(s) pour demain`);
     });
   }
 
@@ -148,7 +163,7 @@ export function AdminDashboard({
       </nav>
 
       <div className="space-y-16 pt-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <a
           href="/admin/clients"
           className="glass rounded-2xl border border-white/50 p-6 text-center transition-all duration-300 hover:border-primary/50 hover:scale-105"
@@ -181,6 +196,23 @@ export function AdminDashboard({
           <p className="font-serif text-lg text-foreground">Congés &amp; fermetures</p>
           <p className="text-sm text-muted-foreground mt-2">Gérer les jours fermés</p>
         </a>
+        <button
+          type="button"
+          disabled={isPendingRappels}
+          onClick={envoyerRappels}
+          className="glass rounded-2xl border border-white/50 p-6 text-center transition-all duration-300 hover:border-primary/50 hover:scale-105 disabled:opacity-60"
+        >
+          <p className="text-3xl font-bold text-primary mb-2">📩</p>
+          <p className="font-serif text-lg text-foreground">Rappels J-1</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            {isPendingRappels ? "Envoi..." : "Rappels pour demain"}
+          </p>
+          {rappelMsg && (
+            <p className="text-xs font-semibold text-emerald-800 mt-2 bg-emerald-50 py-1 px-2 rounded">
+              {rappelMsg}
+            </p>
+          )}
+        </button>
       </div>
 
       <section>

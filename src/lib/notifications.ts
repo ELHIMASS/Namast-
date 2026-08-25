@@ -292,3 +292,81 @@ export async function notifierSalonRdvSupprime(rdv: RendezVousEmail) {
     contact: `Tél: ${rdv.client.telephone || rdv.client.email}`,
   });
 }
+
+export async function notifierMotDePasseOublieAdmin(motDePasse: string) {
+  return envoyerEmailAuSalon({
+    subject: "Récupération de votre mot de passe Administrateur - Namasté",
+    action: "SÉCURITÉ",
+    titre: "Mot de passe d'administration",
+    intro: "Une demande de récupération de mot de passe a été effectuée depuis la page de connexion administrateur.",
+    details: `
+      <div style="background: #ffffff; padding: 16px; border-radius: 6px; border: 1px solid #e0d5d0; margin: 16px 0;">
+        <p style="margin: 0 0 8px 0; font-size: 14px; color: #555;">Votre mot de passe d'accès administrateur est :</p>
+        <p style="margin: 0; font-size: 24px; font-weight: bold; color: #b58348; letter-spacing: 1px; font-family: monospace;">${motDePasse}</p>
+      </div>
+      <p style="font-size: 13px; color: #666;">Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail.</p>
+    `,
+    contact: "Administration Namasté",
+  });
+}
+
+export async function chargerRendezVousEmail(id: string): Promise<RendezVousEmail | null> {
+  return prisma.rendezVous.findUnique({
+    where: { id },
+    include: {
+      client: true,
+      prestations: {
+        include: {
+          prestation: { include: { variantesLongueur: true } },
+          options: { include: { option: { include: { variantesLongueur: true } } } },
+        },
+      },
+    },
+  });
+}
+
+export async function notifierRdvConfirmeDirect(rdv: RendezVousEmail & { code?: string | null }) {
+  const codeHtml = rdv.code
+    ? `<div style="background: #f5f1ed; border-left: 4px solid #d4a574; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+        <p style="margin: 0; font-size: 13px; color: #666;">Code de gestion de votre rendez-vous :</p>
+        <p style="margin: 4px 0 0 0; font-size: 20px; font-weight: bold; color: #b58348; letter-spacing: 1px;">${rdv.code}</p>
+        <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">Conservez ce code pour modifier ou annuler votre créneau depuis votre espace cliente.</p>
+       </div>`
+    : "";
+
+  await envoyerEmail({
+    to: rdv.client.email,
+    subject: `✓ Confirmation de votre rendez-vous chez Namasté${rdv.code ? ` (${rdv.code})` : ""}`,
+    html: gabarit(
+      "Rendez-vous confirmé !",
+      `Bonjour <strong>${rdv.client.prenom}</strong>, votre rendez-vous chez Namasté a été confirmé avec succès.`,
+      `
+        ${await detailsRdvHtml(rdv)}
+        ${codeHtml}
+      `
+    ),
+  });
+}
+
+export async function notifierRappelRdvJMoins1(rdv: RendezVousEmail & { code?: string | null }) {
+  const codeHtml = rdv.code
+    ? `<p style="font-size: 13px; color: #666; margin-top: 12px;">Votre code de réservation : <strong>${rdv.code}</strong></p>`
+    : "";
+
+  await envoyerEmail({
+    to: rdv.client.email,
+    subject: "🌿 Rappel : Votre rendez-vous demain chez Namasté",
+    html: gabarit(
+      "Rappel de votre rendez-vous demain",
+      `Bonjour <strong>${rdv.client.prenom}</strong>, nous vous rappelons votre rendez-vous prévu <strong>demain</strong> au salon Namasté.`,
+      `
+        <div style="background: #fff9f5; border: 1px solid #f0e2d5; padding: 16px; border-radius: 8px; margin: 16px 0;">
+          <h3 style="margin: 0 0 8px 0; color: #b58348; font-size: 16px;">Détails de votre rendez-vous</h3>
+          ${await detailsRdvHtml(rdv)}
+          ${codeHtml}
+        </div>
+        <p style="font-size: 14px; color: #444;">En cas d'empêchement de dernière minute, merci de nous contacter au <strong>06 51 41 28 33</strong>.</p>
+      `
+    ),
+  });
+}
