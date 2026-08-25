@@ -60,9 +60,13 @@ services:
       migrate:
         # Le site ne démarre qu'une fois les migrations passées.
         condition: service_completed_successfully
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql://namaste:${POSTGRES_PASSWORD}@db:5432/namaste?schema=public
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?mot de passe de l espace pro manquant dans .env}
+      BREVO_API_KEY: ${BREVO_API_KEY}
+      CALENDRIER_JETON: ${CALENDRIER_JETON}
       TZ: Europe/Paris
     ports:
       # Exposé sur le NAS uniquement ; c'est le reverse proxy du NAS qui
