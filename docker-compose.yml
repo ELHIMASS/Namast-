@@ -49,6 +49,7 @@ services:
     restart: "no"
 
   web:
+    container_name: namastecoiffure
     build:
       context: .
       target: runner
