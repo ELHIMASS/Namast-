@@ -110,7 +110,7 @@ export async function getDemandesEnAttente() {
 export async function getRendezVousConfirmes() {
   const debut = new Date(new Date().setHours(0, 0, 0, 0));
   const fin = new Date(debut);
-  fin.setDate(fin.getDate() + 90);
+  fin.setDate(fin.getDate() + 365);
 
   return prisma.rendezVous.findMany({
     where: { statut: "CONFIRME", dateDebut: { gte: debut, lte: fin } },

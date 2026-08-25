@@ -271,7 +271,7 @@ export function AncienneClienteWizard({
   }));
 
   const jours = useMemo(() => {
-    const base = prochainsJours(90).filter(estJourOuvert);
+    const base = prochainsJours(365).filter(estJourOuvert);
     if (prestationsFiltre.length === 0) return base;
     return base.filter((date) => estJourAutorisePourPrestations(date, prestationsFiltre));
   }, [prestationsFiltre]);

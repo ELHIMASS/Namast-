@@ -118,7 +118,7 @@ export function RendezVousModal({
 
   // Aucun filtre de jour dans l'espace pro : dimanche, mardi et jours de
   // fermeture sont proposés comme les autres.
-  const jours = useMemo(() => prochainsJours(90), []);
+  const jours = useMemo(() => prochainsJours(365), []);
 
   function chargerCreneaux(date: Date) {
     startTransition(async () => {
