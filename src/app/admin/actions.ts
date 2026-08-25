@@ -37,17 +37,23 @@ const INCLUDE_COMPLET = {
   },
 } as const;
 
+function getExpectedPassword() {
+  const envPwd = process.env.ADMIN_PASSWORD || "";
+  return envPwd.replace(/^["']|["']$/g, "").trim();
+}
+
 function normaliserTelephone(telephone: string): string {
   return telephone.replace(/[\s.\-]/g, "");
 }
 
 export async function loginAdminAction(motDePasse: string) {
-  if (motDePasse !== process.env.ADMIN_PASSWORD) {
+  const expected = getExpectedPassword();
+  if (motDePasse.trim() !== expected) {
     return { ok: false as const, error: "Mot de passe incorrect." };
   }
 
   const cookieStore = await cookies();
-  cookieStore.set(COOKIE_NAME, motDePasse, {
+  cookieStore.set(COOKIE_NAME, expected, {
     httpOnly: true,
     sameSite: "lax",
     // Cookie restreint à HTTPS en production. COOKIE_NON_SECURISE=1 lève
@@ -71,7 +77,7 @@ export async function logoutAdminAction() {
 }
 
 export async function motDePasseOublieAdminAction() {
-  const adminPassword = process.env.ADMIN_PASSWORD;
+  const adminPassword = getExpectedPassword();
   if (!adminPassword) {
     return {
       ok: false as const,
