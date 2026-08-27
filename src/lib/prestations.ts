@@ -8,15 +8,12 @@ export type PrestationCalcul = {
 export function calculerTotal(prestations: PrestationCalcul[]) {
   const dureePrestations = prestations.reduce((s, p) => s + p.dureeMinutes, 0);
   const prixTotalCentimes = prestations.reduce((s, p) => s + p.prixCentimes, 0);
-  const tempsNettoyage = prestations.length
-    ? Math.max(...prestations.map((p) => p.tempsNettoyageMinutes))
-    : 0;
 
   return {
     dureePrestations,
-    dureeTotaleAvecNettoyage: dureePrestations + tempsNettoyage,
+    dureeTotaleAvecNettoyage: dureePrestations,
     prixTotalCentimes,
-    tempsNettoyage,
+    tempsNettoyage: 0,
   };
 }
 
@@ -147,13 +144,11 @@ export function calculerTotalAvecOptions(
 ) {
   let prixTotalCentimes = 0;
   let dureePrestations = 0;
-  let tempsNettoyage = 0;
 
   for (const ligne of lignes) {
     const base = resoudrePrestation(ligne.prestation, ligne.longueur, ligne.densite, matriceLissage);
     prixTotalCentimes += base.prixCentimes - remiseFinition(ligne);
     dureePrestations += base.dureeMinutes;
-    tempsNettoyage = Math.max(tempsNettoyage, ligne.prestation.tempsNettoyageMinutes);
 
     for (const option of ligne.options) {
       const resolu = resoudreOption(option, ligne.longueur);
@@ -164,9 +159,9 @@ export function calculerTotalAvecOptions(
 
   return {
     dureePrestations,
-    dureeTotaleAvecNettoyage: lignes.length ? dureePrestations + tempsNettoyage : 0,
+    dureeTotaleAvecNettoyage: dureePrestations,
     prixTotalCentimes,
-    tempsNettoyage,
+    tempsNettoyage: 0,
   };
 }
 

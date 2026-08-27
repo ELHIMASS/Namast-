@@ -80,12 +80,6 @@ export function estHoraireAutorisePourPrestations(
   return true;
 }
 
-/**
- * Temps de mise en place nécessaire avant le rendez-vous (15 min pour Head Spa / Massage).
- */
-export function getTempsMiseEnPlaceMinutes(prestations: PrestationFiltre[]): number {
-  const aHeadSpaOuMassage = prestations.some(
-    (p) => p.categorie === "HEAD_SPA" || p.categorie === "MASSAGE"
-  );
-  return aHeadSpaOuMassage ? 15 : 0;
+export function getTempsMiseEnPlaceMinutes(_prestations: PrestationFiltre[]): number {
+  return 0;
 }
