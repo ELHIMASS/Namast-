@@ -27,13 +27,12 @@ export function CommandeBelma() {
   return (
     <div className="glass rounded-3xl border border-white/50 p-6 text-center sm:p-10 overflow-hidden relative">
       <div className="grid md:grid-cols-12 gap-8 items-center">
-        {/* Photo des produits Belmakosmetik */}
-        <div className="md:col-span-5 relative h-64 sm:h-72 w-full rounded-2xl overflow-hidden shadow-md border border-white/60">
-          <Image
+        {/* Photo des produits Belmakosmetik dans sa taille et proportions réelles */}
+        <div className="md:col-span-5 flex items-center justify-center p-2">
+          <img
             src="/images/belma.jpeg"
             alt="Produits Belmakosmetik"
-            fill
-            className="object-cover transition-transform duration-500 hover:scale-105"
+            className="w-full h-auto max-h-[360px] object-contain rounded-2xl shadow-md border border-white/60 transition-transform duration-500 hover:scale-105"
           />
         </div>
 
