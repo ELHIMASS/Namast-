@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { VideoCarousel } from "@/components/VideoCarousel";
 import { BandeAmbiance } from "@/components/BandeAmbiance";
 import { Galerie } from "@/components/Galerie";
+import { GoogleReviews } from "@/components/GoogleReviews";
 import { CommandeBelma } from "@/components/CommandeBelma";
 import { SeparateurCiseau } from "@/components/Ciseau";
 import { Repliable } from "@/components/Repliable";
@@ -492,6 +493,8 @@ export default async function Home() {
         <Reveal>
           <Galerie />
         </Reveal>
+
+        <GoogleReviews />
 
         <Reveal className="mx-auto max-w-5xl px-6 pb-24">
           <CommandeBelma />
