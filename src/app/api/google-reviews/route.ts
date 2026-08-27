@@ -12,15 +12,47 @@ export async function GET() {
   }
 
   try {
-    // 1. Essayer l'API Places Legacy
+    // 1. Essayer d'abord la nouvelle Places API (v1) qui est activée sur votre clé
+    const newApiUrl = `https://places.googleapis.com/v1/places/${placeId}?languageCode=fr`;
+    const newRes = await fetch(newApiUrl, {
+      headers: {
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": "id,displayName,rating,userRatingCount,reviews,googleMapsUri",
+      },
+      cache: "no-store",
+    });
+
+    if (newRes.ok) {
+      const newData = await newRes.json();
+      if (newData.rating && newData.reviews && newData.reviews.length > 0) {
+        const formattedReviews = newData.reviews.map((rev: any, idx: number) => ({
+          id: rev.name || `rev-new-${idx}`,
+          author_name: rev.authorAttribution?.displayName || "Client Google",
+          profile_photo_url: rev.authorAttribution?.photoUri,
+          rating: rev.rating || 5,
+          relative_time_description: rev.relativePublishTimeDescription || "Récemment",
+          text: typeof rev.text === "object" ? (rev.text?.text || "") : (rev.text || ""),
+        })).filter((rev: any) => rev.text.trim().length > 0);
+
+        return NextResponse.json({
+          configured: true,
+          rating: newData.rating,
+          user_ratings_total: newData.userRatingCount,
+          url: newData.googleMapsUri,
+          reviews: formattedReviews,
+        });
+      }
+    }
+
+    // 2. Repli sur l'API Places Legacy si la première méthode ne renvoie rien
     const legacyUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,rating,user_ratings_total,reviews,url&language=fr&key=${apiKey}`;
-    const legacyRes = await fetch(legacyUrl, { next: { revalidate: 86400 } });
+    const legacyRes = await fetch(legacyUrl, { cache: "no-store" });
 
     if (legacyRes.ok) {
       const legacyData = await legacyRes.json();
-      if (legacyData.status === "OK" && legacyData.result) {
+      if (legacyData.status === "OK" && legacyData.result && legacyData.result.reviews) {
         const result = legacyData.result;
-        const formattedReviews = (result.reviews || []).map((rev: any, idx: number) => ({
+        const formattedReviews = result.reviews.map((rev: any, idx: number) => ({
           id: rev.time ? String(rev.time) : `rev-${idx}`,
           author_name: rev.author_name,
           profile_photo_url: rev.profile_photo_url,
@@ -40,40 +72,8 @@ export async function GET() {
       }
     }
 
-    // 2. Essayer la nouvelle Places API (v1)
-    const newApiUrl = `https://places.googleapis.com/v1/places/${placeId}?languageCode=fr`;
-    const newRes = await fetch(newApiUrl, {
-      headers: {
-        "X-Goog-Api-Key": apiKey,
-        "X-Goog-FieldMask": "id,displayName,rating,userRatingCount,reviews,googleMapsUri",
-      },
-      next: { revalidate: 86400 },
-    });
-
-    if (newRes.ok) {
-      const newData = await newRes.json();
-      if (newData.rating) {
-        const formattedReviews = (newData.reviews || []).map((rev: any, idx: number) => ({
-          id: rev.name || `rev-new-${idx}`,
-          author_name: rev.authorAttribution?.displayName || "Client Google",
-          profile_photo_url: rev.authorAttribution?.photoUri,
-          rating: rev.rating || 5,
-          relative_time_description: rev.relativePublishTimeDescription || "Récemment",
-          text: rev.text?.text || "",
-        }));
-
-        return NextResponse.json({
-          configured: true,
-          rating: newData.rating,
-          user_ratings_total: newData.userRatingCount,
-          url: newData.googleMapsUri,
-          reviews: formattedReviews,
-        });
-      }
-    }
-
     return NextResponse.json(
-      { configured: false, error: "L'API Places n'est pas encore activée sur Google Cloud." },
+      { configured: false, error: "Impossible de charger les avis." },
       { status: 200 }
     );
   } catch (error: any) {

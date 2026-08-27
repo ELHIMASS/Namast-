@@ -14,49 +14,42 @@ export interface GoogleReview {
   time?: number;
 }
 
-// Avis de démonstration authentiques pour Namasté au cas où l'API n'est pas encore activée
+// Vrais avis Google de Cécile Bernillon Namasté
 const DEFAULT_REVIEWS: GoogleReview[] = [
   {
     id: "1",
-    author_name: "Élodie Martin",
+    author_name: "Marie Stragier",
     rating: 5,
-    relative_time_description: "Il y a 2 semaines",
-    text: "Un moment de détente incroyable chez Namasté ! L'accueil est chaleureux et le soin sur-mesure a sublimé mes cheveux. Je recommande les yeux fermés.",
+    relative_time_description: "il y a un an",
+    text: "Une expérience exceptionnelle ! Cécile est douce, à l’écoute et d’une grande patience, ce qui rend le moment particulièrement agréable. Le résultat est impeccable. Je n’ai jamais vu un tel rapport qualité/prix à ce niveau de prestation.",
   },
   {
     id: "2",
-    author_name: "Sophie Bernard",
+    author_name: "Milie Pdlm",
     rating: 5,
-    relative_time_description: "Il y a 1 mois",
-    text: "Salon magnifique, ambiance zen et cocooning. On prend vraiment le temps de vous écouter et de conseiller le meilleur soin. Une pépite !",
+    relative_time_description: "il y a un an",
+    text: "J'y suis allée l'esprit lourd mais confiant et effectivement j'ai vraiment lâcher prise. Cécile est exceptionnelle, je ressors beaucoup plus légère et détendue. Je me suis même endormie... Merci pour ton professionnalisme !",
   },
   {
     id: "3",
-    author_name: "Camille Dubois",
+    author_name: "Solenne Ranouil",
     rating: 5,
-    relative_time_description: "Il y a 1 mois",
-    text: "Prestation de coiffure et soin d'une grande qualité. Le cadre est très apaisant, on se sent choyée du début à la fin.",
+    relative_time_description: "il y a 4 ans",
+    text: "On est accueilli dans un écrin de bien être. J'ai adoré cette expérience car elle est personnalisée. Cécile est disponible pour nous, nos besoins et elle prend le temps ! Je suis sortie ravie de ma coupe et de mon soin.",
   },
   {
     id: "4",
-    author_name: "Audrey Laurent",
+    author_name: "Lydie L",
     rating: 5,
-    relative_time_description: "Il y a 2 mois",
-    text: "Je suis ravie de mon passage chez Namasté. Résultat superbe et conseils très précieux pour l'entretien au quotidien.",
+    relative_time_description: "il y a 3 ans",
+    text: "Cécile m'a orientée vers un traitement extraordinaire afin d'hydrater mes cheveux. Maintenant, je ne galère plus à les lisser ni à les coiffer... Et à chaque fois, c’est un agréable moment passé aux côtés de Cécile.",
   },
   {
     id: "5",
-    author_name: "Nathalie Perret",
+    author_name: "Bruno KARKOWSKI",
     rating: 5,
-    relative_time_description: "Il y a 3 mois",
-    text: "Cécile est une professionnelle douce et à l'écoute. Le lissage et les soins sont d'une qualité remarquable. Un pur bonheur !",
-  },
-  {
-    id: "6",
-    author_name: "Marine Fournier",
-    rating: 5,
-    relative_time_description: "Il y a 3 mois",
-    text: "Une bulle de sérénité absolue. Cadre magnifique et prestation irréprochable. Mes cheveux n'ont jamais été aussi beaux et brillants.",
+    relative_time_description: "il y a 6 ans",
+    text: "Très professionnelle ! Nous avons fait confiance à Cécile et nous ne regrettons pas du tout notre choix. Encore merci !",
   },
 ];
 
@@ -69,17 +62,15 @@ export function GoogleReviews() {
   const [googleMapsUrl, setGoogleMapsUrl] = useState<string>(
     "https://www.google.com/maps/place/?q=place_id:ChIJX-qK54DP9EcRHVjcWd-PkNA"
   );
-  // Gestion de l'extension de chaque avis par ID
   const [expandedReviews, setExpandedReviews] = useState<Record<string, boolean>>({});
 
-  // Mélange aléatoire et sélection de 4 avis
   const selectionnerAvisAleatoires = (liste: GoogleReview[]) => {
     const melange = [...liste].sort(() => 0.5 - Math.random());
     return melange.slice(0, 4);
   };
 
   useEffect(() => {
-    // Initialisation au hasard des 4 avis
+    // Initialisation au hasard des 4 avis réels
     setReviews(selectionnerAvisAleatoires(DEFAULT_REVIEWS));
 
     async function fetchReviews() {
@@ -112,7 +103,6 @@ export function GoogleReviews() {
     <section className="relative mx-auto max-w-6xl px-6 py-24">
       <Reveal className="flex flex-col items-center text-center mb-16">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#7D522A]/10 text-[#7D522A] text-xs uppercase tracking-[0.25em] font-semibold mb-4">
-          {/* Logo Google SVG */}
           <svg className="w-4 h-4" viewBox="0 0 24 24">
             <path
               fill="#4285F4"
@@ -139,7 +129,6 @@ export function GoogleReviews() {
         </h2>
         <SeparateurCiseau className="mt-2 mb-6" />
 
-        {/* Note globale et étoiles */}
         <div className="flex flex-wrap items-center justify-center gap-4 bg-white/40 backdrop-blur-md rounded-2xl border border-white/60 px-6 py-4 shadow-sm">
           <div className="flex items-center gap-2">
             <span className="font-serif text-3xl font-bold text-[#3A2411]">{rating.toFixed(1)}</span>
@@ -154,7 +143,7 @@ export function GoogleReviews() {
         </div>
       </Reveal>
 
-      {/* Cartes des 4 avis sélectionnés au hasard */}
+      {/* Cartes des 4 avis sélectionnées au hasard */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {reviews.map((review, idx) => {
           const estLong = review.text.length > SEUIL_CARACTERES;
@@ -168,7 +157,6 @@ export function GoogleReviews() {
             <Reveal key={review.id || idx} delay={idx * 80}>
               <div className="glass rounded-3xl border border-white/50 p-6 flex flex-col justify-between h-full card-hover hover:border-primary/40 transition-all duration-300 shadow-sm hover:shadow-md">
                 <div>
-                  {/* En-tête avec uniquement l'initiale de l'utilisateur */}
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#989077] to-[#7D522A] text-white flex items-center justify-center font-serif font-bold text-lg shadow-sm shrink-0">
                       {initiale}
@@ -187,7 +175,6 @@ export function GoogleReviews() {
                     </div>
                   </div>
 
-                  {/* Texte de l'avis avec système "Voir plus" */}
                   <p className="text-sm text-muted-foreground leading-relaxed italic">
                     "{texteAffiche}"
                   </p>
@@ -202,11 +189,10 @@ export function GoogleReviews() {
                   )}
                 </div>
 
-                {/* Badge Google d'authenticité */}
                 <div className="mt-6 pt-4 border-t border-border/20 flex items-center justify-between text-xs text-muted-foreground/80">
                   <span className="flex items-center gap-1 text-[0.75rem] text-[#7D522A] font-medium">
                     <svg className="w-3.5 h-3.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                     Avis Google vérifié
                   </span>
@@ -217,7 +203,6 @@ export function GoogleReviews() {
         })}
       </div>
 
-      {/* CTA Google Maps */}
       <Reveal className="mt-12 flex flex-col sm:flex-row gap-4 justify-center items-center">
         <a
           href={googleMapsUrl}
