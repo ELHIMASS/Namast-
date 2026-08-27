@@ -3,7 +3,12 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { getCatalogue } from "@/lib/data";
 import { AdminDashboard } from "./AdminDashboard";
-import { getDemandesEnAttente, getRendezVousConfirmes, logoutAdminAction } from "./actions";
+import {
+  getDemandesEnAttente,
+  getRendezVousConfirmes,
+  getTousRendezVousPourStats,
+  logoutAdminAction,
+} from "./actions";
 
 // Toujours régénérée au moment de la requête : sans ça, Netlify servirait
 // une page figée avec les données du dernier build (les nouvelles demandes
@@ -11,11 +16,13 @@ import { getDemandesEnAttente, getRendezVousConfirmes, logoutAdminAction } from 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  const [demandes, confirmes, { prestations, options, lissageMatrice }] = await Promise.all([
-    getDemandesEnAttente(),
-    getRendezVousConfirmes(),
-    getCatalogue(),
-  ]);
+  const [demandes, confirmes, tousRdvStats, { prestations, options, lissageMatrice }] =
+    await Promise.all([
+      getDemandesEnAttente(),
+      getRendezVousConfirmes(),
+      getTousRendezVousPourStats(),
+      getCatalogue(),
+    ]);
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -52,6 +59,7 @@ export default async function AdminPage() {
           <AdminDashboard
             demandesInitiales={demandes}
             confirmesInitiaux={confirmes}
+            tousRdvStats={tousRdvStats}
             prestations={prestations}
             options={options}
             lissageMatrice={lissageMatrice}

@@ -119,6 +119,20 @@ export async function getRendezVousConfirmes() {
   });
 }
 
+export async function getTousRendezVousPourStats() {
+  const debutAnnee = new Date(new Date().getFullYear(), 0, 1);
+  const finAnnee = new Date(new Date().getFullYear() + 1, 0, 1);
+
+  return prisma.rendezVous.findMany({
+    where: {
+      statut: { in: ["CONFIRME", "TERMINE"] },
+      dateDebut: { gte: debutAnnee, lt: finAnnee },
+    },
+    include: INCLUDE_COMPLET,
+    orderBy: { dateDebut: "asc" },
+  });
+}
+
 /**
  * Un numéro peut désormais correspondre à plusieurs fiches (proches partageant
  * une ligne fixe), d'où un findFirst et non un findUnique.

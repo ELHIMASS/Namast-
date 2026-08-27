@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   calculerTotalAvecOptions,
@@ -70,12 +70,14 @@ function listePrestations(prestations: RendezVous["prestations"]): string {
 export function AdminDashboard({
   demandesInitiales,
   confirmesInitiaux,
+  tousRdvStats = [],
   prestations,
   options,
   lissageMatrice,
 }: {
   demandesInitiales: RendezVous[];
   confirmesInitiaux: RendezVous[];
+  tousRdvStats?: RendezVous[];
   prestations: PrestationAvecVariantes[];
   options: OptionAvecVariantes[];
   lissageMatrice: LissageTarifSimple[];
@@ -91,6 +93,40 @@ export function AdminDashboard({
 
   const demandes = demandesInitiales.filter((r) => !traitees.has(r.id));
   const confirmes = confirmesInitiaux;
+
+  // Calcul du Chiffre d'Affaires et des RDV par mois
+  const statsMensuelles = useMemo(() => {
+    const map = new Map<string, { label: string; count: number; totalCentimes: number }>();
+
+    for (const rdv of tousRdvStats) {
+      const d = new Date(rdv.dateDebut);
+      const yearMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+      const labelCapitalise = label.charAt(0).toUpperCase() + label.slice(1);
+
+      const { prixTotalCentimes } = calculerTotalAvecOptions(versLignes(rdv.prestations), lissageMatrice);
+
+      const existing = map.get(yearMonth) ?? { label: labelCapitalise, count: 0, totalCentimes: 0 };
+      existing.count += 1;
+      existing.totalCentimes += prixTotalCentimes;
+      map.set(yearMonth, existing);
+    }
+
+    return Array.from(map.entries())
+      .map(([key, data]) => ({ key, ...data }))
+      .sort((a, b) => b.key.localeCompare(a.key));
+  }, [tousRdvStats, lissageMatrice]);
+
+  const maintenant = new Date();
+  const moisEnCoursKey = `${maintenant.getFullYear()}-${String(maintenant.getMonth() + 1).padStart(2, "0")}`;
+  const statsMoisEnCours = statsMensuelles.find((s: { key: string }) => s.key === moisEnCoursKey) ?? {
+    label: maintenant.toLocaleDateString("fr-FR", { month: "long", year: "numeric" }),
+    count: 0,
+    totalCentimes: 0,
+  };
+
+  const totalAnnuelCentimes = statsMensuelles.reduce((acc: number, item: { totalCentimes: number }) => acc + item.totalCentimes, 0);
+  const totalAnnuelRdv = statsMensuelles.reduce((acc: number, item: { count: number }) => acc + item.count, 0);
 
   function fermerEtRafraichir() {
     setModal(null);
@@ -162,7 +198,47 @@ export function AdminDashboard({
         </div>
       </nav>
 
-      <div className="space-y-16 pt-6">
+      <div className="space-y-12 pt-6">
+      {/* SYNTHÈSE MOIS EN COURS & ACTIVITÉ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="glass rounded-2xl border border-primary/20 bg-primary/5 p-6 flex flex-col justify-between">
+          <div>
+            <span className="text-xs uppercase tracking-widest text-primary font-semibold">
+              Ce mois-ci ({statsMoisEnCours.label})
+            </span>
+            <p className="text-3xl font-bold font-serif text-foreground mt-2">
+              {formatPrix(statsMoisEnCours.totalCentimes)}
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">Chiffre d'affaires estimé</p>
+        </div>
+
+        <div className="glass rounded-2xl border border-primary/20 bg-primary/5 p-6 flex flex-col justify-between">
+          <div>
+            <span className="text-xs uppercase tracking-widest text-primary font-semibold">
+              Rendez-vous
+            </span>
+            <p className="text-3xl font-bold font-serif text-foreground mt-2">
+              {statsMoisEnCours.count} <span className="text-sm font-normal text-muted-foreground">RDV</span>
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">Confirmés / Honorés ce mois-ci</p>
+        </div>
+
+        <div className="glass rounded-2xl border border-white/50 p-6 flex flex-col justify-between">
+          <div>
+            <span className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+              Total Annuel ({maintenant.getFullYear()})
+            </span>
+            <p className="text-2xl font-bold font-serif text-foreground mt-2">
+              {formatPrix(totalAnnuelCentimes)}
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">{totalAnnuelRdv} rendez-vous au total cette année</p>
+        </div>
+      </div>
+
+      {/* BOUTONS ACCÈS RAPIDE */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <a
           href="/admin/clients"
@@ -214,6 +290,53 @@ export function AdminDashboard({
           )}
         </button>
       </div>
+
+      {/* TABLEAU RÉCAPITULATIF MENSUEL (CHIFFRE D'AFFAIRES & RDV) */}
+      <section>
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="font-serif text-2xl text-foreground">
+            Bilan Financier &amp; Rendez-vous Mensuel ({maintenant.getFullYear()})
+          </h2>
+        </div>
+
+        {statsMensuelles.length === 0 ? (
+          <p className="glass rounded-2xl border border-white/50 p-6 text-sm text-muted-foreground">
+            Aucune donnée de rendez-vous enregistrée pour le moment.
+          </p>
+        ) : (
+          <div className="glass rounded-2xl border border-white/50 overflow-hidden shadow-sm">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-primary/10 text-xs font-semibold uppercase text-foreground">
+                <tr>
+                  <th className="px-6 py-4">Mois</th>
+                  <th className="px-6 py-4 text-center">Nombre de Rendez-vous</th>
+                  <th className="px-6 py-4 text-right">Chiffre d'Affaires</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {statsMensuelles.map((stat) => (
+                  <tr key={stat.key} className="hover:bg-primary/5 transition-colors">
+                    <td className="px-6 py-4 font-medium text-foreground">{stat.label}</td>
+                    <td className="px-6 py-4 text-center font-semibold text-primary">{stat.count} RDV</td>
+                    <td className="px-6 py-4 text-right font-bold text-foreground">
+                      {formatPrix(stat.totalCentimes)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-primary/10 font-bold text-foreground">
+                <tr>
+                  <td className="px-6 py-4">Total Annuel</td>
+                  <td className="px-6 py-4 text-center text-primary">{totalAnnuelRdv} RDV</td>
+                  <td className="px-6 py-4 text-right text-lg text-primary">
+                    {formatPrix(totalAnnuelCentimes)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+      </section>
 
       <section>
         <div className="mb-6 flex items-center justify-between">
