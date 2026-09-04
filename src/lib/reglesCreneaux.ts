@@ -60,23 +60,6 @@ export function estHoraireAutorisePourPrestations(
   // Samedi : Privilège totalement interdit
   if (day === 6) return false;
 
-  // Jeudi (4) et Vendredi (5) :
-  // Privilège autorisé de 09h00 à 11h00 et de 16h00 à la fin de journée.
-  // Interdit entre 11h00 et 16h00.
-  if (day === 4 || day === 5) {
-    const minutesDebut = dateDebut.getHours() * 60 + dateDebut.getMinutes();
-    const minutesFin = dateFin.getHours() * 60 + dateFin.getMinutes();
-
-    const min11h = 11 * 60; // 660
-    const min16h = 16 * 60; // 960
-
-    // Si le créneau chevauche la période restreinte [11h00, 16h00[
-    const chevaucheIntervalleInterdit = minutesDebut < min16h && minutesFin > min11h;
-    if (chevaucheIntervalleInterdit) {
-      return false;
-    }
-  }
-
   return true;
 }
 
