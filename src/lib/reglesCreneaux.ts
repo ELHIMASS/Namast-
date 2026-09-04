@@ -35,11 +35,6 @@ export function estJourAutorisePourPrestations(date: Date, prestations: Prestati
     return false;
   }
 
-  // 4. Samedi : Privilège interdit
-  if (day === 6 && contientPrivilege) {
-    return false;
-  }
-
   return true;
 }
 
@@ -51,15 +46,6 @@ export function estHoraireAutorisePourPrestations(
   dateFin: Date,
   prestations: PrestationFiltre[]
 ): boolean {
-  const day = dateDebut.getDay();
-  const contientPrivilege = prestations.some((p) => p.formule === "PRIVILEGE");
-
-  // Si pas de prestation Privilège, pas de restriction d'horaire spécifique
-  if (!contientPrivilege) return true;
-
-  // Samedi : Privilège totalement interdit
-  if (day === 6) return false;
-
   return true;
 }
 
