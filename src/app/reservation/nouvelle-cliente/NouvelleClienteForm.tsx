@@ -85,6 +85,7 @@ export function NouvelleClienteForm({
     prestationId: l.prestation.id,
     longueur: l.longueur,
     densite: l.densite,
+    finition: l.finition,
     optionIds: l.options.map((o) => o.id),
   }));
 

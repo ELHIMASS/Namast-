@@ -9,7 +9,7 @@ const JOURS_AFFICHES = [
   { index: 1, jour: "Lundi", prestations: "Coiffure Privilège & Bien-être" },
   { index: 2, jour: "Mardi" },
   { index: 3, jour: "Mercredi", prestations: "Coiffure Enfants & Homme" },
-  { index: 4, jour: "Jeudi", prestations: "Coiffure Bien-être" },
+  { index: 4, jour: "Jeudi", prestations: "Coiffure Privilège & Bien-être" },
   { index: 5, jour: "Vendredi", prestations: "Coiffure Bien-être" },
   { index: 6, jour: "Samedi", prestations: "Coiffure Privilège & Bien-être" },
 ];
