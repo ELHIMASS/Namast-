@@ -13,6 +13,7 @@ import { LABEL_LONGUEUR } from "@/lib/categories";
 
 type RendezVousEmail = {
   dateDebut: Date;
+  dateFin?: Date | null;
   client: { prenom: string; nom: string; email: string; telephone: string | null };
   prestations: {
     prestation: PrestationAvecVariantes;
@@ -70,12 +71,40 @@ function gabarit(titre: string, intro: string, corpsHtml: string): string {
 }
 
 async function detailsRdvHtml(rdv: RendezVousEmail): Promise<string> {
+  const lissageMatrice = await prisma.lissageTarif.findMany();
+  const { dureeTotaleAvecNettoyage } = calculerTotalAvecOptions(versLignes(rdv), lissageMatrice);
+  const dateDebut = new Date(rdv.dateDebut);
+  const dateFin = rdv.dateFin ? new Date(rdv.dateFin) : new Date(dateDebut.getTime() + dureeTotaleAvecNettoyage * 60000);
+
+  const startISO = dateDebut.toISOString().replace(/-|:|\.\d+/g, "");
+  const endISO = dateFin.toISOString().replace(/-|:|\.\d+/g, "");
+  const titre = encodeURIComponent("Rendez-vous Coiffure & Bien-être - Namasté");
+  const details = encodeURIComponent(`Rendez-vous au salon Namasté.\nPrestations : ${listePrestations(rdv)}\n\nLieu : 6 Impasse des Prunelliers, 69720 Saint-Laurent-de-Mure\nTél : 06 51 41 28 33`);
+  const lieu = encodeURIComponent("6 Impasse des Prunelliers, 69720 Saint-Laurent-de-Mure");
+
+  const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titre}&dates=${startISO}/${endISO}&details=${details}&location=${lieu}`;
+  const outlookUrl = `https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent&subject=${titre}&startdt=${dateDebut.toISOString()}&enddt=${dateFin.toISOString()}&body=${details}&location=${lieu}`;
+
   return `
     <ul>
       <li><strong>Date :</strong> ${formatDateHeure(rdv.dateDebut)}</li>
       <li><strong>Prestations :</strong> ${listePrestations(rdv)}</li>
       <li><strong>Total :</strong> ${await totalPrix(rdv)}</li>
     </ul>
+
+    <div style="margin-top: 20px; padding: 16px; background-color: #f7f4ee; border-radius: 12px; border: 1px solid #e0d5d0; text-align: center;">
+      <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: bold; color: #7D522A; text-transform: uppercase; letter-spacing: 0.5px;">
+        📅 Ajouter à mon agenda
+      </p>
+      <div style="margin-top: 8px;">
+        <a href="${googleUrl}" target="_blank" style="display: inline-block; background-color: #989077; color: #ffffff; padding: 8px 16px; text-decoration: none; border-radius: 20px; font-size: 12px; font-weight: 600; margin: 4px;">
+          Google Agenda
+        </a>
+        <a href="${outlookUrl}" target="_blank" style="display: inline-block; background-color: #7D522A; color: #ffffff; padding: 8px 16px; text-decoration: none; border-radius: 20px; font-size: 12px; font-weight: 600; margin: 4px;">
+          Outlook / Apple / Autre
+        </a>
+      </div>
+    </div>
   `;
 }
 
