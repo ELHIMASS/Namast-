@@ -153,6 +153,21 @@ export async function getCreneauxAction(
   return creneaux.map((d) => d.toISOString());
 }
 
+export async function getCreneauxMultiplesJoursAction(
+  datesISO: string[],
+  lignes: LigneChoisie[],
+  creneauxPanier: CreneauReserve[] = [],
+) {
+  const resultats: Record<string, string[]> = {};
+  await Promise.all(
+    datesISO.map(async (dateISO) => {
+      const creneaux = await creneauxPourLignes(dateISO, lignes, undefined, creneauxPanier);
+      resultats[dateISO] = creneaux.map((d) => d.toISOString());
+    })
+  );
+  return resultats;
+}
+
 /**
  * Durée totale d'un ensemble de lignes, nettoyage compris.
  * Le panier en a besoin côté navigateur pour calculer la fin d'un créneau

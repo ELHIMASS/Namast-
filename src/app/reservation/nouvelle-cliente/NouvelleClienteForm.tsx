@@ -17,7 +17,11 @@ import {
 import { BarreFixeMobile } from "@/components/BarreFixeMobile";
 import { PrestationChooser } from "../PrestationChooser";
 import type { LigneChoisie } from "@/lib/reservationLignes";
-import { creerDemandeNouvelleClienteAction, getCreneauxAction } from "../actions";
+import {
+  creerDemandeNouvelleClienteAction,
+  getCreneauxAction,
+  getCreneauxMultiplesJoursAction,
+} from "../actions";
 
 type Step = "infos" | "prestations" | "creneau" | "envoyee";
 
@@ -62,6 +66,9 @@ export function NouvelleClienteForm({
   const [dateSelectionnee, setDateSelectionnee] = useState<Date | null>(null);
   const [creneaux, setCreneaux] = useState<string[]>([]);
   const [creneauSelectionne, setCreneauSelectionne] = useState<string | null>(null);
+  const [creneauxParJour, setCreneauxParJour] = useState<Record<string, string[]>>({});
+  const [chargementCreneaux, setChargementCreneaux] = useState(false);
+  const [pageJours, setPageJours] = useState(0);
   const [erreur, setErreur] = useState<string | null>(null);
   const [codeRendezVous, setCodeRendezVous] = useState<string | null>(null);
 
@@ -104,32 +111,27 @@ export function NouvelleClienteForm({
     });
   }
 
-  // Pré-sélection automatique du premier jour qui contient réellement des créneaux libres
+  // Chargement automatique des créneaux pour les jours affichés
   useEffect(() => {
-    if (step === "creneau" && !dateSelectionnee && jours.length > 0) {
+    if (step === "creneau" && jours.length > 0) {
       let annule = false;
+      setChargementCreneaux(true);
+      const joursACharger = jours.slice(pageJours * 6, (pageJours + 1) * 6);
       startTransition(async () => {
-        for (const jour of jours) {
-          if (annule) break;
-          const iso = await getCreneauxAction(jour.toISOString(), lignesChoisies);
-          if (iso.length > 0) {
-            if (!annule) {
-              setDateSelectionnee(jour);
-              setCreneaux(iso);
-            }
-            return;
-          }
-        }
-        if (!annule && jours[0]) {
-          setDateSelectionnee(jours[0]);
-          setCreneaux([]);
+        const res = await getCreneauxMultiplesJoursAction(
+          joursACharger.map((j) => j.toISOString()),
+          lignesChoisies,
+        );
+        if (!annule) {
+          setCreneauxParJour((prev) => ({ ...prev, ...res }));
+          setChargementCreneaux(false);
         }
       });
       return () => {
         annule = true;
       };
     }
-  }, [step, dateSelectionnee, jours]);
+  }, [step, jours, pageJours]);
 
   function envoyerDemande() {
     if (!creneauSelectionne) return;
@@ -301,70 +303,110 @@ export function NouvelleClienteForm({
   }
 
   if (step === "creneau") {
+    const joursAffiches = jours.slice(pageJours * 6, (pageJours + 1) * 6);
+
     return (
       <div className="space-y-6">
         <div>
-          <p className="mb-3 text-sm text-muted-foreground">
-            Date souhaitée
+          <h2 className="font-serif text-2xl text-foreground">
+            Choisissez votre créneau horaire
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Sélectionnez directement votre horaire ci-dessous sous le jour de votre choix :
           </p>
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {jours.map((jour) => {
-              const actif = dateSelectionnee?.toDateString() === jour.toDateString();
+        </div>
+
+        {chargementCreneaux && Object.keys(creneauxParJour).length === 0 ? (
+          <div className="py-12 text-center text-sm text-muted-foreground glass rounded-2xl">
+            Chargement des créneaux disponibles…
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {joursAffiches.map((jour) => {
+              const key = jour.toISOString();
+              const creneauxJour = creneauxParJour[key];
+              const estEnChargement = creneauxJour === undefined && chargementCreneaux;
+
               return (
-                <button
-                  key={jour.toISOString()}
-                  type="button"
-                  onClick={() => choisirDate(jour)}
-                  className={`shrink-0 rounded-xl border px-4 py-2 text-sm transition-colors ${
-                    actif
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "glass border-white/50 text-foreground hover:border-primary/40"
-                  }`}
+                <div
+                  key={key}
+                  className="glass rounded-2xl border border-white/60 p-4 flex flex-col items-center shadow-sm hover:border-primary/40 transition-all"
                 >
-                  {jour.toLocaleDateString("fr-FR", {
-                    weekday: "short",
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </button>
+                  <div className="text-center border-b border-border/40 pb-2.5 mb-3 w-full">
+                    <p className="font-serif font-bold text-base text-foreground capitalize">
+                      {jour.toLocaleDateString("fr-FR", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                      })}
+                    </p>
+                  </div>
+
+                  <div className="w-full flex flex-col gap-2">
+                    {estEnChargement ? (
+                      <div className="text-xs text-muted-foreground text-center py-4">
+                        Recherche…
+                      </div>
+                    ) : !creneauxJour || creneauxJour.length === 0 ? (
+                      <div className="text-xs text-muted-foreground italic text-center py-4 bg-muted/20 rounded-xl">
+                        Aucun créneau libre
+                      </div>
+                    ) : (
+                      creneauxJour.map((iso) => {
+                        const actif = creneauSelectionne === iso;
+                        const heure = new Date(iso).toLocaleTimeString("fr-FR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        });
+
+                        return (
+                          <button
+                            key={iso}
+                            type="button"
+                            onClick={() => {
+                              setDateSelectionnee(jour);
+                              setCreneauSelectionne(iso);
+                            }}
+                            className={`w-full rounded-xl py-2.5 px-3 text-xs font-bold transition-all ${
+                              actif
+                                ? "bg-primary text-primary-foreground shadow-md scale-[1.02]"
+                                : "bg-white/50 border border-border/60 text-foreground hover:border-primary hover:bg-primary/10"
+                            }`}
+                          >
+                            {heure}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>
-        </div>
-
-        {dateSelectionnee && (
-          <div>
-            <p className="mb-3 text-sm text-muted-foreground">Horaire souhaité</p>
-            {isPending && <p className="text-sm text-muted-foreground">Chargement…</p>}
-            {!isPending && creneaux.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                Aucun créneau disponible ce jour-là pour cette prestation.
-              </p>
-            )}
-            <div className="flex flex-wrap gap-2">
-              {creneaux.map((iso) => {
-                const actif = creneauSelectionne === iso;
-                return (
-                  <button
-                    key={iso}
-                    type="button"
-                    onClick={() => setCreneauSelectionne(iso)}
-                    className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
-                      actif
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "glass border-white/50 text-foreground hover:border-primary/40"
-                    }`}
-                  >
-                    {new Date(iso).toLocaleTimeString("fr-FR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         )}
+
+        {/* Navigation des jours */}
+        <div className="flex items-center justify-between pt-2">
+          {pageJours > 0 ? (
+            <button
+              type="button"
+              onClick={() => setPageJours((p) => p - 1)}
+              className="text-xs text-primary font-semibold hover:underline"
+            >
+              ‹ Jours précédents
+            </button>
+          ) : <div />}
+
+          {(pageJours + 1) * 6 < jours.length && (
+            <button
+              type="button"
+              onClick={() => setPageJours((p) => p + 1)}
+              className="text-xs text-primary font-semibold hover:underline"
+            >
+              Voir les jours suivants ›
+            </button>
+          )}
+        </div>
 
         {erreur && <p className="text-sm text-rose-700">{erreur}</p>}
 
