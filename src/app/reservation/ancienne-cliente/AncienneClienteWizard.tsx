@@ -368,6 +368,13 @@ export function AncienneClienteWizard({
     });
   }
 
+  // Pré-sélection automatique du premier jour disponible dès l'arrivée sur la sélection du créneau
+  useEffect(() => {
+    if (step === "creneau" && !dateSelectionnee && jours.length > 0) {
+      choisirDate(jours[0]);
+    }
+  }, [step, dateSelectionnee, jours]);
+
   /** Enregistre les prestations de la personne courante, puis passe au créneau. */
   function versCreneau() {
     setPersonnes((p) =>

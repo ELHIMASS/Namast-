@@ -104,6 +104,13 @@ export function NouvelleClienteForm({
     });
   }
 
+  // Pré-sélection automatique du premier jour disponible dès l'arrivée sur l'étape des horaires
+  useEffect(() => {
+    if (step === "creneau" && !dateSelectionnee && jours.length > 0) {
+      choisirDate(jours[0]);
+    }
+  }, [step, dateSelectionnee, jours]);
+
   function envoyerDemande() {
     if (!creneauSelectionne) return;
     setErreur(null);
