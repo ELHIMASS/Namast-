@@ -368,10 +368,34 @@ export function AncienneClienteWizard({
     });
   }
 
-  // Pré-sélection automatique du premier jour disponible dès l'arrivée sur la sélection du créneau
+  // Pré-sélection automatique du premier jour qui contient réellement des créneaux libres
   useEffect(() => {
     if (step === "creneau" && !dateSelectionnee && jours.length > 0) {
-      choisirDate(jours[0]);
+      let annule = false;
+      startTransition(async () => {
+        for (const jour of jours) {
+          if (annule) break;
+          const iso = await getCreneauxAction(
+            jour.toISOString(),
+            lignesChoisies,
+            creneauxDesAutres,
+          );
+          if (iso.length > 0) {
+            if (!annule) {
+              setDateSelectionnee(jour);
+              setCreneaux(iso);
+            }
+            return;
+          }
+        }
+        if (!annule && jours[0]) {
+          setDateSelectionnee(jours[0]);
+          setCreneaux([]);
+        }
+      });
+      return () => {
+        annule = true;
+      };
     }
   }, [step, dateSelectionnee, jours]);
 
