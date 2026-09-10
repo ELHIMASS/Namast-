@@ -35,6 +35,11 @@ export function estJourAutorisePourPrestations(date: Date, prestations: Prestati
     return false;
   }
 
+  // 4. Vendredi : uniquement réservé aux formules Bien-être (Privilège interdit le vendredi)
+  if (day === 5 && contientPrivilege) {
+    return false;
+  }
+
   return true;
 }
 
