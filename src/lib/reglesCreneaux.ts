@@ -30,15 +30,13 @@ export function estJourAutorisePourPrestations(date: Date, prestations: Prestati
     return false;
   }
 
-  // 3. Mercredi : réservé aux enfants/hommes
-  if (estMer && !contientEnfantOuHomme) {
+  // 3. Mercredi : réservé aux enfants/hommes ET aux femmes Privilège (9h-11h)
+  //    Les femmes Bien-être (sans Privilège, sans enfant/homme) restent interdites.
+  if (estMer && !contientEnfantOuHomme && !contientPrivilege) {
     return false;
   }
 
-  // 4. Vendredi : uniquement réservé aux formules Bien-être (Privilège interdit le vendredi)
-  if (day === 5 && contientPrivilege) {
-    return false;
-  }
+  // 4. Vendredi : Privilège autorisé avant 16h seulement → vérification fine dans estHoraireAutorisePourPrestations
 
   return true;
 }
@@ -51,6 +49,34 @@ export function estHoraireAutorisePourPrestations(
   dateFin: Date,
   prestations: PrestationFiltre[]
 ): boolean {
+  const day = dateDebut.getDay();
+  const heureDebut = dateDebut.getHours() * 60 + dateDebut.getMinutes();
+
+  const contientEnfantOuHomme = prestations.some((p) => p.profil === "ENFANT" || p.profil === "HOMME");
+  const contientPrivilege = prestations.some((p) => p.formule === "PRIVILEGE");
+
+  const h9  = 9  * 60; //  540 min
+  const h11 = 11 * 60; //  660 min
+  const h16 = 16 * 60; //  960 min
+
+  // --- MERCREDI ---
+  if (day === 3) {
+    if (contientPrivilege && !contientEnfantOuHomme) {
+      // Femmes Privilège : uniquement 9h–11h
+      return heureDebut >= h9 && heureDebut < h11;
+    }
+    if (contientEnfantOuHomme) {
+      // Enfants & Hommes : à partir de 11h (créneaux 11h–13h et 14h–18h)
+      return heureDebut >= h11;
+    }
+  }
+
+  // --- VENDREDI ---
+  if (day === 5 && contientPrivilege) {
+    // Privilège uniquement avant 16h
+    return heureDebut < h16;
+  }
+
   return true;
 }
 

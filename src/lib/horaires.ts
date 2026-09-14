@@ -14,16 +14,16 @@ export const HORAIRES_SALON: Record<number, Plage[]> = {
   1: [{ debut: "13:30", fin: "17:30" }],
   2: [],
   3: [
-    { debut: "09:00", fin: "12:30" },
-    { debut: "14:00", fin: "18:00" },
+    { debut: "09:00", fin: "11:00" }, // Femmes Privilège uniquement
+    { debut: "11:00", fin: "13:00" }, // Enfants & Hommes
+    { debut: "14:00", fin: "18:00" }, // Enfants & Hommes
   ],
   4: [
     { debut: "09:00", fin: "13:00" },
     { debut: "14:00", fin: "18:00" },
   ],
   5: [
-    { debut: "09:00", fin: "13:00" },
-    { debut: "14:00", fin: "18:30" },
+    { debut: "09:00", fin: "18:30" }, // Privilège jusqu'à 16h, Bien-être jusqu'à 18h30
   ],
   6: [{ debut: "09:00", fin: "14:00" }],
 };

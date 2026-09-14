@@ -176,6 +176,10 @@ export function getGroupesOptionsPourPrestation(prestation: {
   nom?: string;
 }): string[] {
   if (prestation.estLissage) return [];
+
+  // Head Spa : tout est inclus dans le soin, aucune option à proposer
+  if (prestation.categorie === "HEAD_SPA") return [];
+
   if (prestation.profil === "HOMME") return ["HOMME"];
 
   // Chez les enfants, les options de coiffage ne concernent que les filles.
