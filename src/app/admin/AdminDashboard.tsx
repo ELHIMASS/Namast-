@@ -87,12 +87,28 @@ export function AdminDashboard({
   const [isPending, startTransition] = useTransition();
   const [traitementId, setTraitementId] = useState<string | null>(null);
   const [modal, setModal] = useState<"creer" | RendezVousCalendrier | null>(null);
+  const [rechercheClient, setRechercheClient] = useState("");
 
   const [isPendingRappels, startTransitionRappels] = useTransition();
   const [rappelMsg, setRappelMsg] = useState<string | null>(null);
 
   const demandes = demandesInitiales.filter((r) => !traitees.has(r.id));
   const confirmes = confirmesInitiaux;
+
+  // Résultats de recherche client (filtre sur tous les RDV confirmés)
+  const termeNormalise = rechercheClient.trim().toLowerCase();
+  const rdvFiltres = termeNormalise.length >= 2
+    ? confirmes.filter((r) => {
+        const nomComplet = `${r.client.prenom} ${r.client.nom}`.toLowerCase();
+        const nomInverse = `${r.client.nom} ${r.client.prenom}`.toLowerCase();
+        const tel = (r.client.telephone ?? "").toLowerCase();
+        return nomComplet.includes(termeNormalise) ||
+               nomInverse.includes(termeNormalise) ||
+               tel.includes(termeNormalise);
+      })
+      .sort((a, b) => new Date(b.dateDebut).getTime() - new Date(a.dateDebut).getTime())
+    : [];
+
 
   // Calcul du Chiffre d'Affaires et des RDV par mois
   const statsMensuelles = useMemo(() => {
@@ -419,6 +435,87 @@ export function AdminDashboard({
       </section>
 
       <section>
+        {/* RECHERCHE CLIENT */}
+        <div className="mb-6">
+          <div className="glass rounded-2xl border border-white/50 p-6">
+            <h2 className="font-serif text-2xl text-foreground mb-4">🔍 Rechercher un client</h2>
+            <div className="relative">
+              <input
+                id="recherche-client"
+                type="text"
+                value={rechercheClient}
+                onChange={(e) => setRechercheClient(e.target.value)}
+                placeholder="Tapez un nom, prénom ou téléphone…"
+                className="w-full rounded-xl border border-border bg-background px-4 py-3 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              />
+              {rechercheClient && (
+                <button
+                  type="button"
+                  onClick={() => setRechercheClient("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-lg leading-none"
+                  aria-label="Effacer"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
+            {termeNormalise.length >= 2 && (
+              <div className="mt-4">
+                {rdvFiltres.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-3 text-center">
+                    Aucun rendez-vous trouvé pour «&nbsp;{rechercheClient}&nbsp;»
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {rdvFiltres.length} rendez-vous trouvé{rdvFiltres.length > 1 ? "s" : ""}
+                    </p>
+                    {rdvFiltres.map((rdv) => {
+                      const { prixTotalCentimes } = calculerTotalAvecOptions(versLignes(rdv.prestations), lissageMatrice);
+                      const datePassee = new Date(rdv.dateDebut) < new Date();
+                      return (
+                        <button
+                          key={rdv.id}
+                          type="button"
+                          onClick={() => setModal(rdv as unknown as RendezVousCalendrier)}
+                          className="w-full text-left rounded-xl border border-border p-4 hover:border-primary/50 hover:bg-primary/5 transition-all duration-200 group"
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <div>
+                              <p className="font-serif text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                                {rdv.client.prenom} {rdv.client.nom}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {rdv.client.telephone}{rdv.client.email ? ` · ${rdv.client.email}` : ""}
+                              </p>
+                              <p className="text-sm text-foreground mt-1">
+                                {listePrestations(rdv.prestations)}
+                              </p>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className={`text-sm font-medium ${datePassee ? "text-muted-foreground" : "text-foreground"}`}>
+                                {formatDateHeure(rdv.dateDebut)}
+                              </p>
+                              <p className="text-sm font-bold text-primary mt-0.5">{formatPrix(prixTotalCentimes)}</p>
+                              {datePassee && (
+                                <span className="text-xs text-muted-foreground italic">passé</span>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-xs text-primary mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            Cliquer pour modifier ou annuler →
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-serif text-2xl text-foreground">Planning</h2>
           <button

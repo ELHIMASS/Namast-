@@ -10,6 +10,7 @@ import {
   modifierPrixOptionAction,
   modifierPrixVarianteOptionAction,
   modifierLissageTarifAction,
+  modifierDureeLissageTarifAction,
   synchroniserVariantesPrestationAction,
   synchroniserVariantesOptionAction,
 } from "./actions";
@@ -121,6 +122,24 @@ export default function PageTarifs() {
       }
     } catch (error) {
       setMessage({ type: "error", text: "Erreur lors de la sauvegarde." });
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  async function sauvegarderDuree(id: string, dureeMinutes: number) {
+    setSaving(id + "-duree");
+    try {
+      const result = await modifierDureeLissageTarifAction(id, dureeMinutes);
+      if (result?.ok) {
+        setMessage({ type: "success", text: "Durée mise à jour !" });
+        setTimeout(() => setMessage(null), 2000);
+        await chargerDonnees();
+      } else {
+        setMessage({ type: "error", text: result?.error || "Erreur." });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Erreur lors de la sauvegarde de la durée." });
     } finally {
       setSaving(null);
     }
@@ -446,8 +465,28 @@ export default function PageTarifs() {
                         />
                         €
                       </td>
-                      <td style={{ padding: "12px", textAlign: "right", color: "#666" }}>
-                        {l.dureeMinutes}
+                      <td style={{ padding: "12px", textAlign: "right" }}>
+                        <input
+                          type="number"
+                          min={30}
+                          step={15}
+                          defaultValue={l.dureeMinutes}
+                          onBlur={(e) => {
+                            const val = parseInt(e.target.value);
+                            if (!isNaN(val) && val > 0 && val !== l.dureeMinutes) {
+                              sauvegarderDuree(l.id, val);
+                            }
+                          }}
+                          disabled={saving === l.id + "-duree"}
+                          style={{
+                            width: "70px",
+                            padding: "6px",
+                            border: "1px solid #ddd",
+                            borderRadius: "4px",
+                            textAlign: "right",
+                          }}
+                        />
+                        <span style={{ color: "#999", fontSize: "12px", marginLeft: "4px" }}>min</span>
                       </td>
                     </tr>
                   ))}

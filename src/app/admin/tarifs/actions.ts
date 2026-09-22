@@ -102,6 +102,21 @@ export async function modifierLissageTarifAction(
   }
 }
 
+export async function modifierDureeLissageTarifAction(
+  lissageId: string,
+  dureeMinutes: number
+) {
+  try {
+    await prisma.lissageTarif.update({
+      where: { id: lissageId },
+      data: { dureeMinutes },
+    });
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: "Erreur lors de la modification de la durée." };
+  }
+}
+
 export async function synchroniserVariantesPrestationAction(
   prestationId: string,
   ancienPrix: number,
