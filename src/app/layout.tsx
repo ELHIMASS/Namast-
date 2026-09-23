@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Dancing_Script, Fraunces, Manrope } from "next/font/google";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { CookieBanner } from "@/components/CookieBanner";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -40,6 +41,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <AnimatedBackground />
         {children}
+        <CookieBanner />
       </body>
     </html>
   );

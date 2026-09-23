@@ -25,7 +25,7 @@ export default function PrivacyPage() {
         <article className="prose prose-sm max-w-none space-y-6">
           <div>
             <h1 className="font-serif text-4xl mb-2 text-foreground">Politique de Confidentialité</h1>
-            <p className="text-muted-foreground">Dernière mise à jour: {new Date().getFullYear()}</p>
+            <p className="text-muted-foreground">Dernière mise à jour&nbsp;: septembre 2025</p>
           </div>
 
           <section>
@@ -41,8 +41,9 @@ export default function PrivacyPage() {
             <div className="bg-muted/50 p-4 rounded-lg text-sm space-y-1">
               <p className="font-semibold text-foreground">Namasté - Salon de Coiffure</p>
               <p className="text-muted-foreground">6 impasse des Prunelliers</p>
-              <p className="text-muted-foreground">69720 Saint-Laurent-de-Mure</p>
-              <p className="text-muted-foreground">France</p>
+              <p className="text-muted-foreground">69720 Saint-Laurent-de-Mure, France</p>
+              <p className="text-muted-foreground mt-2">SIREN&nbsp;: <span className="font-mono">920 914 751</span></p>
+              <p className="text-muted-foreground">Email&nbsp;: contact@namaste-salon.fr</p>
             </div>
           </section>
 
