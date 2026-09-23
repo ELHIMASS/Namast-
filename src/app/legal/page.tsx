@@ -25,18 +25,17 @@ export default function LegalPage() {
         <article className="prose prose-sm max-w-none space-y-6">
           <div>
             <h1 className="font-serif text-4xl mb-2 text-foreground">Mentions Légales</h1>
-            <p className="text-muted-foreground">Dernière mise à jour: {new Date().getFullYear()}</p>
+            <p className="text-muted-foreground">Dernière mise à jour&nbsp;: septembre 2025</p>
           </div>
 
           <section>
             <h2 className="font-serif text-2xl font-bold text-foreground mt-8 mb-4">1. Identification de l'entreprise</h2>
             <div className="bg-muted/50 p-4 rounded-lg text-sm space-y-2">
-              <p><strong className="text-foreground">Nom:</strong> <span className="text-muted-foreground">Namasté - Salon de Coiffure & Bien-être</span></p>
-              <p><strong className="text-foreground">Statut juridique:</strong> <span className="text-muted-foreground">SARL / Auto-entrepreneur</span></p>
-              <p><strong className="text-foreground">SIRET:</strong> <span className="text-muted-foreground">À compléter selon votre numéro</span></p>
-              <p><strong className="text-foreground">Adresse:</strong> <span className="text-muted-foreground">6 impasse des Prunelliers, 69720 Saint-Laurent-de-Mure</span></p>
-              <p><strong className="text-foreground">Téléphone:</strong> <span className="text-muted-foreground">À compléter</span></p>
-              <p><strong className="text-foreground">Email:</strong> <span className="text-muted-foreground">contact@namaste-salon.fr</span></p>
+              <p><strong className="text-foreground">Nom&nbsp;:</strong> <span className="text-muted-foreground">Namasté - Salon de Coiffure &amp; Bien-être</span></p>
+              <p><strong className="text-foreground">Statut juridique&nbsp;:</strong> <span className="text-muted-foreground">Micro-entreprise</span></p>
+              <p><strong className="text-foreground">SIRET&nbsp;:</strong> <span className="text-muted-foreground font-mono">920 914 751 00010</span></p>
+              <p><strong className="text-foreground">Adresse&nbsp;:</strong> <span className="text-muted-foreground">6 impasse des Prunelliers, 69720 Saint-Laurent-de-Mure</span></p>
+              <p><strong className="text-foreground">Email&nbsp;:</strong> <span className="text-muted-foreground">contact@namaste-salon.fr</span></p>
             </div>
           </section>
 
@@ -51,9 +50,9 @@ export default function LegalPage() {
           <section>
             <h2 className="font-serif text-2xl font-bold text-foreground mt-8 mb-4">3. Hébergement du site</h2>
             <div className="bg-muted/50 p-4 rounded-lg text-sm space-y-1">
-              <p className="font-semibold text-foreground">Hébergeur:</p>
-              <p className="text-muted-foreground">Vercel Inc.</p>
-              <p className="text-muted-foreground">440 N Barranca Ave, Covina, CA 91723, United States</p>
+              <p className="font-semibold text-foreground">OVH SAS</p>
+              <p className="text-muted-foreground">2 rue Kellermann, 59100 Roubaix, France</p>
+              <p className="text-muted-foreground">Tél&nbsp;: 1007 &middot; <a href="https://www.ovh.com" className="underline hover:text-primary">www.ovh.com</a></p>
             </div>
           </section>
 
@@ -147,13 +146,7 @@ export default function LegalPage() {
           </section>
 
           <section className="mt-12 pt-6 border-t border-border">
-            <p className="text-sm text-muted-foreground">
-              Dernière mise à jour: {new Date().toLocaleDateString("fr-FR", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
+            <p className="text-sm text-muted-foreground">Dernière mise à jour&nbsp;: septembre 2025</p>
           </section>
         </article>
       </main>

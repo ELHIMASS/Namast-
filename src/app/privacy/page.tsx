@@ -42,7 +42,7 @@ export default function PrivacyPage() {
               <p className="font-semibold text-foreground">Namasté - Salon de Coiffure</p>
               <p className="text-muted-foreground">6 impasse des Prunelliers</p>
               <p className="text-muted-foreground">69720 Saint-Laurent-de-Mure, France</p>
-              <p className="text-muted-foreground mt-2">SIREN&nbsp;: <span className="font-mono">920 914 751</span></p>
+              <p className="text-muted-foreground mt-2">SIRET&nbsp;: <span className="font-mono">920 914 751 00010</span></p>
               <p className="text-muted-foreground">Email&nbsp;: contact@namaste-salon.fr</p>
             </div>
           </section>
