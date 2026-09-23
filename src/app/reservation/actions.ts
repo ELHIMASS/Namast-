@@ -46,8 +46,16 @@ export async function findClientByName(
 
   const clients = await prisma.client.findMany({
     where: {
-      prenom: { equals: p, mode: "insensitive" },
-      nom: { equals: n, mode: "insensitive" },
+      OR: [
+        {
+          prenom: { contains: p, mode: "insensitive" },
+          nom: { contains: n, mode: "insensitive" },
+        },
+        {
+          prenom: { contains: n, mode: "insensitive" },
+          nom: { contains: p, mode: "insensitive" },
+        },
+      ],
     },
   });
 
