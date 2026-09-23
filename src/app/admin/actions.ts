@@ -108,9 +108,10 @@ export async function getDemandesEnAttente() {
 }
 
 export async function getRendezVousConfirmes() {
-  const debut = new Date(new Date().setHours(0, 0, 0, 0));
+  const debut = new Date();
+  debut.setMonth(debut.getMonth() - 2); // Remonte 2 mois en arrière pour garder l'historique
   const fin = new Date(debut);
-  fin.setDate(fin.getDate() + 365);
+  fin.setDate(fin.getDate() + 400); // Couvre plus d'un an
 
   return prisma.rendezVous.findMany({
     where: { statut: "CONFIRME", dateDebut: { gte: debut, lte: fin } },
