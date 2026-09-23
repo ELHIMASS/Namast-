@@ -138,11 +138,11 @@ export function AncienneClienteWizard({
   const personneCourante = personnes[indexCourant];
 
   const [dateSelectionnee, setDateSelectionnee] = useState<Date | null>(null);
+  const [moisSelectionne, setMoisSelectionne] = useState<string | null>(null);
   const [creneaux, setCreneaux] = useState<string[]>([]);
   const [creneauSelectionne, setCreneauSelectionne] = useState<string | null>(null);
   const [creneauxParJour, setCreneauxParJour] = useState<Record<string, string[]>>({});
   const [chargementCreneaux, setChargementCreneaux] = useState(false);
-  const [pageJours, setPageJours] = useState(0);
   const [rendezVousConfirmes, setRendezVousConfirmes] = useState<
     { code: string | null; personne: string | null; debutISO: string; finISO: string }[]
   >([]);
@@ -184,7 +184,9 @@ export function AncienneClienteWizard({
           setIndexCourant(e.indexCourant ?? 0);
           setCreneauSelectionne(e.creneauSelectionne ?? null);
           if (e.dateSelectionneeISO) {
-            setDateSelectionnee(new Date(e.dateSelectionneeISO));
+            const dateRestau = new Date(e.dateSelectionneeISO);
+            setDateSelectionnee(dateRestau);
+            setMoisSelectionne(dateRestau.toLocaleDateString("fr-FR", { month: "long", year: "numeric" }));
           }
           window.history.replaceState({ etape: e.step }, "");
           restaure.current = true;
@@ -281,6 +283,24 @@ export function AncienneClienteWizard({
     return base.filter((date) => estJourAutorisePourPrestations(date, prestationsFiltre));
   }, [prestationsFiltre]);
 
+  const joursParMois = useMemo(() => {
+    const map = new Map<string, Date[]>();
+    for (const j of jours) {
+      const mois = j.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+      if (!map.has(mois)) map.set(mois, []);
+      map.get(mois)!.push(j);
+    }
+    return map;
+  }, [jours]);
+
+  const listeMois = Array.from(joursParMois.keys());
+
+  useEffect(() => {
+    if (step === "creneau" && listeMois.length > 0 && !moisSelectionne) {
+      setMoisSelectionne(listeMois[0]);
+    }
+  }, [step, listeMois, moisSelectionne]);
+
   function soumettreIdentification(e: React.FormEvent) {
     e.preventDefault();
     setErreurIdentification(null);
@@ -372,12 +392,12 @@ export function AncienneClienteWizard({
     });
   }
 
-  // Chargement automatique des créneaux pour les jours affichés
+  // Chargement automatique des créneaux pour le mois sélectionné
   useEffect(() => {
-    if (step === "creneau" && jours.length > 0) {
+    if (step === "creneau" && moisSelectionne) {
       let annule = false;
       setChargementCreneaux(true);
-      const joursACharger = jours.slice(pageJours * 6, (pageJours + 1) * 6);
+      const joursACharger = joursParMois.get(moisSelectionne) || [];
       startTransition(async () => {
         const res = await getCreneauxMultiplesJoursAction(
           joursACharger.map((j) => j.toISOString()),
@@ -393,7 +413,7 @@ export function AncienneClienteWizard({
         annule = true;
       };
     }
-  }, [step, jours, pageJours, indexCourant]);
+  }, [step, moisSelectionne, indexCourant, joursParMois]);
 
   /** Enregistre les prestations de la personne courante, puis passe au créneau. */
   function versCreneau() {
@@ -668,7 +688,10 @@ export function AncienneClienteWizard({
 
   if (step === "creneau" && personneCourante) {
     const derniere = indexCourant + 1 >= personnes.length;
-    const joursAffiches = jours.slice(pageJours * 6, (pageJours + 1) * 6);
+    const joursDuMois = moisSelectionne ? (joursParMois.get(moisSelectionne) || []) : [];
+    const keyJourSelectionne = dateSelectionnee ? dateSelectionnee.toISOString() : null;
+    const creneauxJourSelectionne = keyJourSelectionne ? creneauxParJour[keyJourSelectionne] : null;
+    const estEnChargement = keyJourSelectionne && creneauxJourSelectionne === undefined && chargementCreneaux;
 
     return (
       <div className="space-y-6">
@@ -682,101 +705,112 @@ export function AncienneClienteWizard({
             Horaire de {personneCourante.prenom}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Sélectionnez directement votre horaire ci-dessous sous le jour de votre choix :
+            Sélectionnez un mois, puis un jour, et enfin un horaire disponible.
           </p>
         </div>
 
-        {chargementCreneaux && Object.keys(creneauxParJour).length === 0 ? (
-          <div className="py-12 text-center text-sm text-muted-foreground glass rounded-2xl">
-            Chargement des créneaux disponibles…
+        {/* 1. Sélection du Mois */}
+        <div>
+          <h3 className="font-serif text-lg text-foreground mb-3">1. Mois</h3>
+          <div className="flex flex-wrap gap-2">
+            {listeMois.map((mois) => (
+              <button
+                key={mois}
+                type="button"
+                onClick={() => {
+                  setMoisSelectionne(mois);
+                  setDateSelectionnee(null);
+                  setCreneauSelectionne(null);
+                }}
+                className={`rounded-full px-4 py-2 text-sm font-semibold capitalize transition-all ${
+                  moisSelectionne === mois
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "glass border border-white/60 text-foreground hover:border-primary/50"
+                }`}
+              >
+                {mois}
+              </button>
+            ))}
           </div>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {joursAffiches.map((jour) => {
-              const key = jour.toISOString();
-              const creneauxJour = creneauxParJour[key];
-              const estEnChargement = creneauxJour === undefined && chargementCreneaux;
+        </div>
 
-              return (
-                <div
-                  key={key}
-                  className="glass rounded-2xl border border-white/60 p-4 flex flex-col items-center shadow-sm hover:border-primary/40 transition-all"
-                >
-                  <div className="text-center border-b border-border/40 pb-2.5 mb-3 w-full">
-                    <p className="font-serif font-bold text-base text-foreground capitalize">
-                      {jour.toLocaleDateString("fr-FR", {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "long",
-                      })}
-                    </p>
-                  </div>
-
-                  <div className="w-full flex flex-col gap-2">
-                    {estEnChargement ? (
-                      <div className="text-xs text-muted-foreground text-center py-4">
-                        Recherche…
-                      </div>
-                    ) : !creneauxJour || creneauxJour.length === 0 ? (
-                      <div className="text-xs text-muted-foreground italic text-center py-4 bg-muted/20 rounded-xl">
-                        Aucun créneau libre
-                      </div>
-                    ) : (
-                      creneauxJour.map((iso) => {
-                        const actif = creneauSelectionne === iso;
-                        const heure = new Date(iso).toLocaleTimeString("fr-FR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        });
-
-                        return (
-                          <button
-                            key={iso}
-                            type="button"
-                            onClick={() => {
-                              setDateSelectionnee(jour);
-                              setCreneauSelectionne(iso);
-                            }}
-                            className={`w-full rounded-xl py-2.5 px-3 text-xs font-bold transition-all ${
-                              actif
-                                ? "bg-primary text-primary-foreground shadow-md scale-[1.02]"
-                                : "bg-white/50 border border-border/60 text-foreground hover:border-primary hover:bg-primary/10"
-                            }`}
-                          >
-                            {heure}
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+        {/* 2. Sélection du Jour */}
+        {moisSelectionne && (
+          <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+            <h3 className="font-serif text-lg text-foreground mb-3">2. Jour</h3>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+              {joursDuMois.map((jour) => {
+                const estSelectionne = dateSelectionnee?.toISOString() === jour.toISOString();
+                const numJour = jour.getDate();
+                const nomJour = jour.toLocaleDateString("fr-FR", { weekday: "short" });
+                return (
+                  <button
+                    key={jour.toISOString()}
+                    type="button"
+                    onClick={() => {
+                      setDateSelectionnee(jour);
+                      setCreneauSelectionne(null);
+                    }}
+                    className={`flex flex-col items-center justify-center rounded-xl p-3 transition-all ${
+                      estSelectionne
+                        ? "bg-primary text-primary-foreground shadow-md scale-105"
+                        : "glass border border-white/60 text-foreground hover:border-primary/50"
+                    }`}
+                  >
+                    <span className="text-xs uppercase font-medium opacity-80">{nomJour}</span>
+                    <span className="text-xl font-bold mt-1">{numJour}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
-        {/* Navigation des jours */}
-        <div className="flex items-center justify-between pt-2">
-          {pageJours > 0 ? (
-            <button
-              type="button"
-              onClick={() => setPageJours((p) => p - 1)}
-              className="text-xs text-primary font-semibold hover:underline"
-            >
-              ‹ Jours précédents
-            </button>
-          ) : <div />}
+        {/* 3. Sélection de l'Heure */}
+        {dateSelectionnee && (
+          <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+            <h3 className="font-serif text-lg text-foreground mb-3">
+              3. Heure pour le {dateSelectionnee.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+            </h3>
+            
+            <div className="glass rounded-2xl border border-white/60 p-4">
+              {estEnChargement ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                  Recherche des horaires disponibles…
+                </div>
+              ) : !creneauxJourSelectionne || creneauxJourSelectionne.length === 0 ? (
+                <div className="py-8 text-center text-sm text-muted-foreground italic">
+                  Aucun créneau libre pour ce jour
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {creneauxJourSelectionne.map((iso) => {
+                    const actif = creneauSelectionne === iso;
+                    const heure = new Date(iso).toLocaleTimeString("fr-FR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
 
-          {(pageJours + 1) * 6 < jours.length && (
-            <button
-              type="button"
-              onClick={() => setPageJours((p) => p + 1)}
-              className="text-xs text-primary font-semibold hover:underline"
-            >
-              Voir les jours suivants ›
-            </button>
-          )}
-        </div>
+                    return (
+                      <button
+                        key={iso}
+                        type="button"
+                        onClick={() => setCreneauSelectionne(iso)}
+                        className={`w-full rounded-xl py-3 px-2 text-sm font-bold transition-all ${
+                          actif
+                            ? "bg-primary text-primary-foreground shadow-md scale-105"
+                            : "bg-white/50 border border-border/60 text-foreground hover:border-primary hover:bg-primary/10"
+                        }`}
+                      >
+                        {heure}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {erreurPanier && <p className="text-sm text-rose-700">{erreurPanier}</p>}
 
