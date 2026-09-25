@@ -255,7 +255,7 @@ export function AdminDashboard({
       </div>
 
       {/* BOUTONS ACCÈS RAPIDE */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
         <a
           href="/admin/clients"
           className="glass rounded-2xl border border-white/50 p-6 text-center transition-all duration-300 hover:border-primary/50 hover:scale-105"
@@ -295,6 +295,14 @@ export function AdminDashboard({
           <p className="text-3xl font-bold text-primary mb-2">🛎️</p>
           <p className="font-serif text-lg text-foreground">Historique</p>
           <p className="text-sm text-muted-foreground mt-2">Journal d'activité</p>
+        </a>
+        <a
+          href="/admin/emails"
+          className="glass rounded-2xl border border-white/50 p-6 text-center transition-all duration-300 hover:border-primary/50 hover:scale-105"
+        >
+          <p className="text-3xl font-bold text-primary mb-2">✉️</p>
+          <p className="font-serif text-lg text-foreground">E-mails</p>
+          <p className="text-sm text-muted-foreground mt-2">Envoyer aux clients</p>
         </a>
         <button
           type="button"

@@ -63,6 +63,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             🛎️ Historique
           </Link>
+          <Link
+            href="/admin/emails"
+            className="border-b-2 border-transparent px-6 py-4 text-sm font-medium text-foreground transition-all duration-300 hover:border-primary hover:text-primary"
+          >
+            ✉️ E-mails
+          </Link>
         </div>
       </nav>
 
