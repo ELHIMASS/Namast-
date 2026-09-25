@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { logAction } from "@/lib/historique";
 
 export async function getPrestationsAvecVariantes() {
   return prisma.prestation.findMany({
@@ -35,10 +36,11 @@ export async function modifierPrixPrestationAction(
   prixCentimes: number
 ) {
   try {
-    await prisma.prestation.update({
+    const prestation = await prisma.prestation.update({
       where: { id: prestationId },
       data: { prixCentimes },
     });
+    await logAction("PRESTATION", "UPDATE", `Modification du prix pour la prestation: ${prestation.nom}`);
     return { ok: true };
   } catch (error) {
     return { ok: false, error: "Erreur lors de la modification." };
@@ -62,10 +64,11 @@ export async function modifierPrixVariantePrestationAction(
 
 export async function modifierPrixOptionAction(optionId: string, prixCentimes: number | null) {
   try {
-    await prisma.option.update({
+    const option = await prisma.option.update({
       where: { id: optionId },
       data: { prixCentimes },
     });
+    await logAction("PRESTATION", "UPDATE", `Modification du prix pour l'option: ${option.nom}`);
     return { ok: true };
   } catch (error) {
     return { ok: false, error: "Erreur lors de la modification." };
@@ -92,10 +95,11 @@ export async function modifierLissageTarifAction(
   prixCentimes: number
 ) {
   try {
-    await prisma.lissageTarif.update({
+    const lissage = await prisma.lissageTarif.update({
       where: { id: lissageId },
       data: { prixCentimes },
     });
+    await logAction("PRESTATION", "UPDATE", `Modification du prix du tarif de lissage (${lissage.longueur} - ${lissage.densite})`);
     return { ok: true };
   } catch (error) {
     return { ok: false, error: "Erreur lors de la modification." };

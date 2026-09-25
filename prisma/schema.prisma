@@ -236,3 +236,24 @@ model RendezVousOption {
   optionId               String
   option                 Option               @relation(fields: [optionId], references: [id])
 }
+
+enum EntiteType {
+  CLIENT
+  RENDEZVOUS
+  PRESTATION
+  AUTRE
+}
+
+enum ActionType {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+model ActionLog {
+  id        String     @id @default(cuid())
+  entite    EntiteType
+  action    ActionType
+  details   String
+  createdAt DateTime   @default(now())
+}

@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { logAction } from "@/lib/historique";
 
 export async function getClientsAction() {
   return prisma.client.findMany({
@@ -35,6 +36,7 @@ export async function ajouterClientAction({
         commentConnue: commentConnue?.trim() || undefined,
       },
     });
+    await logAction("CLIENT", "CREATE", `Client ajouté : ${client.prenom} ${client.nom}`);
     return { ok: true, client };
   } catch (error) {
     return { ok: false, error: "Erreur lors de l'ajout du client." };
@@ -71,6 +73,7 @@ export async function modifierClientAction({
         commentConnue: commentConnue?.trim() || undefined,
       },
     });
+    await logAction("CLIENT", "UPDATE", `Client modifié : ${client.prenom} ${client.nom}`);
     return { ok: true, client };
   } catch (error) {
     return { ok: false, error: "Erreur lors de la modification du client." };
@@ -79,9 +82,10 @@ export async function modifierClientAction({
 
 export async function supprimerClientAction(id: string) {
   try {
-    await prisma.client.delete({
+    const client = await prisma.client.delete({
       where: { id },
     });
+    await logAction("CLIENT", "DELETE", `Client supprimé : ${client.prenom} ${client.nom}`);
     return { ok: true };
   } catch (error) {
     return { ok: false, error: "Erreur lors de la suppression du client." };

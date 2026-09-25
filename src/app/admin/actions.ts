@@ -12,6 +12,7 @@ import {
   resoudreLignes,
   type LigneChoisie,
 } from "@/lib/reservationLignes";
+import { logAction } from "@/lib/historique";
 import {
   notifierDemandeAcceptee,
   notifierDemandeRefusee,
@@ -213,6 +214,7 @@ export async function accepterDemandeAction(rendezVousId: string) {
     data: { statut: "CONFIRME" },
     include: INCLUDE_COMPLET,
   });
+  await logAction("RENDEZVOUS", "UPDATE", `Demande de rendez-vous acceptée pour ${rdv.client.prenom} ${rdv.client.nom}`);
   await notifierDemandeAcceptee(rdv);
   await notifierSalonRdvAjoute(rdv);
 }
@@ -223,6 +225,7 @@ export async function refuserDemandeAction(rendezVousId: string, motif?: string)
     data: { statut: "REFUSE", motifRefus: motif || undefined },
     include: INCLUDE_COMPLET,
   });
+  await logAction("RENDEZVOUS", "UPDATE", `Demande de rendez-vous refusée pour ${rdv.client.prenom} ${rdv.client.nom}`);
   await notifierDemandeRefusee(rdv, motif);
 }
 
@@ -301,6 +304,7 @@ export async function creerRendezVousAdminAction({
     include: INCLUDE_COMPLET,
   });
 
+  await logAction("RENDEZVOUS", "CREATE", `Rendez-vous créé par l'admin pour ${rdv.client.prenom} ${rdv.client.nom}`);
   await notifierRdvCreeParAdmin(rdv);
   await notifierSalonRdvAjoute(rdv);
 
@@ -456,9 +460,11 @@ export async function modifierRendezVousAction({
   if (dateChangee) {
     await notifierRdvDeplace(rdv, ancienneDateDebut);
     await notifierSalonRdvDeplace(rdv, ancienneDateDebut);
+    await logAction("RENDEZVOUS", "UPDATE", `Rendez-vous déplacé pour ${rdv.client.prenom} ${rdv.client.nom}`);
   } else {
     await notifierRdvModifie(rdv);
     await notifierSalonRdvModifie(rdv);
+    await logAction("RENDEZVOUS", "UPDATE", `Prestations modifiées pour le rendez-vous de ${rdv.client.prenom} ${rdv.client.nom}`);
   }
 
   return { ok: true as const };
@@ -469,6 +475,7 @@ export async function supprimerRendezVousAction(rendezVousId: string) {
     where: { id: rendezVousId },
     include: INCLUDE_COMPLET,
   });
+  await logAction("RENDEZVOUS", "DELETE", `Rendez-vous supprimé pour ${rdv.client.prenom} ${rdv.client.nom}`);
   await notifierRdvSupprime(rdv);
   await notifierSalonRdvSupprime(rdv);
 }
