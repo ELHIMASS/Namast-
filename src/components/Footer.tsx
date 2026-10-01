@@ -80,8 +80,20 @@ export function Footer() {
         {/* Séparateur */}
         <div className="my-8 h-px bg-border" />
 
-        {/* Liens légaux */}
-        <div className="mb-8 flex flex-wrap justify-center gap-4 sm:gap-6 text-xs">
+        {/* Liens légaux & Avis Google */}
+        <div className="mb-8 flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-xs">
+          <a
+            href="https://www.google.com/maps/place/?q=place_id:ChIJX-qK54DP9EcRHVjcWd-PkNA"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#7D522A] bg-[#7D522A]/10 hover:bg-[#7D522A]/20 rounded-full transition-all border border-[#7D522A]/20"
+          >
+            <svg className="w-3.5 h-3.5 text-amber-500 fill-amber-500" viewBox="0 0 24 24">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            Donner votre avis Google
+          </a>
+          <span className="text-border">•</span>
           <Link
             href="/mon-rendez-vous"
             className="text-muted-foreground hover:text-foreground transition-colors"

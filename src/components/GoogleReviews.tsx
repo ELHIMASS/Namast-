@@ -228,7 +228,19 @@ export function GoogleReviews() {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
             />
           </svg>
-          Voir tous les avis sur Google Maps
+          Voir les avis sur Google Maps
+        </a>
+
+        <a
+          href={googleMapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-full bg-[#7D522A] px-8 py-3.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#633e1e] active:scale-95"
+        >
+          <svg className="w-4 h-4 fill-amber-300 text-amber-300" viewBox="0 0 24 24">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          ★ Donner votre avis Google
         </a>
       </Reveal>
     </section>

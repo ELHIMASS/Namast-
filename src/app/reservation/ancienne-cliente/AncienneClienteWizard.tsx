@@ -740,25 +740,39 @@ export function AncienneClienteWizard({
             <h3 className="font-serif text-lg text-foreground mb-3">2. Jour</h3>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
               {joursDuMois.map((jour) => {
-                const estSelectionne = dateSelectionnee?.toISOString() === jour.toISOString();
+                const isoJour = jour.toISOString();
+                const estSelectionne = dateSelectionnee?.toISOString() === isoJour;
                 const numJour = jour.getDate();
                 const nomJour = jour.toLocaleDateString("fr-FR", { weekday: "short" });
+
+                const creneauxDuJour = creneauxParJour[isoJour];
+                const estCharge = creneauxDuJour !== undefined;
+                const estComplet = estCharge && creneauxDuJour.length === 0;
+
                 return (
                   <button
-                    key={jour.toISOString()}
+                    key={isoJour}
                     type="button"
+                    disabled={estComplet}
                     onClick={() => {
                       setDateSelectionnee(jour);
                       setCreneauSelectionne(null);
                     }}
-                    className={`flex flex-col items-center justify-center rounded-xl p-3 transition-all ${
+                    className={`flex flex-col items-center justify-center rounded-xl p-3 transition-all relative ${
                       estSelectionne
                         ? "bg-primary text-primary-foreground shadow-md scale-105"
-                        : "glass border border-white/60 text-foreground hover:border-primary/50"
+                        : estComplet
+                          ? "bg-muted/40 border border-border/30 text-muted-foreground/50 cursor-not-allowed opacity-60"
+                          : "glass border border-white/60 text-foreground hover:border-primary/50"
                     }`}
                   >
                     <span className="text-xs uppercase font-medium opacity-80">{nomJour}</span>
-                    <span className="text-xl font-bold mt-1">{numJour}</span>
+                    <span className="text-xl font-bold mt-0.5">{numJour}</span>
+                    {estComplet && (
+                      <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-rose-600/80 mt-0.5">
+                        Complet
+                      </span>
+                    )}
                   </button>
                 );
               })}
