@@ -14,8 +14,7 @@ export const HORAIRES_SALON: Record<number, Plage[]> = {
   1: [{ debut: "13:30", fin: "17:30" }],
   2: [],
   3: [
-    { debut: "09:00", fin: "11:00" }, // Femmes Privilège uniquement
-    { debut: "11:00", fin: "13:00" }, // Enfants & Hommes
+    { debut: "09:00", fin: "13:00" }, // Femmes (9h-12h) & Enfants/Hommes (11h-13h)
     { debut: "14:00", fin: "18:00" }, // Enfants & Hommes
   ],
   4: [
@@ -43,7 +42,7 @@ export function estJourOuvert(date: Date): boolean {
   return (HORAIRES_SALON[date.getDay()] ?? []).length > 0;
 }
 
-// Mercredi : enfants et hommes
+// Mercredi : femmes (9h-12h) et enfants/hommes (à partir de 11h)
 // Vendredi : bien-être seulement
 // Lundi, jeudi, samedi : privilège et bien-être
 export function estMercredi(date: Date): boolean {

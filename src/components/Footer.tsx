@@ -8,7 +8,7 @@ import { horairesLisibles } from "@/lib/horaires";
 const JOURS_AFFICHES = [
   { index: 1, jour: "Lundi", prestations: "Coiffure Privilège & Bien-être" },
   { index: 2, jour: "Mardi" },
-  { index: 3, jour: "Mercredi", prestations: "Coiffure Enfants & Homme" },
+  { index: 3, jour: "Mercredi", prestations: "Femmes (9h – 12h) · Enfants & Homme (11h – 18h)" },
   { index: 4, jour: "Jeudi", prestations: "Coiffure Privilège & Bien-être" },
   { index: 5, jour: "Vendredi", prestations: "Coiffure Bien-être" },
   { index: 6, jour: "Samedi", prestations: "Coiffure Privilège & Bien-être" },
