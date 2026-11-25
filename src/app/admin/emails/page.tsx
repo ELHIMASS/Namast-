@@ -9,13 +9,13 @@ export default function EmailsPage() {
   const router = useRouter();
   const [clients, setClients] = useState<any[]>([]);
   const [loadingClients, setLoadingClients] = useState(true);
-  
+
   const [typeDest, setTypeDest] = useState<"ALL" | "SELECTION">("SELECTION");
   const [selectedClients, setSelectedClients] = useState<string[]>([]);
-  
+
   const [sujet, setSujet] = useState("");
   const [contenu, setContenu] = useState("");
-  
+
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null);
 
@@ -87,7 +87,7 @@ export default function EmailsPage() {
 
       <div className="glass rounded-3xl border border-white/60 p-6 shadow-sm">
         <form onSubmit={handleSend} className="space-y-6">
-          
+
           {/* CHOIX DES DESTINATAIRES */}
           <div className="space-y-3">
             <label className="text-sm font-semibold text-foreground">Destinataires</label>
@@ -111,7 +111,7 @@ export default function EmailsPage() {
                 <span className="font-medium text-sm">Tous les clients ({clients.length})</span>
               </label>
             </div>
-            
+
             {typeDest === "SELECTION" && (
               <div className="mt-4 border rounded-xl p-4 bg-white/40 max-h-60 overflow-y-auto">
                 {loadingClients ? (
@@ -142,7 +142,7 @@ export default function EmailsPage() {
           {/* SUJET DE L'EMAIL */}
           <div className="space-y-3">
             <label className="text-sm font-semibold text-foreground">Sujet de l'e-mail</label>
-            
+
             <div className="flex flex-wrap gap-2 mb-2">
               {SUGGESTIONS.map(sugg => (
                 <button
